@@ -1,5 +1,5 @@
 
-setClass( "qgraph.semModel", representation(
+setClass( "SEMmodel", representation(
     RAM = "data.frame",
     Vars = "data.frame",
     Computed = "logical",
@@ -7,36 +7,36 @@ setClass( "qgraph.semModel", representation(
     ImpCovs = "list",
     Original = "list"))
 
-setGeneric("qgraphSEM.S4", function(object) {
-  standardGeneric("qgraphSEM.S4")
+setGeneric("SEMmodel.S4", function(object) {
+  standardGeneric("SEMmodel.S4")
 })
 
-setGeneric("pathDiagram.S4", function(object,...) {
-  standardGeneric("pathDiagram.S4")
+setGeneric("SEMpaths.S4", function(object,...) {
+  standardGeneric("SEMpaths.S4")
 })
 
-pathDiagram <- function(object,...)
+SEMpaths <- function(object,...)
 {
-  if ("MxRAMModel"%in%class(object)) return(pathDiagram_MxRAMModel(object,...)) 
-  if ("MxModel"%in%class(object)) return(pathDiagram_MxModel(object,...))
+  if ("MxRAMModel"%in%class(object)) return(SEMpaths_MxRAMModel(object,...)) 
+  if ("MxModel"%in%class(object)) return(SEMpaths_MxModel(object,...))
   if(isS4(object)) 
   {
-    pathDiagram.S4(object, ...)
+    SEMpaths.S4(object, ...)
   } else
   {
-    UseMethod("pathDiagram", object)
+    UseMethod("SEMpaths", object)
   }
 }
 
-qgraphSEM <- function (object) {
-  if ("MxRAMModel"%in%class(object)) return(qgraphSEM_MxRAMModel(object)) 
-  if ("MxModel"%in%class(object)) return(qgraphSEM_MxModel(object))
+SEMmodel <- function (object) {
+  if ("MxRAMModel"%in%class(object)) return(SEMmodel_MxRAMModel(object)) 
+  if ("MxModel"%in%class(object)) return(SEMmodel_MxModel(object))
   if(isS4(object)) 
   {
-    qgraphSEM.S4(object)
+    SEMmodel.S4(object)
   } else
   {
-    UseMethod("qgraphSEM", object)
+    UseMethod("SEMmodel", object)
   }
 }
 

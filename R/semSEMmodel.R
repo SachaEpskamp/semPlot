@@ -1,22 +1,22 @@
-pathDiagram.sem <- function(object,...) 
+SEMpaths.sem <- function(object,...) 
 {
-  invisible(pathDiagram(qgraphSEM(object),...))
+  invisible(SEMpaths(SEMmodel(object),...))
 }
 
-pathDiagram.msem <- function(object,...) 
+SEMpaths.msem <- function(object,...) 
 {
-  invisible(pathDiagram(qgraphSEM(object),...))
+  invisible(SEMpaths(SEMmodel(object),...))
 }
 
-pathDiagram.msemObjectiveML <- function(object,...) 
+SEMpaths.msemObjectiveML <- function(object,...) 
 {
-  invisible(pathDiagram(qgraphSEM(object),...))
+  invisible(SEMpaths(SEMmodel(object),...))
 }
 
 
 
 ### SINGLE GROUP MODEL ###
-qgraphSEM.sem <- function(object)
+SEMmodel.sem <- function(object)
 {
   
   # Check if object is of class "sem":
@@ -62,7 +62,7 @@ qgraphSEM.sem <- function(object)
   RAM$edge[object$ram[,1]==1] <- "->"
 #   RAM$op[object$ram[,1]==1 & !Vars$manifest[match(RAM$lhs,Vars$name)] & Vars$manifest[match(RAM$rhs,Vars$name)]] <- "->"
   
-  semModel <- new("qgraph.semModel")
+  semModel <- new("SEMmodel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
   semModel@Computed <- TRUE
@@ -77,7 +77,7 @@ qgraphSEM.sem <- function(object)
 
 
 ### MUTLI GROUP MODEL ###
-qgraphSEM.msem <- qgraphSEM.msemObjectiveML <- function(object)
+SEMmodel.msem <- SEMmodel.msemObjectiveML <- function(object)
 {
   
   nGroup <- length(object$ram)
@@ -136,7 +136,7 @@ qgraphSEM.msem <- qgraphSEM.msemObjectiveML <- function(object)
   
   #   RAM$op[object$ram[,1]==1 & !Vars$manifest[match(RAM$lhs,Vars$name)] & Vars$manifest[match(RAM$rhs,Vars$name)]] <- "->"
   
-  semModel <- new("qgraph.semModel")
+  semModel <- new("SEMmodel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
   semModel@Computed <- TRUE

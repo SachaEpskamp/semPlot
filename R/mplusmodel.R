@@ -1,11 +1,11 @@
 
 # object <- readModels(file.choose())
-pathDiagram.mplus.model <- function(object,...) 
+SEMpaths.mplus.model <- function(object,...) 
 {
-  invisible(pathDiagram(qgraphSEM(object),...))
+  invisible(SEMpaths(SEMmodel(object),...))
 }
 
-qgraphSEM.mplus.model <- function(object)
+SEMmodel.mplus.model <- function(object)
 {
   parsUS <- object$parameters$unstandardized
   if (is.null(parsUS$Group)) parsUS$Group <- ""
@@ -51,7 +51,7 @@ qgraphSEM.mplus.model <- function(object)
   
 
   
-  semModel <- new("qgraph.semModel")
+  semModel <- new("SEMmodel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
   semModel@Computed <- TRUE

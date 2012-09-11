@@ -1,6 +1,6 @@
 
 SEMcors <- function(object,vertical=FALSE,...){
-  if (!"qgraph.semModel"%in%class(object)) object <- qgraphSEM(object) 
+  if (!"SEMmodel"%in%class(object)) object <- SEMmodel(object) 
   
   if (!object@Computed) stop("SEM model has not been evaluated; there are no implied covariances")
   

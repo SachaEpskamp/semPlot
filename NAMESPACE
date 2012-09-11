@@ -1,22 +1,22 @@
-export(pathDiagram,pathDiagram.S4,qgraphSEM,qgraphSEM.S4,pathDiagramGUI)
+export(SEMpaths,SEMpaths.S4,SEMmodel,SEMmodel.S4,SEMpathsGUI)
 # export Classes
 exportClasses(
-              "qgraph.semModel"
+              "SEMmodel"
              )
 
 # export Methods
 exportMethods(
-             "qgraphSEM.S4",
-			"pathDiagram.S4"
+             "SEMmodel.S4",
+			"SEMpaths.S4"
              )
-S3method(pathDiagram,sem)
-S3method(pathDiagram,mplus.model)
-S3method(qgraphSEM,mplus.model)
-S3method(qgraphSEM,sem)
-S3method(qgraphSEM,msem)
-S3method(pathDiagram,msem)
-S3method(qgraphSEM,msemObjectiveML)
-S3method(pathDiagram,msemObjectiveML)
+S3method(SEMpaths,sem)
+S3method(SEMpaths,mplus.model)
+S3method(SEMmodel,mplus.model)
+S3method(SEMmodel,sem)
+S3method(SEMmodel,msem)
+S3method(SEMpaths,msem)
+S3method(SEMmodel,msemObjectiveML)
+S3method(SEMpaths,msemObjectiveML)
 
 importFrom(sem,"sem","standardizedCoefficients")
 importFrom(lavaan,"lavaan","cfa","standardizedSolution", "standardizedsolution", "parameterEstimates", "parameterestimates","inspect")

@@ -1,17 +1,17 @@
 ### Path diagrams ###
 
-pathDiagram_MxRAMModel <- function(object,...){
-  invisible(pathDiagram(qgraphSEM(object),...))
+SEMpaths_MxRAMModel <- function(object,...){
+  invisible(SEMpaths(SEMmodel(object),...))
 }
           
-pathDiagram_MxModel <- function(object,...){
-  invisible(pathDiagram(qgraphSEM(object),...))
+SEMpaths_MxModel <- function(object,...){
+  invisible(SEMpaths(SEMmodel(object),...))
 }
-
+ 
 ### EXTRACT MODEL ###
           
 ### SINGLE GROUP ###
-qgraphSEM_MxRAMModel <- function(object){
+SEMmodel_MxRAMModel <- function(object){
   
   # Extract names:
   varNames <- object@manifestVars
@@ -112,7 +112,7 @@ qgraphSEM_MxRAMModel <- function(object){
   
   RAM$label[is.na(RAM$label)] <- ""
   
-  semModel <- new("qgraph.semModel")
+  semModel <- new("SEMmodel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
   semModel@Computed <- !length(object@output)==0
@@ -140,13 +140,13 @@ qgraphSEM_MxRAMModel <- function(object){
 }
 
 
-qgraphSEM_MxModel <- function(object){
+SEMmodel_MxModel <- function(object){
 
   if (any(!"MxRAMModel"%in%sapply(object@submodels,class))) stop("Model or all submodels must be of class 'MxRAMModel'")
   for (i in 1:length(object@submodels)) object@submodels[[i]]@output <- list(TRUE)
-  S4objects <- lapply(object@submodels,qgraphSEM)
+  S4objects <- lapply(object@submodels,SEMmodel)
   
-  semModel <- new("qgraph.semModel")
+  semModel <- new("SEMmodel")
   semModel@RAM <- do.call("rbind",lapply(S4objects,slot,"RAM"))
   
   semModel@RAM$par <- 0

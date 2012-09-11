@@ -1,13 +1,13 @@
 ### Path diagrams ###
 
-setMethod("pathDiagram.S4",signature("lavaan"),function(object,...){
-  invisible(pathDiagram(qgraphSEM(object),...))
+setMethod("SEMpaths.S4",signature("lavaan"),function(object,...){
+  invisible(SEMpaths(SEMmodel(object),...))
 })
 
 
 
 ## EXTRACT MODEL ###
-setMethod("qgraphSEM.S4",signature("lavaan"),function(object){
+setMethod("SEMmodel.S4",signature("lavaan"),function(object){
   
   
   if (class(object)!="lavaan") stop("Input must me a 'lavaan' object")
@@ -38,7 +38,7 @@ setMethod("qgraphSEM.S4",signature("lavaan"),function(object){
   # Extract parameter names:
   if (is.null(pars$label)) pars$label <- rep("",nrow(pars))
   
-  semModel <- new("qgraph.semModel")
+  semModel <- new("SEMmodel")
   
   if (is.null(pars$group)) pars$group <- ""
   

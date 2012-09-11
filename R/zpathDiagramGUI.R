@@ -1,10 +1,10 @@
 
 
-pathDiagramGUI <- function(object,...)
+SEMpathsGUI <- function(object,...)
 {
   if (!require("rpanel")) stop("Package 'rpanel' is required to use GUI functionality")
   
-  object <- qgraphSEM(object)
+  object <- SEMmodel(object)
   
   Groups <- unique(object@RAM$group)
   Ng <- length(Groups)
@@ -17,7 +17,7 @@ pathDiagramGUI <- function(object,...)
     panel$height <- as.numeric(panel$dimensions[2])    
     panel$include <- which(panel$inclGroups)
     if (panel$GroupOr=="Horizontal") layout(t(1:sum(panel$inclGroups))) else layout(1:sum(panel$inclGroups))
-    do.call(pathDiagram,panel)
+    do.call(SEMpaths,panel)
     panel
   }
   qgraph.newplot <- function(panel)
@@ -34,7 +34,7 @@ pathDiagramGUI <- function(object,...)
     panel$include <- which(panel$inclGroups)
     pdf(paste0(panel$filename,".pdf"),panel$width,panel$height)
     if (panel$GroupOr=="Horizontal") layout(t(1:sum(panel$inclGroups))) else layout(1:sum(panel$inclGroups))
-    do.call(pathDiagram,c(panel))
+    do.call(SEMpaths,c(panel))
     dev.off()
     message(paste("Output stored in",paste0(getwd(),"/",panel$filename,".pdf")))
     panel
@@ -72,7 +72,7 @@ pathDiagramGUI <- function(object,...)
 #   
 #   qgraph.printcall <- function(panel)
 #   {
-#     cat("pathDiagram(",paste(paste(names(panel),"=",sapply(panel,function(x)paste(deparse(dput(x)),collapse=""))),collapse=","),")")
+#     cat("SEMpaths(",paste(paste(names(panel),"=",sapply(panel,function(x)paste(deparse(dput(x)),collapse=""))),collapse=","),")")
 #     return(panel)
 #   }
 #   
