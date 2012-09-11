@@ -1,0 +1,16 @@
+Package: drawSEM
+Type: Package
+Title: Path diagrams and visual analysis of various SEM packages' output
+Version: 0.1.0
+Date: 2012-09-11
+Author: Sacha Epskamp
+Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
+Depends: R (>= 2.15.0)
+Depends: qgraph
+Suggests: lavaan, sem, MplusAutomation, OpenMx, rpanel
+Imports:  lavaan, sem, plyr, methods
+ByteCompile: yes
+Description:  Path diagrams and visual analysis of various SEM packages' output
+URL: https://github.com/SachaEpskamp/drawSEM
+License: GPL-2
+LazyLoad: yes
