@@ -3,6 +3,17 @@
 SEMpathsGUI <- function(object,...)
 {
   if (!require("rpanel")) stop("Package 'rpanel' is required to use GUI functionality")
+
+  if (any(grepl("RStudio", .libPaths(), ignore.case=TRUE)))
+  {
+    if (grepl("win",Sys.info()["sysname"],ignore.case=TRUE))
+    {
+      windows()
+    } else X11()
+  } else
+  {
+    dev.new()
+  }
   
   object <- SEMmodel(object)
   
@@ -13,8 +24,8 @@ SEMpathsGUI <- function(object,...)
   qgraph.draw <- function(panel) {
     panel$residuals <- panel$cbox[1]
     panel$means <- panel$cbox[2]
-    panel$width <- as.numeric(panel$dimensions[1])
-    panel$height <- as.numeric(panel$dimensions[2])    
+#     panel$width <- as.numeric(panel$dimensions[1])
+#     panel$height <- as.numeric(panel$dimensions[2])    
     panel$include <- which(panel$inclGroups)
     if (panel$GroupOr=="Horizontal") layout(t(1:sum(panel$inclGroups))) else layout(1:sum(panel$inclGroups))
     do.call(SEMpaths,panel)
@@ -22,7 +33,16 @@ SEMpathsGUI <- function(object,...)
   }
   qgraph.newplot <- function(panel)
   {
-    x11()
+    if (any(grepl("RStudio", .libPaths(), ignore.case=TRUE)))
+    {
+      if (grepl("win",Sys.info()["sysname"],ignore.case=TRUE))
+      {
+        windows()
+      } else X11()
+    } else
+    {
+      dev.new()
+    }
     qgraph.draw(panel)
     panel
   }
