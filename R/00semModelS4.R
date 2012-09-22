@@ -40,3 +40,19 @@ SEMmodel <- function (object) {
   }
 }
 
+
+SEMpaths.default <- function(object,...)
+{
+  if (is.character(object) && grepl("\\.out",object))
+  {
+    return(SEMpaths(readModels(object),...))
+  }
+}
+
+SEMmodel.default <- function(object)
+{
+  if (is.character(object) && grepl("\\.out",object))
+  {
+    return(SEMmodel(readModels(object)))
+  }
+}
