@@ -484,9 +484,9 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
         for (i in which(Labels%in%latNames))
         {
           # Layout subset of all connected:
-          subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),]
+          subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),,drop=FALSE]
           conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
-          subLayout <- Layout[conNodes,]
+          subLayout <- Layout[conNodes,,drop=FALSE]
           Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
           if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->"))
           {
@@ -635,7 +635,7 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
         eLabels <- as.character(round(GroupRAM$est,2))
       } else if (grepl("eq|cons",whatLabels,ignore.case=TRUE))
       {
-        if (edge.labels) eLabels <- GroupRAM$par
+        eLabels <- GroupRAM$par
       } else if (grepl("no|omit|hide|invisible",whatLabels,ignore.case=TRUE))
       {
         eLabels <- rep("",nrow(Edgelist))

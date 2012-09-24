@@ -15,7 +15,7 @@ SEMmodel.semspec <- function(object)
   
   semreprObject <- semrepr(object)
   sumObject <- summary(object)
-  
+
   # Define RAM:
   RAM <- data.frame(
     label = "", 
@@ -26,8 +26,37 @@ SEMmodel.semspec <- function(object)
     std = NA,
     group = ifelse(is.na(semreprObject$group),"",semreprObject$group),
     fixed = FALSE,
-    par = 1:nrow(semreprObject),
+    par = 0,
     stringsAsFactors=FALSE)
+  
+  # Label:
+  if (!is.null(semreprObject$param)) RAM$label <- semreprObject$param
+  
+  
+  # Fixed:
+#   if (!is.null(semreprObject$free)) RAM$fixed <- !semreprObject$free
+  if (length(sumObject$constraints$details$Constraint)>0)
+  {
+    spl <- strsplit(sumObject$constraints$details$Constraint,split=" == ")[grepl("==",sumObject$constraints$details$Constraint)]
+    parNum <- sapply(spl,function(x)sum(x%in%RAM$label))
+    parIt <- 1
+    for (p in 1:length(spl))
+    {
+      if (parNum[p]==1)
+      {
+        RAM$fixed[RAM$label%in%spl[[p]]] <- TRUE
+      } else if (parNum[p]==2)
+      {
+        RAM$par[RAM$label%in%spl[[p]]] <- parIt
+        parIt <- parIt + 1
+      } else warning("Error in computation of equality constraints.")
+    }
+  }
+  
+  if (max(RAM$par) < nrow(RAM))
+  {
+    RAM$par[RAM$par==0] <- max(RAM$par)+(1:sum(RAM$par==0))
+  }
   
   # Extract parameter estimates:
   RAM$est[object$ram[,4]!=0] <- object$coef[object$ram[,4]]
@@ -42,97 +71,27 @@ SEMmodel.semspec <- function(object)
   
   # Variable dataframe: 
   Vars <- data.frame(
-    name = object$var.names,
-    manifest = object$var.names %in% colnames(object$S),
+    name = sumObject$variables$details$Variable,
+    manifest = sumObject$variables$details$Type == "Manifest",
     stringsAsFactors=FALSE)
   
-  # Define operators:
-  RAM$edge[object$ram[,1]==2] <- "<->"
-  RAM$edge[object$ram[,1]==1] <- "->"
-#   RAM$op[object$ram[,1]==1 & !Vars$manifest[match(RAM$lhs,Vars$name)] & Vars$manifest[match(RAM$rhs,Vars$name)]] <- "->"
-  
-  semModel <- new("SEMmodel")
-  semModel@RAM <- RAM
-  semModel@Vars <- Vars
-  semModel@Computed <- TRUE
-  semModel@Original <- list(object)
-  semModel@ObsCovs <- list(object$S)
-  semModel@ImpCovs <- list(object$C)
-  
-  return(semModel)
-}
-
-
-
-
-### MUTLI GROUP MODEL ###
-SEMmodel.msem <- SEMmodel.msemObjectiveML <- function(object)
-{
-  
-  nGroup <- length(object$ram)
-  GroupNames <- object$groups
-  
-  RAMS <- list()
-  stdobject <- standcoefmsem(object)
-  
-  for (g in 1:nGroup)
+  # If all are latent, make guess at which are latent:
+  if (all(!Vars$manifest))
   {
-    # Define RAM:
-    RAM <- data.frame(
-      label = rownames(object$ram[[g]]), 
-      lhs = object$ram[[g]][,3],
-      edge = "",
-      rhs = object$ram[[g]][,2],
-      est = object$ram[[g]][,5],
-      std = stdobject[[g]][,2],
-      group = GroupNames[g],
-      fixed = object$ram[[g]][,4]==0,
-      par = object$ram[[g]][,4],
-      stringsAsFactors=FALSE)
-    
-    # Extract parameter estimates:
-    RAM$est[object$ram[[g]][,4]!=0] <- object$coef[object$ram[[g]][,4]]
-    
-    # Fix labels:
-    for (i in unique(object$ram[[g]][,4][object$ram[[g]][,4]!=0]))
+    for (i in 1:nrow(Vars))
     {
-      if (any(RAM$label[object$ram[[g]][,4]==i]=="") & any(RAM$label[object$ram[[g]][,4]==i]!="")) 
-      {
-        RAM$label[object$ram[[g]][,4]==i & RAM$label==""] <- RAM$label[object$ram[[g]][,4]==i & RAM$label!=""] 
-      }
+      Vars$manifest[i] <- !any(semreprObject$type[semreprObject$lhs==Vars$name[i]]=="latent")
     }
-    
-    # Name variables:
-    RAM$lhs <- object$var.names[[g]][RAM$lhs]
-    RAM$rhs <- object$var.names[[g]][RAM$rhs]
-    
-    
-    # Define operators:
-    RAM$edge[object$ram[[g]][,1]==2] <- "<->"
-    RAM$edge[object$ram[[g]][,1]==1] <- "->"
-    
-    RAMS[[g]] <- RAM
   }
   
-  RAM <- do.call("rbind",RAMS)
-  
-  # Variable dataframe: 
-  Vars <- data.frame(
-    name = unique(unlist(object$var.names)),
-    manifest = unique(unlist(object$var.names)) %in% unique(c(sapply(object$S,colnames))),
-    stringsAsFactors=FALSE)
-  
-  
-  #   RAM$op[object$ram[,1]==1 & !Vars$manifest[match(RAM$lhs,Vars$name)] & Vars$manifest[match(RAM$rhs,Vars$name)]] <- "->"
-  
   semModel <- new("SEMmodel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
-  semModel@Computed <- TRUE
-  semModel@Original <- list(object)
-  semModel@ObsCovs <- object$S
-  semModel@ImpCovs <- object$S
+  semModel@Computed <- FALSE
+  semModel@Original <- list()
+  semModel@ObsCovs <- list()
+  semModel@ImpCovs <- list()
   
   return(semModel)
 }
-          
+
