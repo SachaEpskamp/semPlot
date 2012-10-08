@@ -20,7 +20,12 @@ SEMpathsGUI <- function(object,...)
   Groups <- unique(object@RAM$group)
   Ng <- length(Groups)
   
-    qgraph.setup <- function(panel) panel
+  qgraph.setup <- function(panel) 
+  {
+    if (isTRUE(panel$OnTheFly)) qgraph.draw(panel)
+    panel
+  }
+  
   qgraph.draw <- function(panel) {
     panel$residuals <- panel$cbox[1]
     panel$means <- panel$cbox[2]
@@ -130,12 +135,13 @@ SEMpathsGUI <- function(object,...)
   
   rp.button(qgraph.panel, action = qgraph.newplot, title = "New" ,pos = list(column=1,row=7))
   
+  rp.checkbox(qgraph.panel, OnTheFly ,qgraph.setup, title="Plot on the fly", pos = list(column=0,row=8), initval=FALSE)
   
   if (Ng>1)
   {
-    rp.radiogroup(qgraph.panel, GroupOr, c("Horizontal", "Vertical"), title = "Orientation", action = qgraph.setup, pos = list(column=0,row=8), initval="Vertical")
+    rp.radiogroup(qgraph.panel, GroupOr, c("Horizontal", "Vertical"), title = "Orientation", action = qgraph.setup, pos = list(column=0,row=9), initval="Vertical")
     
-    rp.checkbox(qgraph.panel, inclGroups, qgraph.setup, labels = Groups, title="Include", pos = list(column=1,row=8), initval=rep(TRUE,Ng))
+    rp.checkbox(qgraph.panel, inclGroups, qgraph.setup, labels = Groups, title="Include", pos = list(column=1,row=9), initval=rep(TRUE,Ng))
   }
   
   
