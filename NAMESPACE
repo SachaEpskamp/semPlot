@@ -1,4 +1,4 @@
-export(SEMpaths,SEMpaths.S4,SEMmodel,SEMmodel.S4,SEMpathsGUI)
+export(SEMpaths,SEMpaths.S4,SEMmodel,SEMmodel.S4,SEMpathsGUI,SEMcors)
 # export Classes
 exportClasses(
               "SEMmodel"
