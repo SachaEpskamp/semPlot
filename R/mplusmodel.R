@@ -9,6 +9,7 @@ SEMmodel.mplus.model <- function(object)
 {
   parsUS <- object$parameters$unstandardized
   if (is.null(parsUS$Group)) parsUS$Group <- ""
+  if (is.null(parsUS$BetweenWithin)) parsUS$BetweenWithin <- ""
   
   # Define RAM:
   RAM <- data.frame(
@@ -18,10 +19,27 @@ SEMmodel.mplus.model <- function(object)
     rhs = parsUS$param,
     est = parsUS$est,
     std = NA,
-    group = parsUS$Group,
+    group = paste(parsUS$Group, parsUS$BetweenWithin, sep=""),
     fixed = parsUS$se==0,
-    par = 1:nrow(parsUS),
+    par = 0,
     stringsAsFactors=FALSE)
+  
+  c <- 1
+  for (i in 1:nrow(RAM))
+  {
+    if (!isTRUE(RAM$fixed[i]) & RAM$par[i]==0)
+    {
+      par <- sapply(1:nrow(parsUS),function(j)isTRUE(all.equal(unlist(parsUS[j,c("est","se","est_se","pval")]),unlist(parsUS[i,c("est","se","est_se","pval")]))))
+      RAM$par[par] <- c
+      c <- c+1
+    }
+  }
+  
+  
+  if (!is.null(object$parameters$std.standardized))
+  {
+    RAM$std <- object$parameters$std.standardized$est
+  }
   
   RAM$lhs[grepl("BY|ON",parsUS$paramHeader)] <- gsub("\\.(BY|ON)","",parsUS$paramHeader[grepl("BY|ON",parsUS$paramHeader)])
   RAM$edge[grepl("BY|ON",parsUS$paramHeader)] <- "->"
