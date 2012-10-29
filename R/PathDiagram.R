@@ -3,6 +3,7 @@
 # 2 = endo manifests righy
 # 3 = endo man up
 # 4 = endo man left
+# allVars: TRUE includes variables that are not in model (e.g. with between-within group models)
 
 # manifests: vector of manifest labels ordered
 # latents: vector of latents ordered
@@ -119,7 +120,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,...){
+setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,...){
 
   if (gui) return(do.call(SEMpathsGUI,as.list(match.call())[-1]))
 
@@ -208,6 +209,7 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
   Labels <- c(manNames,latNames)
   nM <- length(manNames)
   nL <- length(latNames)
+  nN <- length(Labels)
   object@Vars <- object@Vars[match(Labels,object@Vars$name),]
   
   # Define groups and colors setup:
@@ -280,12 +282,24 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
   
   if (missing(include)) include <- 1:length(Groups)
   
+  # Reassign labels (temporary solution for excluding vars in multi group)
+  AllLabs <- Labels
+  AllMan <- manNames
+  AllLat <- latNames
+  
   par(ask=ask)
   for (gr in Groups[(1:length(Groups))%in%include])
   {
     GroupRAM <- object@RAM[object@RAM$group==gr,]
+    GroupVars <- object@Vars
     
-    Labels <- c(manNames,latNames)
+    # Restore Labels, manNames and latNames:
+    Labels <- AllLabs
+    manNames <- AllMan
+    latNames <- AllLat
+    nM <- length(AllMan)
+    nL <- length(AllLat)
+    
     
     Ni <- sum(GroupRAM$edge=="int")
     # Add intercept:
@@ -300,9 +314,9 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
         Labels <- c(Labels,rep("1",Ni))
       } 
     }
+    
     nN <- length(Labels)
     
-  
     # Extract edgelist:
     Edgelist <- GroupRAM[c("lhs","rhs")]
     Edgelist$lhs <- match(Edgelist$lhs,Labels)
@@ -313,19 +327,36 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
     Edgelist$lhs <- as.numeric(Edgelist$lhs)
     Edgelist$rhs <- as.numeric(Edgelist$rhs)
     Edgelist <- as.matrix(Edgelist)
+    
+    if (!allVars)
+    {
+      NodesInGroup <- sort(unique(c(Edgelist[,1],Edgelist[,2])))
+      incl <- 1:nN %in% NodesInGroup
+          
+      Edgelist[,1] <- match(Edgelist[,1],NodesInGroup)
+      Edgelist[,2] <- match(Edgelist[,2],NodesInGroup)
+      
+    } else incl <- 1:nN
+    
+    Labels <- Labels[incl]
+    nN <- length(Labels)
+    nM <- sum(manNames%in%Labels)
+    nL <- sum(latNames%in%Labels)
+    
+    GroupVars <- GroupVars[GroupVars$name%in%Labels,]
 
     manInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%manNames,]
     latInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,]
     
-    manIntsEndo <- manInts[!object@Vars$exogenous[manInts[,2]],,drop=FALSE]
-    manIntsExo <- manInts[object@Vars$exogenous[manInts[,2]],,drop=FALSE]
-    latIntsEndo <- latInts[!object@Vars$exogenous[latInts[,2]],,drop=FALSE]
-    latIntsExo <- latInts[object@Vars$exogenous[latInts[,2]],,drop=FALSE]
+    manIntsEndo <- manInts[!GroupVars$exogenous[manInts[,2]],,drop=FALSE]
+    manIntsExo <- manInts[GroupVars$exogenous[manInts[,2]],,drop=FALSE]
+    latIntsEndo <- latInts[!GroupVars$exogenous[latInts[,2]],,drop=FALSE]
+    latIntsExo <- latInts[GroupVars$exogenous[latInts[,2]],,drop=FALSE]
     
-    endoMan <- which(Labels%in%manNames&Labels%in%object@Vars$name[!object@Vars$exogenous])
-    exoMan <- which(Labels%in%manNames&Labels%in%object@Vars$name[object@Vars$exogenous])
-    endoLat <- which(Labels%in%latNames&Labels%in%object@Vars$name[!object@Vars$exogenous])
-    exoLat <- which(Labels%in%latNames&Labels%in%object@Vars$name[object@Vars$exogenous])
+    endoMan <- which(Labels%in%manNames&Labels%in%GroupVars$name[!GroupVars$exogenous])
+    exoMan <- which(Labels%in%manNames&Labels%in%GroupVars$name[GroupVars$exogenous])
+    endoLat <- which(Labels%in%latNames&Labels%in%GroupVars$name[!GroupVars$exogenous])
+    exoLat <- which(Labels%in%latNames&Labels%in%GroupVars$name[GroupVars$exogenous])
     
     # Bidirectional:
     Bidir <- GroupRAM$edge == "<->"
@@ -385,7 +416,7 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
           Layout[exoMan,2] <- 4
           Layout[latIntsEndo[,1],2] <- 2
           Layout[latIntsExo[,1],2] <- 3
-          
+
           if (residuals)
           {
             Layout[manIntsExo[,1],2] <- 4
@@ -431,13 +462,20 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
             if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
           }
           # Curves:
-
-          if (!grepl("lisrel",style,ignore.case=TRUE) | all(!object@Vars$exogenous) | !residuals)
+          inBet <- as.numeric(as.factor(apply(Edgelist,1,inBetween)))
+          if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
           {
-            Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",apply(Edgelist,1,inBetween)*curve,0)
+            Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",curve+pmax(inBet-1,0)/max(inBet)*curve,0)
           } else {
-            Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,apply(Edgelist,1,inBetween)*curve,0)
+            Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,curve+pmax(inBet-1,0)/max(inBet)*curve,0)
           }
+          
+          ### If origin node is "right" of  destination node, flip curve:
+          Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
+          ## If endo man, flip again:
+          Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 * Curve, Curve)
+          
+#           Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan,-1*Curve,Curve)
           
         } else stop("MeanStyle not supported")
         
@@ -478,23 +516,31 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
       loopRotation[exoLat] <- pi
       loopRotation <- loopRotation - 0.5 * (rotation-1) *pi
       
-      if (any(object@Vars$exogenous))
+      if (any(GroupVars$exogenous))
       {
         ### For latents, find opposite of mean angle
         for (i in which(Labels%in%latNames))
         {
           # Layout subset of all connected:
-          subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),,drop=FALSE]
+          subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),,drop=FALSE]              
           conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
+          
+          # Test for empty:
+          if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
+            
           subLayout <- Layout[conNodes,,drop=FALSE]
           Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
           if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->"))
           {
-            loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
+              loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
           } else {
             # Layout subset of all connected:
             subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->",]
             conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
+            
+            # Test for empty:
+            if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
+            
             subLayout <- Layout[conNodes,]
             goodDegrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
             loopRotation[i] <- optimize(loopOptim,c(min(goodDegrees-pi/4),max(goodDegrees+pi/4)),Degrees=Degrees,maximum=TRUE)$maximum
@@ -656,7 +702,7 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
     if (grepl("lisrel",style,ignore.case=TRUE) & residuals)
     {
       isResid <- GroupRAM$edge == "<->" & GroupRAM$lhs != GroupRAM$rhs
-    } else isResid <- FALSE
+    } else isResid <- rep(FALSE,nrow(Edgelist))
     
     
 #       nResid <- length(whichResid)
@@ -710,6 +756,21 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
     
     if (layout=="spring") loopRotation <- NULL
     
+    
+    if (!allVars)
+    {
+      NodeGroups2 <- NodeGroups
+      if (!is.null(NodeGroups2))
+      {
+        newNodes <- match(1:length(AllLabs),(1:length(AllLabs))[incl])
+        for (g in 1:length(NodeGroups2))
+        {
+          NodeGroups2[[g]] <- newNodes[NodeGroups2[[g]]]
+          NodeGroups2[[g]] <- NodeGroups2[[g]][!is.na(NodeGroups2[[g]])]
+        }
+      }
+    }
+    
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,
            bidirectional=Bidir,
@@ -722,7 +783,7 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
            mar=mar,
             vsize = vSize,
            edge.color=eColor,
-            groups=NodeGroups,
+            groups=NodeGroups2,
             color=Vcolors,
             residuals=LoopAsResid,
             residScale = residScale,

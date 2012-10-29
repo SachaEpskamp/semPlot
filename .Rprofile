@@ -46,9 +46,9 @@ upVers <- function(path,update="snapshot",date=TRUE,simplify=TRUE)
   writeLines(DESC,DESCfile)
 }
 
-up <- utils:::menu(c("Yes","No"),TRUE,"Update snapshot?")
-if (up==1)
-{
-	upVers()
-	cat("Snapshot updated!")
-} else cat("Snapshot NOT updated!")
+# up <- utils:::menu(c("Yes","No"),TRUE,"Update snapshot?")
+# if (up==1)
+# {
+# 	upVers("")
+# 	cat("Snapshot updated!")
+# } else cat("Snapshot NOT updated!")

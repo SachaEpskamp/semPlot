@@ -1,8 +1,8 @@
 Package: drawSEM
 Type: Package
 Title: Path diagrams and visual analysis of various SEM packages' output
-Version: 0.1.0-2
-Date: 2012-10-23
+Version: 0.1.0-6
+Date: 2012-10-25
 Author: Sacha Epskamp
 Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
 Depends: R (>= 2.15.0)

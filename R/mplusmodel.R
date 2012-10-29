@@ -24,16 +24,20 @@ SEMmodel.mplus.model <- function(object)
     par = 0,
     stringsAsFactors=FALSE)
   
-  c <- 1
-  for (i in 1:nrow(RAM))
-  {
-    if (!isTRUE(RAM$fixed[i]) & RAM$par[i]==0)
-    {
-      par <- sapply(1:nrow(parsUS),function(j)isTRUE(all.equal(unlist(parsUS[j,c("est","se","est_se","pval")]),unlist(parsUS[i,c("est","se","est_se","pval")]))))
-      RAM$par[par] <- c
-      c <- c+1
-    }
-  }
+  parNums <- dlply(cbind(sapply(parsUS[c("est","se","est_se","pval")],function(x)round(as.numeric(x),10)),data.frame(num=1:nrow(parsUS))),c("est","se","est_se","pval"),'[[',"num")
+  for (i in 1:length(parNums)) RAM$par[parNums[[i]]] <- i
+  RAM$par[RAM$fixed] <- 0
+#   
+#   c <- 1
+#   for (i in 1:nrow(RAM))
+#   {
+#     if (!isTRUE(RAM$fixed[i]) & RAM$par[i]==0)
+#     {
+#       par <- sapply(1:nrow(parsUS),function(j)isTRUE(all.equal(unlist(parsUS[j,c("est","se","est_se","pval")]),unlist(parsUS[i,c("est","se","est_se","pval")]))))
+#       RAM$par[par] <- c
+#       c <- c+1
+#     }
+#   }
   
   
   if (!is.null(object$parameters$std.standardized))
