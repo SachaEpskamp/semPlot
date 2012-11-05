@@ -1,3 +1,6 @@
+Changes in Version 0.2.0-2
+	o Added '~>' operator for regression parameters to distinguish between regressions and factor loadings ('->')
+
 Changes in Version 0.2.0-1
 	o Default margins are now chosen more appropriatly
 
