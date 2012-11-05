@@ -65,7 +65,8 @@ semPlotModel.semspec <- function(object)
   RAM[c("lhs","rhs")][semreprObject$type=="regression",] <- RAM[c("rhs","lhs")][semreprObject$type=="regression",]
   
   # Set edges:
-  RAM$edge[semreprObject$type%in%c("regression","latent")] <- "->"
+  RAM$edge[semreprObject$type=="regression"] <- "~>"
+  RAM$edge[semreprObject$type=="latent"] <- "->"
   RAM$edge[semreprObject$type=="covariance"] <- "<->"
   RAM$edge[semreprObject$type=="intercept"] <- "int"
   

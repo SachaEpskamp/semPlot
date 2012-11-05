@@ -45,8 +45,12 @@ semPlotModel.mplus.model <- function(object)
     RAM$std <- object$parameters$std.standardized$est
   }
   
-  RAM$lhs[grepl("BY|ON",parsUS$paramHeader)] <- gsub("\\.(BY|ON)","",parsUS$paramHeader[grepl("BY|ON",parsUS$paramHeader)])
-  RAM$edge[grepl("BY|ON",parsUS$paramHeader)] <- "->"
+  RAM$lhs[grepl("BY",parsUS$paramHeader)] <- gsub("\\.BY","",parsUS$paramHeader[grepl("BY",parsUS$paramHeader)])
+  RAM$edge[grepl("BY",parsUS$paramHeader)] <- "->"
+  
+  RAM$lhs[grepl("ON",parsUS$paramHeader)] <- gsub("\\.ON","",parsUS$paramHeader[grepl("ON",parsUS$paramHeader)])
+  RAM$edge[grepl("ON",parsUS$paramHeader)] <- "~>"
+  RAM[grepl("ON",parsUS$paramHeader),c("lhs","rhs")] <- RAM[grepl("ON",parsUS$paramHeader),c("rhs","lhs")]
   
   RAM$lhs[grepl("WITH",parsUS$paramHeader)] <- gsub("\\.WITH","",parsUS$paramHeader[grepl("WITH",parsUS$paramHeader)])
   RAM$edge[grepl("WITH",parsUS$paramHeader)] <- "<->"

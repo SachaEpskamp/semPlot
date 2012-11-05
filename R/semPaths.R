@@ -120,7 +120,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,...){
 
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
@@ -240,7 +240,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   object@Vars$exogenous <- FALSE
   for (i in which(!object@Vars$manifest))
   {
-    if (!any(object@RAM$edge[object@RAM$rhs==object@Vars$name[i]] == "->" & object@RAM$lhs[object@RAM$rhs==object@Vars$name[i]]%in%latNames))
+    if (!any(object@RAM$edge[object@RAM$rhs==object@Vars$name[i]] == "~>" & object@RAM$lhs[object@RAM$rhs==object@Vars$name[i]]%in%latNames))
     {
       object@Vars$exogenous[i] <- TRUE
     }
@@ -249,7 +249,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   {
     if (all(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$lhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
       all(object@RAM$rhs[object@RAM$lhs==object@Vars$name[i] & object@RAM$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-      !any(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="->"]%in%manNames))
+      !any(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"]%in%manNames))
     {
       object@Vars$exogenous[i] <- TRUE
     }
@@ -260,9 +260,9 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     object@Vars$exogenous <- FALSE
   }
   # If al endo, treat formative manifest as exo (MIMIC mode)
-  if (!all(object@Vars$exogenous))
+  if (!any(object@Vars$exogenous))
   {
-    object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge=="->"])] <- TRUE
+    object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge=="~>"])] <- TRUE
   }
   
   Groups <- unique(object@RAM$group)
@@ -746,6 +746,33 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       # loopRotation:
       loopRotation <- apply(Layout,1,function(x)atan2(x[1],x[2]))
       loopRotation <- ifelse(underMean,loopRotation,(loopRotation+pi)%%(2*pi))
+    }
+    
+    # Optimize layout if reorder = TRUE
+    if (reorder & layout!="spring")
+    {
+
+      ConOrd <- function(nodes)
+      {
+        subE <- rbind(Edgelist[Edgelist[,1]%in%nodes,1:2],Edgelist[Edgelist[,2]%in%nodes,2:1])
+        subE <- subE[subE[,2]%in%endoLat|subE[,2]%in%exoLat,]
+        subE[,2] <- as.numeric(as.factor(subE[,2]))
+        avgCon <- sapply(nodes,function(x)mean(subE[subE[,1]==x,2]))
+        return(order(avgCon))
+      }
+
+#             browser()
+      # Endo:    
+      if (length(endoMan) > 0)
+      {
+        Layout[endoMan,][ConOrd(endoMan),] <- Layout[endoMan,]
+      }
+    
+      # Exo:    
+      if (length(exoMan) > 0)
+      {
+        Layout[exoMan,][ConOrd(exoMan),] <- Layout[exoMan,]
+      }
     }
     
     if (layout=="spring") loopRotation <- NULL

@@ -59,7 +59,7 @@ semPlotModel.sem <- function(object)
   
   # Define operators:
   RAM$edge[object$ram[,1]==2] <- "<->"
-  RAM$edge[object$ram[,1]==1] <- "->"
+  RAM$edge[object$ram[,1]==1] <- "~>"
 #   RAM$op[object$ram[,1]==1 & !Vars$manifest[match(RAM$lhs,Vars$name)] & Vars$manifest[match(RAM$rhs,Vars$name)]] <- "->"
   
   semModel <- new("semPlotModel")

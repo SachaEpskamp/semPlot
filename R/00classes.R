@@ -1,3 +1,9 @@
+## SemPlotModel
+# Note on edge specification:
+# '->' is factor loading
+# '~>' is regression
+# '<->' is (co)variance
+# 'int' is an intercept
 
 setClass( "semPlotModel", representation(
     RAM = "data.frame",
