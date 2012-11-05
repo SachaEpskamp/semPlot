@@ -249,11 +249,12 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   {
     if (all(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$lhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
       all(object@RAM$rhs[object@RAM$lhs==object@Vars$name[i] & object@RAM$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-      !any(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"]%in%manNames))
+      !any(object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"))
     {
       object@Vars$exogenous[i] <- TRUE
     }
   }
+  
   # If all exo, treat all as endo:
   if (all(object@Vars$exogenous) | layout=="circle")
   {
@@ -262,7 +263,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   # If al endo, treat formative manifest as exo (MIMIC mode)
   if (!any(object@Vars$exogenous))
   {
-    object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge=="~>"])] <- TRUE
+    object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge=="~>"|object@RAM$edge=="->"])] <- TRUE
   }
   
   Groups <- unique(object@RAM$group)
@@ -449,29 +450,52 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
           {
             Layout[exoLat,1] <- seq(-1,1,length=length(exoLat)+2)[-c(1,length(exoLat)+2)]
           }
-          
-          inBetween <- function(x)
-          {
-            if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
-          }
-          # Curves:
-          inBet <- apply(Edgelist,1,inBetween)
-          inBet[inBet>0] <- as.numeric(as.factor(inBet[inBet>0]))
-          if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
-          {
-            Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",curve+inBet/max(inBet)*curve,0))
-          } else {
-            Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,curve+inBet/max(inBet)*curve,0))
-          }
-          
-          ### If origin node is "right" of  destination node, flip curve:
-          Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
-          ## If endo man, flip again:
-          Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
-          
-#           Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan,-1*Curve,Curve)
-          
+                            
         } else stop("MeanStyle not supported")
+        
+        # Optimize layout if reorder = TRUE
+        if (reorder)
+        {
+          
+          ConOrd <- function(nodes)
+          {
+            subE <- rbind(Edgelist[Edgelist[,1]%in%nodes,1:2],Edgelist[Edgelist[,2]%in%nodes,2:1])
+            subE <- subE[subE[,2]%in%endoLat|subE[,2]%in%exoLat,,drop=FALSE]
+            subE[,2] <- rank(subE[,2])
+            avgCon <- sapply(nodes,function(x)mean(subE[subE[,1]==x,2]))
+            return(order(avgCon))
+          }
+          
+          # Endo:    
+          if (length(endoMan) > 0)
+          {
+            Layout[endoMan,][ConOrd(endoMan),] <- Layout[endoMan,]
+          }
+          
+          # Exo:    
+          if (length(exoMan) > 0)
+          {
+            Layout[exoMan,][ConOrd(exoMan),] <- Layout[exoMan,]
+          }
+        }
+        
+        inBetween <- function(x)
+        {
+          if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
+        }
+        # Curves:
+        inBet <- apply(Edgelist,1,inBetween)
+        inBet[inBet>0] <- as.numeric(as.factor(inBet[inBet>0]))
+        if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
+        {
+          Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",curve+inBet/max(inBet)*curve,0))
+        } else {
+          Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,curve+inBet/max(inBet)*curve,0))
+        }
+        ### If origin node is "right" of  destination node, flip curve:
+        Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
+        ## If endo man, flip again:
+        Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
         
         ### ORDINALIZE LAYOUT ###
         Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
@@ -747,34 +771,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       loopRotation <- apply(Layout,1,function(x)atan2(x[1],x[2]))
       loopRotation <- ifelse(underMean,loopRotation,(loopRotation+pi)%%(2*pi))
     }
-    
-    # Optimize layout if reorder = TRUE
-    if (reorder & layout!="spring")
-    {
-
-      ConOrd <- function(nodes)
-      {
-        subE <- rbind(Edgelist[Edgelist[,1]%in%nodes,1:2],Edgelist[Edgelist[,2]%in%nodes,2:1])
-        subE <- subE[subE[,2]%in%endoLat|subE[,2]%in%exoLat,]
-        subE[,2] <- as.numeric(as.factor(subE[,2]))
-        avgCon <- sapply(nodes,function(x)mean(subE[subE[,1]==x,2]))
-        return(order(avgCon))
-      }
-
-#             browser()
-      # Endo:    
-      if (length(endoMan) > 0)
-      {
-        Layout[endoMan,][ConOrd(endoMan),] <- Layout[endoMan,]
-      }
-    
-      # Exo:    
-      if (length(exoMan) > 0)
-      {
-        Layout[exoMan,][ConOrd(exoMan),] <- Layout[exoMan,]
-      }
-    }
-    
+        
     if (layout=="spring") loopRotation <- NULL
     
     
