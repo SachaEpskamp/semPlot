@@ -120,9 +120,9 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,...){
 
-  if (gui) return(do.call(SEMpathsGUI,as.list(match.call())[-1]))
+  if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
   # Check:
   if (!rotation%in%1:4)
@@ -138,7 +138,7 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
   {
     if (layout == "tree")
     {
-      curve <- 0.4
+      curve <- 1
     } else {
       curve <- 0
     }
@@ -382,8 +382,8 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
         {
           # Curves:
           Curve <- ifelse(GroupRAM$lhs != GroupRAM$rhs & ((GroupRAM$lhs%in%manNames & GroupRAM$rhs%in%manNames) | (GroupRAM$lhs%in%latNames & GroupRAM$rhs%in%latNames)),curve,0)
-          Curve <- ifelse(GroupRAM$lhs%in%manNames,-1*Curve,Curve)
-          Curve <- ifelse(GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,-1*curve,Curve)
+          Curve <- ifelse(GroupRAM$lhs%in%manNames,Curve,-1*Curve)
+          Curve <- ifelse(GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,curve,-1*Curve)
           
           # Empty layout:
           Layout <- matrix(,length(Labels),2)
@@ -462,18 +462,19 @@ setMethod("SEMpaths.S4",signature("SEMmodel"),function(object,what="paths",whatL
             if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
           }
           # Curves:
-          inBet <- as.numeric(as.factor(apply(Edgelist,1,inBetween)))
+          inBet <- apply(Edgelist,1,inBetween)
+          inBet[inBet>0] <- as.numeric(as.factor(inBet[inBet>0]))
           if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
           {
-            Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",curve+pmax(inBet-1,0)/max(inBet)*curve,0)
+            Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",curve+inBet/max(inBet)*curve,0))
           } else {
-            Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,curve+pmax(inBet-1,0)/max(inBet)*curve,0)
+            Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,curve+inBet/max(inBet)*curve,0))
           }
           
           ### If origin node is "right" of  destination node, flip curve:
           Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
           ## If endo man, flip again:
-          Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 * Curve, Curve)
+          Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
           
 #           Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan,-1*Curve,Curve)
           

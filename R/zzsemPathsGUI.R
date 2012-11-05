@@ -1,6 +1,6 @@
 
 
-SEMpathsGUI <- function(object,...)
+semPathsGUI <- function(object,...)
 {
   if (!require("rpanel")) stop("Package 'rpanel' is required to use GUI functionality")
 
@@ -15,7 +15,7 @@ SEMpathsGUI <- function(object,...)
     dev.new()
   }
   
-  object <- SEMmodel(object)
+  object <- semPlotModel(object)
   
   Groups <- unique(object@RAM$group)
   Ng <- length(Groups)
@@ -33,7 +33,7 @@ SEMpathsGUI <- function(object,...)
 #     panel$height <- as.numeric(panel$dimensions[2])    
     panel$include <- which(panel$inclGroups)
     if (panel$GroupOr=="Horizontal") layout(t(1:sum(panel$inclGroups))) else layout(1:sum(panel$inclGroups))
-    do.call(SEMpaths,panel)
+    do.call(semPaths,panel)
     panel
   }
   qgraph.newplot <- function(panel)
@@ -59,7 +59,7 @@ SEMpathsGUI <- function(object,...)
     panel$include <- which(panel$inclGroups)
     pdf(paste0(panel$filename,".pdf"),panel$width,panel$height)
     if (panel$GroupOr=="Horizontal") layout(t(1:sum(panel$inclGroups))) else layout(1:sum(panel$inclGroups))
-    do.call(SEMpaths,c(panel))
+    do.call(semPaths,c(panel))
     dev.off()
     message(paste("Output stored in",paste0(getwd(),"/",panel$filename,".pdf")))
     panel
@@ -97,7 +97,7 @@ SEMpathsGUI <- function(object,...)
 #   
 #   qgraph.printcall <- function(panel)
 #   {
-#     cat("SEMpaths(",paste(paste(names(panel),"=",sapply(panel,function(x)paste(deparse(dput(x)),collapse=""))),collapse=","),")")
+#     cat("semPaths(",paste(paste(names(panel),"=",sapply(panel,function(x)paste(deparse(dput(x)),collapse=""))),collapse=","),")")
 #     return(panel)
 #   }
 #   
@@ -119,7 +119,7 @@ SEMpathsGUI <- function(object,...)
   rp.slider(qgraph.panel, esize, 0, 10 , qgraph.setup, "Edges width",   initval = 1,
             showvalue = TRUE, pos = list(column=1,row=3))
   
-  rp.slider(qgraph.panel, curve, 0, 1 , qgraph.setup, "Curvature",   initval = 0.4,
+  rp.slider(qgraph.panel, curve, 0, 4 , qgraph.setup, "Curvature",   initval = 1,
             showvalue = TRUE, pos = list(column=1,row=4))
   
   rp.slider(qgraph.panel, residScale, 0, 20 , qgraph.setup, "Size residuals (LISREL)",   initval = 10,

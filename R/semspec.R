@@ -1,13 +1,13 @@
 
-SEMpaths.semspec <- function(object,...) 
+semPaths.semspec <- function(object,...) 
 {
-  invisible(SEMpaths(SEMmodel(object),...))
+  invisible(semPaths(semPlotModel(object),...))
 }
 
 
 
 ### SINGLE GROUP MODEL ###
-SEMmodel.semspec <- function(object)
+semPlotModel.semspec <- function(object)
 {
   
   # Load 'semspec':
@@ -84,7 +84,7 @@ SEMmodel.semspec <- function(object)
     }
   }
   
-  semModel <- new("SEMmodel")
+  semModel <- new("semPlotModel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
   semModel@Computed <- FALSE

@@ -1,6 +1,6 @@
 
-SEMcors <- function(object,vertical=FALSE,...){
-  if (!"SEMmodel"%in%class(object)) object <- SEMmodel(object) 
+semCors <- function(object,vertical=FALSE,...){
+  if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object) 
   
   if (!object@Computed) stop("SEM model has not been evaluated; there are no implied covariances")
   

@@ -1,3 +1,9 @@
+Changes in Version 0.1.1
+	o Changed 'SEMcors' to 'semCors'
+	o Changed 'SEMmodel' to 'semPlotModel'
+	o Changed 'SEMpaths' to 'semPaths'
+	o Changed name to 'semPlot'
+
 Changes in Version 0.1.0
  o Split from devellopmental version of qgraph
-
+ o Several devellopmental changes

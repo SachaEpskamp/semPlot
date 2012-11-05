@@ -1,11 +1,11 @@
 
 # object <- readModels(file.choose())
-SEMpaths.mplus.model <- function(object,...) 
+semPaths.mplus.model <- function(object,...) 
 {
-  invisible(SEMpaths(SEMmodel(object),...))
+  invisible(semPaths(semPlotModel(object),...))
 }
 
-SEMmodel.mplus.model <- function(object)
+semPlotModel.mplus.model <- function(object)
 {
   parsUS <- object$parameters$unstandardized
   if (is.null(parsUS$Group)) parsUS$Group <- ""
@@ -73,7 +73,7 @@ SEMmodel.mplus.model <- function(object)
   
 
   
-  semModel <- new("SEMmodel")
+  semModel <- new("semPlotModel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
   semModel@Computed <- TRUE

@@ -1,13 +1,13 @@
 ### Path diagrams ###
 
-setMethod("SEMpaths.S4",signature("lavaan"),function(object,...){
-  invisible(SEMpaths(SEMmodel(object),...))
+setMethod("semPaths.S4",signature("lavaan"),function(object,...){
+  invisible(semPaths(semPlotModel(object),...))
 })
 
 
 
 ## EXTRACT MODEL ###
-setMethod("SEMmodel.S4",signature("lavaan"),function(object){
+setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   
   
   if (class(object)!="lavaan") stop("Input must me a 'lavaan' object")
@@ -38,7 +38,7 @@ setMethod("SEMmodel.S4",signature("lavaan"),function(object){
   # Extract parameter names:
   if (is.null(pars$label)) pars$label <- rep("",nrow(pars))
   
-  semModel <- new("SEMmodel")
+  semModel <- new("semPlotModel")
   
   if (is.null(pars$group)) pars$group <- ""
   

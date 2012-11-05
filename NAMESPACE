@@ -1,26 +1,26 @@
-export(SEMpaths,SEMpaths.S4,SEMmodel,SEMmodel.S4,SEMpathsGUI,SEMcors)
+export(semPaths,semPaths.S4,semPlotModel,semPlotModel.S4,semPathsGUI,semCors)
 # export Classes
 exportClasses(
-              "SEMmodel"
+              "semPlotModel"
              )
 
 # export Methods
 exportMethods(
-             "SEMmodel.S4",
-			"SEMpaths.S4"
+             "semPlotModel.S4",
+			"semPaths.S4"
              )
-S3method(SEMpaths,default)
-S3method(SEMmodel,default)
-S3method(SEMpaths,semspec)
-S3method(SEMmodel,semspec)
-S3method(SEMpaths,sem)
-S3method(SEMpaths,mplus.model)
-S3method(SEMmodel,mplus.model)
-S3method(SEMmodel,sem)
-S3method(SEMmodel,msem)
-S3method(SEMpaths,msem)
-S3method(SEMmodel,msemObjectiveML)
-S3method(SEMpaths,msemObjectiveML)
+S3method(semPaths,default)
+S3method(semPlotModel,default)
+S3method(semPaths,semspec)
+S3method(semPlotModel,semspec)
+S3method(semPaths,sem)
+S3method(semPaths,mplus.model)
+S3method(semPlotModel,mplus.model)
+S3method(semPlotModel,sem)
+S3method(semPlotModel,msem)
+S3method(semPaths,msem)
+S3method(semPlotModel,msemObjectiveML)
+S3method(semPaths,msemObjectiveML)
 importFrom(MplusAutomation,"readModels")
 importFrom(sem,"sem","standardizedCoefficients")
 importFrom(lavaan,"lavaan","cfa","standardizedSolution", "standardizedsolution", "parameterEstimates", "parameterestimates","inspect")
