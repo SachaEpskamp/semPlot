@@ -1,8 +1,7 @@
-Changes in Version 0.1.1
-	o Changed 'SEMcors' to 'semCors'
-	o Changed 'SEMmodel' to 'semPlotModel'
-	o Changed 'SEMpaths' to 'semPaths'
-	o Changed name to 'semPlot'
+Changes in Version 0.2.0-1
+	o Default margins are now chosen more appropriatly
+
+Changes in Version 0.2.0
 
 Changes in Version 0.1.0
  o Split from devellopmental version of qgraph

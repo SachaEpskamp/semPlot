@@ -120,7 +120,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,...){
 
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
@@ -157,13 +157,6 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only OpenMx  or LISREL style is currently supported.")
 #   if (grepl("mx",style,ignore.case=TRUE) & !missing(residScale)) warning("'residScale' ingored in OpenMx style")
   if (missing(residScale)) residScale <- 2*sizeMan
-  
-  # Defaults:
-  if (missing(mar))
-  {
-    if (title) mar <- c(3,3,6,3) else mar <- c(3,3,3,3)
-    if (grepl("lisrel",style,ignore.case=TRUE)) mar <- mar + 2
-  }
   
 #   residScale <- residScale * 1.75
   # Remove means if means==FALSE
@@ -772,6 +765,39 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       }
     }
     
+    ### Compute margins ###
+    if (missing(mar))
+    {
+      Mar <- c(3,3,3,3)
+      
+      # Add 3 to top and bottom for residuals if lisrel style is used:
+      if (grepl("lisrel",style,ignore.case=TRUE)) Mar[c(1,3)] <- Mar[c(1,3)] + 3
+      
+      # Add 4 to bottom if there are endo man residual correlations:
+      if (any(Edgelist[,1]%in%endoMan & Edgelist[,2]%in%endoMan & Edgelist[,1]!=Edgelist[,2]))
+      {
+        Mar[1] <- Mar[1] + 4
+      }
+      
+      # Add 2 to top if there are endo man residual correlations:
+      if (any(Edgelist[,1]%in%exoMan & Edgelist[,2]%in%exoMan & Edgelist[,1]!=Edgelist[,2]))
+      {
+        Mar[3] <- Mar[3] + 4
+      }
+      
+      # Rotate:
+      Mar <- Mar[(0:3 + (rotation-1)) %% 4 + 1]
+      
+      # Add 1 to top for title:
+      if (title) Mar[3] <- Mar[3] + 1
+    } else Mar <- mar
+    
+    # Overwrite edge colors if appropriate:
+    if (!missing(edge.color))
+    {
+      eColor <- edge.color
+    }
+    
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,
            bidirectional=Bidir,
@@ -781,7 +807,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
            loopRotation=loopRotation,
            curve=Curve,
            edge.labels=eLabels,
-           mar=mar,
+           mar=Mar,
             vsize = vSize,
            edge.color=eColor,
             groups=NodeGroups2,
