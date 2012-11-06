@@ -8,6 +8,7 @@
 setClass( "semPlotModel", representation(
     RAM = "data.frame",
     Vars = "data.frame",
+    Thresholds = "data.frame",
     Computed = "logical",
     ObsCovs = "list",
     ImpCovs = "list",

@@ -60,6 +60,11 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   semModel@RAM$edge[semModel@RAM$edge=="=~"] <- "->"
   semModel@RAM$edge[semModel@RAM$edge=="~1"] <- "int"
   
+  # Move thresholds to Thresholds slot:
+  semModel@Thresholds <- semModel@RAM[grepl("\\|",semModel@RAM$edge),-(3:4)]
+  # Remove thresholds from RAM:
+  semModel@RAM <- semModel@RAM[!grepl("\\|",semModel@RAM$edge),]
+  
   semModel@Vars <- data.frame(
     name = c(varNames,factNames),
     manifest = c(varNames,factNames)%in%varNames,

@@ -120,7 +120,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,...){
 
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
@@ -580,7 +580,9 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     vSize[Labels=="1"] <- sizeInt
 
     eColor <- NULL
-
+#     tColor <- rep(rgb(0.5,0.5,0.5),nrow(object@Thresholds))
+    tColor <- rep("black",nrow(object@Thresholds))
+    
     ### WHAT TO PLOT? ###
     if (grepl("path|diagram|model",what,ignore.case=TRUE))
     {
@@ -597,10 +599,20 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     {
       eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
       unPar <- unique(object@RAM$par[object@RAM$par>0 & duplicated(object@RAM$par)])
-      cols <- rainbow(length(unPar))
-      for (i in 1:length(unPar))
+      cols <- rainbow(max(c(object@RAM$par,object@Thresholds$par)))
+      for (i in unPar)
       {
-        eColor[GroupRAM$par==unPar[i]] <- cols[i]
+        eColor[GroupRAM$par==i] <- cols[i]
+      }
+      if (nrow(object@Thresholds) > 0)
+      {
+        for (i in 1:nrow(object@Thresholds))
+        {
+          if (object@Thresholds$par>0)
+          {
+            tColor[i] <- cols[object@Thresholds$par[i]]
+          }
+        }
       }
     } else if (!grepl("col",what,ignore.case=TRUE)) stop("Could not detect use of 'what' argument")
 
@@ -840,6 +852,31 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
             residScale = residScale,
             residEdge = isResid,
             ...)
+    
+    if (thresholds)
+    {
+      if (nrow(object@Thresholds) > 0)
+      {
+        for (i in 1:nrow(object@Thresholds))
+        {
+          node <- which(Labels==object@Thresholds$lhs[i])
+          # Compute side:
+          IntSide <- 1
+          if (layout=="tree")
+          {
+            if (rotation%in%c(1,3))
+            {
+              IntSide <- ifelse(Layout[node,2]>mean(Layout[,2]),3,1)
+            } else {
+              IntSide <- ifelse(Layout[node,1]>mean(Layout[,1]),4,2)
+            }
+          } else {
+            IntSide <- sum((atan2(qgraphRes[[which(Groups==gr)]]$layout[node,1],qgraphRes[[which(Groups==gr)]]$layout[node,2])+pi)%%(2*pi) > c(0,pi/2,pi,1.5*pi))
+          }
+          IntInNode(qgraphRes[[which(Groups==gr)]]$layout[node,,drop=FALSE],vSize[node],Shape[node],pnorm(object@Thresholds$est[i]),width=0.5,triangles=FALSE,col=tColor[i],IntSide)
+        }
+      }
+    }
     
     if (title)
     {

@@ -1,3 +1,6 @@
+Changes in Version 0.2.0-4
+	o Added moderate support for intercepts. They are now plotted as small lines on the far side of nodes
+
 Changes in Version 0.2.0-3
 	o Improved detection of endogenous variables
 
