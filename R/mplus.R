@@ -62,6 +62,10 @@ semPlotModel.mplus.model <- function(object)
   
   if (!is.null(object$parameters$standardized)) RAM$std <- object$parameters$standardized$est
   
+  
+  # Extract threshold model:
+  Thresh <- RAM[grepl("Thresholds",parsUS$paramHeader),-(3:4)]
+  Thresh$lhs <- gsub("\\$.*","",RAM$rhs[grepl("Thresholds",parsUS$paramHeader)])
   RAM <- RAM[!grepl("Thresholds",parsUS$paramHeader),]
   
   # Detect latent/manifest:
@@ -84,6 +88,7 @@ semPlotModel.mplus.model <- function(object)
   semModel@Original <- list(object)
   semModel@ObsCovs <- list()
   semModel@ImpCovs <- list()
+  semModel@Thresholds <- Thresh
   
   return(semModel)
 }
