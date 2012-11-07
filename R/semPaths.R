@@ -120,7 +120,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,...){
 
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
@@ -168,6 +168,14 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   if (residuals==FALSE)
   {
     object@RAM <- object@RAM[!(object@RAM$edge=="<->"&object@RAM$lhs==object@RAM$rhs),]
+  }  
+  # If structural, remove all manifest from RAM:
+  if (structural)
+  {
+#     browser()
+    object@RAM <- object@RAM[!(object@RAM$lhs %in% object@Vars$name[object@Vars$manifest] | object@RAM$rhs %in% object@Vars$name[object@Vars$manifest]),]
+    object@Vars <- object@Vars[!object@Vars$manifest,]
+    object@Thresholds <- data.frame()
   }  
   
   # Add rows for bidirectional edges:
