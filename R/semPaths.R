@@ -274,6 +274,40 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge=="~>"|object@RAM$edge=="->"])] <- TRUE
   }
   
+  ### Reorder nodes in order of factors
+  if (reorder)
+  {
+    ConOrd <- function(nodes)
+    {
+      E <- object@RAM[c("lhs","rhs")]
+      subE <- rbind(as.matrix(E[E[,1]%in%nodes,1:2]),as.matrix(E[E[,2]%in%nodes,2:1]))
+      subE <- subE[subE[,2]%in%object@Vars$name[!object@Vars$manifest],,drop=FALSE]
+      ranks <- rank(match(subE[,2],object@Vars$name))
+      avgCon <- sapply(nodes,function(x)mean(ranks[subE[,1]==x]))
+      return(order(avgCon))
+    }
+    
+    # Endo:    
+    EnM <- which(object@Vars$manifest & !object@Vars$exogenous)
+    if (length(EnM) > 0)
+    {
+      object@Vars[EnM,][ConOrd(object@Vars$name[EnM]),] <- object@Vars[EnM,]
+    }
+    rm(EnM)
+    
+    ExM <- which(object@Vars$manifest & object@Vars$exogenous)
+    # Exo:    
+    if (length(ExM) > 0)
+    {
+      object@Vars[ExM,][ConOrd(object@Vars$name[ExM]),] <- object@Vars[ExM,]
+    }
+    rm(ExM)
+    
+    manNames <- object@Vars$name[object@Vars$manifest]
+    Labels <- c(manNames,latNames)
+  }
+  
+  
   Groups <- unique(object@RAM$group)
   qgraphRes <- list()
   if (missing(ask))
@@ -462,31 +496,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
         } else stop("MeanStyle not supported")
         
         # Optimize layout if reorder = TRUE
-        if (reorder)
-        {
-          
-          ConOrd <- function(nodes)
-          {
-            subE <- rbind(Edgelist[Edgelist[,1]%in%nodes,1:2],Edgelist[Edgelist[,2]%in%nodes,2:1])
-            subE <- subE[subE[,2]%in%endoLat|subE[,2]%in%exoLat,,drop=FALSE]
-            subE[,2] <- rank(subE[,2])
-            avgCon <- sapply(nodes,function(x)mean(subE[subE[,1]==x,2]))
-            return(order(avgCon))
-          }
-          
-          # Endo:    
-          if (length(endoMan) > 0)
-          {
-            Layout[endoMan,][ConOrd(endoMan),] <- Layout[endoMan,]
-          }
-          
-          # Exo:    
-          if (length(exoMan) > 0)
-          {
-            Layout[exoMan,][ConOrd(exoMan),] <- Layout[exoMan,]
-          }
-        }
-        
+       
         inBetween <- function(x)
         {
           if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
