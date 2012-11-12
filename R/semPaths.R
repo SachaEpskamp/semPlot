@@ -7,6 +7,7 @@
 
 # manifests: vector of manifest labels ordered
 # latents: vector of latents ordered
+# fixedStyle: if coercible to numeric lty is assigned this value, else a color for color representation. If this argument is not a number or color representation the edge is not displayed differently.
 
 mixCols <- function(x,w)
 {
@@ -120,7 +121,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,...){
 
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
@@ -328,6 +329,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   {
     GroupRAM <- object@RAM[object@RAM$group==gr,]
     GroupVars <- object@Vars
+    GroupThresh <- object@Thresholds[object@Thresholds$group==gr,]
     
     # Restore Labels, manNames and latNames:
     Labels <- AllLabs
@@ -381,8 +383,8 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     
     GroupVars <- GroupVars[GroupVars$name%in%Labels,]
 
-    manInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%manNames,]
-    latInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,]
+    manInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%manNames,,drop=FALSE]
+    latInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,,drop=FALSE]
     
     manIntsEndo <- manInts[!GroupVars$exogenous[manInts[,2]],,drop=FALSE]
     manIntsExo <- manInts[GroupVars$exogenous[manInts[,2]],,drop=FALSE]
@@ -400,8 +402,6 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     {
       Bidir[GroupRAM$lhs==GroupRAM$rhs] <- FALSE
     }
-    # lty:
-    lty <- ifelse(GroupRAM$fixed,2,1)
     
     # Shape:
     Shape <- c(rep("square",nM),rep("circle",nL))
@@ -597,9 +597,14 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     vSize[Labels%in%latNames] <- sizeLat
     vSize[Labels=="1"] <- sizeInt
 
-    eColor <- NULL
-#     tColor <- rep(rgb(0.5,0.5,0.5),nrow(object@Thresholds))
-    tColor <- rep("black",nrow(object@Thresholds))
+    eColor <- rep(NA,nrow(Edgelist))
+#     tColor <- rep(rgb(0.5,0.5,0.5),nrow(GroupThresh))
+    if (missing(threshold.color)) 
+    {
+      tColor <- rep("black",nrow(GroupThresh)) 
+    } else {
+      tColor <- rep(threshold.color,nrow(GroupThresh))
+    }
     
     ### WHAT TO PLOT? ###
     if (grepl("path|diagram|model",what,ignore.case=TRUE))
@@ -615,20 +620,20 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       if (edge.labels) eLabels <- as.character(round(GroupRAM$est,2))
     } else if (grepl("eq|cons",what,ignore.case=TRUE))
     {
-      eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
+#       eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
       unPar <- unique(object@RAM$par[object@RAM$par>0 & duplicated(object@RAM$par)])
-      cols <- rainbow(max(c(object@RAM$par,object@Thresholds$par)))
+      cols <- rainbow(max(c(object@RAM$par,GroupThresh$par)))
       for (i in unPar)
       {
         eColor[GroupRAM$par==i] <- cols[i]
       }
-      if (nrow(object@Thresholds) > 0)
+      if (nrow(GroupThresh) > 0)
       {
-        for (i in 1:nrow(object@Thresholds))
+        for (i in 1:nrow(GroupThresh))
         {
-          if (object@Thresholds$par>0)
+          if (GroupThresh$par[i]>0 & sum(GroupThresh$par[i] == object@Thresholds$par) > 1 )
           {
-            tColor[i] <- cols[object@Thresholds$par[i]]
+            tColor[i] <- cols[GroupThresh$par[i]]
           }
         }
       }
@@ -703,16 +708,16 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     
     if (grepl("col",what,ignore.case=TRUE))
     {
-      eColor <- character(nrow(Edgelist))
+#       eColor <- character(nrow(Edgelist))
       for (i in 1:nrow(Edgelist))
       {
         cols <- Vcolors[Edgelist[i,]]
-        if (all(cols=="white"))
-        {
-          eColor[i] <- rgb(0.5,0.5,0.5)
-        } else {
+#         if (all(cols=="white"))
+#         {
+# #           eColor[i] <- rgb(0.5,0.5,0.5)
+#         } else {
           eColor[i] <- mixCols(cols[cols!="white"])
-        }
+#         }
       }
     }
     
@@ -842,15 +847,36 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       # Rotate:
       Mar <- Mar[(0:3 + (rotation-1)) %% 4 + 1]
       
-      # Add 1 to top for title:
-      if (title) Mar[3] <- Mar[3] + 1
+      # Add 2 to top for title:
+      if (title) Mar[3] <- Mar[3] + 2
     } else Mar <- mar
     
     # Overwrite edge colors if appropriate:
     if (!missing(edge.color))
     {
       eColor <- edge.color
+      if (thresholds & missing(threshold.color))
+      {
+        tColor <- rep(edge.color,length(tColor))
+      }
     }
+    
+    # Fixed and free edges:
+    if (length(freeStyle) > 2 | length(fixedStyle) > 2) warning("'freeStyle' and 'fixedStyle' are assumed to be vectors of at most length 2. Unexpected results will probably occur.")
+    # lty:
+    lty <- rep(1,nrow(GroupRAM))
+    
+    # fixedStyle
+    if (any(is.numeric(fixedStyle) | grepl("\\d+",fixedStyle))) lty <- ifelse(GroupRAM$fixed,as.numeric(fixedStyle[is.numeric(fixedStyle) | grepl("\\d+",fixedStyle)]),lty) 
+    
+    if (any(qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("\\d+",fixedStyle)))) eColor[GroupRAM$fixed] <- fixedStyle[qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("\\d+",fixedStyle))]
+    
+    
+    # freeStyle:
+    if (any(is.numeric(freeStyle) | grepl("\\d+",freeStyle))) lty <- ifelse(GroupRAM$fixed,lty,as.numeric(freeStyle[is.numeric(freeStyle) | grepl("\\d+",freeStyle)]))
+    
+    if (any(qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle)))) eColor[!GroupRAM$fixed] <- freeStyle[qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle))]
+    
     
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,
@@ -873,11 +899,11 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     
     if (thresholds)
     {
-      if (nrow(object@Thresholds) > 0)
+      if (nrow(GroupThresh) > 0)
       {
-        for (i in 1:nrow(object@Thresholds))
+        for (i in 1:nrow(GroupThresh))
         {
-          node <- which(Labels==object@Thresholds$lhs[i])
+          node <- which(Labels==GroupThresh$lhs[i])
           # Compute side:
           IntSide <- 1
           if (layout=="tree")
@@ -891,7 +917,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
           } else {
             IntSide <- sum((atan2(qgraphRes[[which(Groups==gr)]]$layout[node,1],qgraphRes[[which(Groups==gr)]]$layout[node,2])+pi)%%(2*pi) > c(0,pi/2,pi,1.5*pi))
           }
-          IntInNode(qgraphRes[[which(Groups==gr)]]$layout[node,,drop=FALSE],vSize[node],Shape[node],pnorm(object@Thresholds$est[i]),width=0.5,triangles=FALSE,col=tColor[i],IntSide)
+          IntInNode(qgraphRes[[which(Groups==gr)]]$layout[node,,drop=FALSE],vSize[node],Shape[node],pnorm(GroupThresh$est[i]),width=0.5,triangles=FALSE,col=tColor[i],IntSide,!ThreshAtSide)
         }
       }
     }
@@ -899,7 +925,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     if (title)
     {
 #       if (length(Groups)==1) title("Path Diagram",line=3) else title(paste0("Path Diagram for group '",gr,"'"),line=3)
-        title(gr,line=3)
+        title(gr,line=3,col.main=title.color)
     }
   }
   par(ask=askOrig)

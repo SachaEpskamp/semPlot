@@ -56,6 +56,7 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
     stringsAsFactors=FALSE)
 
   semModel@RAM$edge[semModel@RAM$edge=="~~"] <- "<->"  
+  semModel@RAM$edge[semModel@RAM$edge=="~*~"] <- "<->"  
   semModel@RAM$edge[semModel@RAM$edge=="~"] <- "~>"
   semModel@RAM$edge[semModel@RAM$edge=="=~"] <- "->"
   semModel@RAM$edge[semModel@RAM$edge=="~1"] <- "int"

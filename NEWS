@@ -1,3 +1,15 @@
+Changes in Version 0.2.0-1
+	o Added arguments 'fixedStyle' and 'freeStyle' to indicate style of fixed and free parameters. Can be numeric for lty, color representation or vector of length 2 containing both (in any order))
+
+
+Changes in Version 0.2.0-9
+	o Thresholds are now plotted inside nodes by default.
+	o Color of thresholds now corresponds to edge color if 'edge.color' is assigned
+
+Changes in Version 0.2.0-8
+	o Fixed a bug where thresholds for each group where plotted in each seperate graph
+	o '~*~' operator in Lavaan is now regarded the same as '~~' (as variance of the node)
+
 Changes in Version 0.2.0-7
 	o reorder now moves intercepts with reordered manifest, and works more consistant.
 
