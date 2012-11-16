@@ -867,9 +867,9 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     lty <- rep(1,nrow(GroupRAM))
     
     # fixedStyle
-    if (any(is.numeric(fixedStyle) | grepl("\\d+",fixedStyle))) lty <- ifelse(GroupRAM$fixed,as.numeric(fixedStyle[is.numeric(fixedStyle) | grepl("\\d+",fixedStyle)]),lty) 
+    if (any(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle))) lty <- ifelse(GroupRAM$fixed,as.numeric(fixedStyle[is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle)]),lty) 
     
-    if (any(qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("\\d+",fixedStyle)))) eColor[GroupRAM$fixed] <- fixedStyle[qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("\\d+",fixedStyle))]
+    if (any(qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle)))) eColor[GroupRAM$fixed] <- fixedStyle[qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle))]
     
     
     # freeStyle:
