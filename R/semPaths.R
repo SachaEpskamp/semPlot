@@ -274,41 +274,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   {
     object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge=="~>"|object@RAM$edge=="->"])] <- TRUE
   }
-  
-  ### Reorder nodes in order of factors
-  if (reorder)
-  {
-    ConOrd <- function(nodes)
-    {
-      E <- object@RAM[c("lhs","rhs")]
-      subE <- rbind(as.matrix(E[E[,1]%in%nodes,1:2]),as.matrix(E[E[,2]%in%nodes,2:1]))
-      subE <- subE[subE[,2]%in%object@Vars$name[!object@Vars$manifest],,drop=FALSE]
-      ranks <- rank(match(subE[,2],object@Vars$name))
-      avgCon <- sapply(nodes,function(x)mean(ranks[subE[,1]==x]))
-      return(order(avgCon))
-    }
     
-    # Endo:    
-    EnM <- which(object@Vars$manifest & !object@Vars$exogenous)
-    if (length(EnM) > 0)
-    {
-      object@Vars[EnM,][ConOrd(object@Vars$name[EnM]),] <- object@Vars[EnM,]
-    }
-    rm(EnM)
-    
-    ExM <- which(object@Vars$manifest & object@Vars$exogenous)
-    # Exo:    
-    if (length(ExM) > 0)
-    {
-      object@Vars[ExM,][ConOrd(object@Vars$name[ExM]),] <- object@Vars[ExM,]
-    }
-    rm(ExM)
-    
-    manNames <- object@Vars$name[object@Vars$manifest]
-    Labels <- c(manNames,latNames)
-  }
-  
-  
   Groups <- unique(object@RAM$group)
   qgraphRes <- list()
   if (missing(ask))
@@ -338,7 +304,40 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     nM <- length(AllMan)
     nL <- length(AllLat)
     
-    
+    ### Reorder nodes in order of factors
+    if (reorder)
+    {
+      ConOrd <- function(nodes)
+      {
+        E <- GroupRAM[c("lhs","rhs")]
+        subE <- rbind(as.matrix(E[E[,1]%in%nodes,1:2]),as.matrix(E[E[,2]%in%nodes,2:1]))
+        subE <- subE[subE[,2]%in%GroupVars$name[!GroupVars$manifest],,drop=FALSE]
+        ranks <- rank(match(subE[,2],GroupVars$name))
+        #       ranks <- match(subE[,2],object@Vars$name)
+        avgCon <- sapply(nodes,function(x)mean(ranks[subE[,1]==x]))
+        return(order(avgCon))
+      }
+      
+      # Endo:    
+      EnM <- which(GroupVars$manifest & !GroupVars$exogenous)
+      if (length(EnM) > 0)
+      {
+        GroupVars[EnM,] <- GroupVars[EnM,][ConOrd(GroupVars$name[EnM]),]
+      }
+      rm(EnM)
+      
+      ExM <- which(GroupVars$manifest & GroupVars$exogenous)
+      # Exo:    
+      if (length(ExM) > 0)
+      {
+        GroupVars[ExM,] <- GroupVars[ExM,][ConOrd(GroupVars$name[ExM]),]
+      }
+      rm(ExM)
+      
+      manNames <- GroupVars$name[GroupVars$manifest]
+      Labels <- c(manNames,latNames)
+    }
+        
     Ni <- sum(GroupRAM$edge=="int")
     # Add intercept:
     if (any(object@RAM$edge=="int")) 
@@ -876,7 +875,6 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     if (any(is.numeric(freeStyle) | grepl("\\d+",freeStyle))) lty <- ifelse(GroupRAM$fixed,lty,as.numeric(freeStyle[is.numeric(freeStyle) | grepl("\\d+",freeStyle)]))
     
     if (any(qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle)))) eColor[!GroupRAM$fixed] <- freeStyle[qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle))]
-    
     
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,
