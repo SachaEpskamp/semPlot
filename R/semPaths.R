@@ -215,6 +215,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   object@Vars <- object@Vars[match(Labels,object@Vars$name),]
   
   # Define groups and colors setup:
+  DefaultColor <- FALSE
   if (!missing(groups))
   {
     if (is.character(groups))
@@ -242,6 +243,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     if (missing(color)) 
     {
       color <- "white"
+      DefaultColor <- TRUE
     } 
   }
   
@@ -876,6 +878,9 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     
     if (any(qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle)))) eColor[!GroupRAM$fixed] <- freeStyle[qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle))]
     
+    # Reset color to default if needed:
+    if (DefaultColor) Vcolors <- NULL
+    
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,
            bidirectional=Bidir,
@@ -897,6 +902,11 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     
     if (thresholds)
     {
+      # Overwrite color to white if bg is dark (temporary solution)
+      if (missing(threshold.color) & missing(edge.color)) 
+      {
+        if (mean(col2rgb(qgraphRes[[which(Groups==gr)]]$background)/255) <= 0.5) tColor <- rep("white",length(tColor))
+      }
       if (nrow(GroupThresh) > 0)
       {
         for (i in 1:nrow(GroupThresh))
