@@ -1,3 +1,6 @@
+Changes in Version 0.2.0-2
+	o Node color now defaults to NA, for invisible
+
 Changes in Version 0.2.0-1
 	o Added arguments 'fixedStyle' and 'freeStyle' to indicate style of fixed and free parameters. Can be numeric for lty, color representation or vector of length 2 containing both (in any order))
 

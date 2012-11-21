@@ -242,8 +242,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   } else {
     if (missing(color)) 
     {
-      color <- "white"
-      DefaultColor <- TRUE
+      color <- "background"
     } 
   }
   
@@ -687,10 +686,10 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
           if (length(cons)>0)
           {
             Vcolors[i] <- mixCols(VcolorsBU[cons],W[cons])
-          } else Vcolors[i] <- "white"
+          } else Vcolors[i] <- NA
         }
       }
-      Vcolors[Vcolors==""] <- "white"
+      Vcolors[Vcolors==""] <- NA
     } else 
     {
       NodeGroups <- NULL
@@ -700,25 +699,20 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
         Vcolors <- rep(color,nN)
       } else if (length(color)==nM)
       {
-        Vcolors <- c(color,rep("white",nN-nM))
+        Vcolors <- c(color,rep(NA,nN-nM))
       } else if (length(color)==nN)
       {
         Vcolors <- color  
       } else stop("'color' vector not of appropriate length")
     }
-    
+
     if (grepl("col",what,ignore.case=TRUE))
     {
 #       eColor <- character(nrow(Edgelist))
       for (i in 1:nrow(Edgelist))
       {
         cols <- Vcolors[Edgelist[i,]]
-#         if (all(cols=="white"))
-#         {
-# #           eColor[i] <- rgb(0.5,0.5,0.5)
-#         } else {
-          eColor[i] <- mixCols(cols[cols!="white"])
-#         }
+        if (!all(cols=="background")) eColor[i] <- mixCols(cols[cols!="background"])
       }
     }
     
@@ -879,8 +873,8 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     if (any(qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle)))) eColor[!GroupRAM$fixed] <- freeStyle[qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle))]
     
     # Reset color to default if needed:
-    if (DefaultColor) Vcolors <- NULL
-    
+#     if (DefaultColor) Vcolors <- NULL
+
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,
            bidirectional=Bidir,
