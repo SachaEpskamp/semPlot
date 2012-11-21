@@ -8,7 +8,11 @@ exportClasses(
 exportMethods(
              "semPlotModel.S4",
 			"semPaths.S4"
-             )
+           )
+S3method(semPaths,loadings)
+S3method(semPaths,factanal)
+S3method(semPlotModel,loadings)
+S3method(semPlotModel,factanal)
 S3method(semPaths,default)
 S3method(semPlotModel,default)
 S3method(semPaths,semspec)

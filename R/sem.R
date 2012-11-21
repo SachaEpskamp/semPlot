@@ -26,7 +26,7 @@ semPlotModel.sem <- function(object)
   RAM <- data.frame(
     label = rownames(object$ram), 
     lhs = object$ram[,3],
-    edge = "",
+    edge = "--",
     rhs = object$ram[,2],
     est = object$ram[,5],
     std = standardizedCoefficients(object)[,2],

@@ -872,12 +872,14 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     
     if (any(qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle)))) eColor[!GroupRAM$fixed] <- freeStyle[qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle))]
     
-    # Reset color to default if needed:
-#     if (DefaultColor) Vcolors <- NULL
+    # Directed settings:
+    
+    Directed <- GroupRAM$edge!="--"
 
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,
            bidirectional=Bidir,
+          directed=Directed,
            shape=Shape,
            layout=Layout,
            lty=lty,

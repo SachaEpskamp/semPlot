@@ -20,7 +20,7 @@ semPlotModel.semspec <- function(object)
   RAM <- data.frame(
     label = "", 
     lhs = semreprObject$lhs,
-    edge = "",
+    edge = "--",
     rhs = semreprObject$rhs,
     est = NA,
     std = NA,

@@ -1,3 +1,6 @@
+Changes in Version 0.2.0-3
+	o Added '--' specifier for unknown edge (undirected)
+
 Changes in Version 0.2.0-2
 	o Node color now defaults to NA, for invisible
 

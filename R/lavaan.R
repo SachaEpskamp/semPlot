@@ -46,7 +46,7 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   semModel@RAM <- data.frame(
     label = pars$label,
     lhs = ifelse(pars$op=="~"|pars$op=="~1",pars$rhs,pars$lhs),
-    edge = pars$op,
+    edge = "--",
     rhs = ifelse(pars$op=="~"|pars$op=="~1",pars$lhs,pars$rhs),
     est = pars$est,
     std = pars$std.all,
@@ -55,11 +55,11 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
     par = list$free,
     stringsAsFactors=FALSE)
 
-  semModel@RAM$edge[semModel@RAM$edge=="~~"] <- "<->"  
-  semModel@RAM$edge[semModel@RAM$edge=="~*~"] <- "<->"  
-  semModel@RAM$edge[semModel@RAM$edge=="~"] <- "~>"
-  semModel@RAM$edge[semModel@RAM$edge=="=~"] <- "->"
-  semModel@RAM$edge[semModel@RAM$edge=="~1"] <- "int"
+  semModel@RAM$edge[pars$op=="~~"] <- "<->"  
+  semModel@RAM$edge[pars$op=="~*~"] <- "<->"  
+  semModel@RAM$edge[pars$op=="~"] <- "~>"
+  semModel@RAM$edge[pars$op=="=~"] <- "->"
+  semModel@RAM$edge[pars$op=="~1"] <- "int"
   
   # Move thresholds to Thresholds slot:
   semModel@Thresholds <- semModel@RAM[grepl("\\|",semModel@RAM$edge),-(3:4)]

@@ -15,7 +15,7 @@ semPlotModel.mplus.model <- function(object)
   RAM <- data.frame(
     label = "", 
     lhs = "",
-    edge = "",
+    edge = "--",
     rhs = parsUS$param,
     est = parsUS$est,
     std = NA,
