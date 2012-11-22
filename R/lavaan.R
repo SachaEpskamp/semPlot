@@ -24,10 +24,10 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   # Extract variable and factor names:
   # varNames <- fit@Model@dimNames$lambda[[1]]
   # factNames <- fit@Model@dimNames$lambda[[2]]
-  Lambda <- inspect(object,"coef")$lambda
-  varNames <- rownames(Lambda)
-  factNames <- colnames(Lambda)
-  rm(Lambda)
+#   Lambda <- inspect(object,"coef")$lambda
+  varNames <- lavaanNames(object, type="ov")
+  factNames <- lavaanNames(object, type="lv")
+#   rm(Lambda)
   
   factNames <- factNames[!factNames%in%varNames]
   

@@ -7,9 +7,39 @@ semPaths.mplus.model <- function(object,...)
 
 semPlotModel.mplus.model <- function(object)
 {
+  if (length(object$parameters)==0) stop("No parameters detected in mplus output.")
+  
   parsUS <- object$parameters$unstandardized
   if (is.null(parsUS$Group)) parsUS$Group <- ""
   if (is.null(parsUS$BetweenWithin)) parsUS$BetweenWithin <- ""
+  
+  if (any(grepl("\\|",parsUS$paramHeader)))
+  {
+    parsUS <- parsUS[!grepl("\\|",parsUS$paramHeader),]
+    warning("'|' operator is not yet supported by semPlot. Parameters using this operator will not be shown and unexpected results might occur.")
+  }
+  
+  if (any(grepl("New.Additional.Parameters",parsUS$paramHeader)))
+  {
+    parsUS <- parsUS[!grepl("New.Additional.Parameters",parsUS$paramHeader),]
+    warning("'New.Additional.Parameters' is not yet supported by semPlot. Parameters will not be shown and unexpected results might occur.")
+  }
+  
+  noPars <- FALSE
+  # Temporary fix for EFA:
+  if (is.null(parsUS$est))
+  {
+    if (!is.null(parsUS$average)) 
+    {
+      parsUS$est <- parsUS$average
+      parsUS$se <- parsUS$average_se
+    } else 
+    {
+      parsUS$est <- 0
+      parsUS$se <- 0
+      noPars <- TRUE
+    }
+  }
   
   # Define RAM:
   RAM <- data.frame(
@@ -24,9 +54,13 @@ semPlotModel.mplus.model <- function(object)
     par = 0,
     stringsAsFactors=FALSE)
   
-  parNums <- dlply(cbind(sapply(parsUS[c("est","se","est_se","pval")],function(x)round(as.numeric(x),10)),data.frame(num=1:nrow(parsUS))),c("est","se","est_se","pval"),'[[',"num")
-  for (i in 1:length(parNums)) RAM$par[parNums[[i]]] <- i
-  RAM$par[RAM$fixed] <- 0
+  if (!noPars)
+  {
+    parNums <- dlply(cbind(sapply(parsUS[c("est","se")],function(x)round(as.numeric(x),10)),data.frame(num=1:nrow(parsUS))),c("est","se"),'[[',"num")
+    for (i in 1:length(parNums)) RAM$par[parNums[[i]]] <- i
+    RAM$par[RAM$fixed] <- 0  
+  } else RAM$par <- 1:nrow(RAM)
+  
 #   
 #   c <- 1
 #   for (i in 1:nrow(RAM))

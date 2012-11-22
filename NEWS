@@ -1,3 +1,8 @@
+Changes in Version 0.2.0-4
+	o Added support for 'principal' and 'princomp' objects
+	o Nodes with missing colors are now properly mixed from connected nodes.
+	o Single manifest variables are now placed at the center
+
 Changes in Version 0.2.0-3
 	o Added '--' specifier for unknown edge (undirected)
 

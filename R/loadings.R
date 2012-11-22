@@ -32,7 +32,7 @@ semPlotModel.loadings <- function(object)
   
   # Variable dataframe: 
   Vars <- data.frame(
-    name = c(manNames,latNames),
+    name = c(manNames[order(apply(abs(object),1,which.max))],latNames),
     manifest = c(rep(TRUE,nrow(object)),rep(FALSE,ncol(object))),
     stringsAsFactors=FALSE)
   

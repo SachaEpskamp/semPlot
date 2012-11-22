@@ -14,6 +14,7 @@ mixCols <- function(x,w)
   # x = vector of colors
   # w = weights
   if (missing(w)) w <- rep(1,length(x))
+  if (length(w)==1) w <- rep(w,length(x))
   
   RGB <- col2rgb(x)
   wMeans <- apply(RGB,1,weighted.mean,w=w)
@@ -155,7 +156,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   
   # Set and check style: 
   if (missing(style)) style <- "OpenMx"
-  if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only OpenMx  or LISREL style is currently supported.")
+  if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only OpenMx or LISREL style is currently supported.")
 #   if (grepl("mx",style,ignore.case=TRUE) & !missing(residScale)) warning("'residScale' ingored in OpenMx style")
   if (missing(residScale)) residScale <- 2*sizeMan
   
@@ -250,7 +251,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   object@Vars$exogenous <- FALSE
   for (i in which(!object@Vars$manifest))
   {
-    if (!any(object@RAM$edge[object@RAM$rhs==object@Vars$name[i]] == "~>" & object@RAM$lhs[object@RAM$rhs==object@Vars$name[i]]%in%latNames))
+    if (!any(object@RAM$edge[object@RAM$rhs==object@Vars$name[i]] %in% c("~>","->") & object@RAM$lhs[object@RAM$rhs==object@Vars$name[i]]%in%latNames))
     {
       object@Vars$exogenous[i] <- TRUE
     }
@@ -270,10 +271,11 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   {
     object@Vars$exogenous <- FALSE
   }
-  # If al endo, treat formative manifest as exo (MIMIC mode)
+  # If al endo, treat formative manifest as exo (MIMIC mode), unless all manifest are formative.
   if (!any(object@Vars$exogenous))
   {
-    object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge=="~>"|object@RAM$edge=="->"])] <- TRUE
+    if (any(object@Vars$manifest & (object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])))
+    object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])] <- TRUE
   }
     
   Groups <- unique(object@RAM$group)
@@ -468,14 +470,14 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
             Layout <- mixInts(endoMan,manIntsEndo,Layout,residuals=residuals)
           } else
           {
-            Layout[endoMan,1] <- seq(-1,1,length=length(endoMan))
+            if (length(endoMan)==1) Layout[endoMan,1] <- 0 else Layout[endoMan,1] <- seq(-1,1,length=length(endoMan))
           }
           if (nrow(manIntsExo)>0)
           {
             Layout <- mixInts(exoMan,manIntsExo,Layout,residuals=residuals)
           } else
           {
-            Layout[exoMan,1] <- seq(-1,1,length=length(exoMan))
+            if (length(exoMan)==1) Layout[exoMan,1] <- 0 else Layout[exoMan,1] <- seq(-1,1,length=length(exoMan))
           }
           
           if (nrow(latIntsEndo)>0)
@@ -492,7 +494,6 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
           {
             Layout[exoLat,1] <- seq(-1,1,length=length(exoLat)+2)[-c(1,length(exoLat)+2)]
           }
-                            
         } else stop("MeanStyle not supported")
         
         # Optimize layout if reorder = TRUE
@@ -607,7 +608,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     }
     
     ### WHAT TO PLOT? ###
-    if (grepl("path|diagram|model",what,ignore.case=TRUE))
+    if (grepl("path|diagram|mod",what,ignore.case=TRUE))
     {
       
     } else if (grepl("stand|std",what,ignore.case=TRUE))
@@ -676,16 +677,21 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       
       # If missing color, obtain weighted mix of connected colors:
       VcolorsBU <- Vcolors
-      if (ncol(Edgelist) ==3) W <- Edgelist[,3] else W <- rep(1,nrow(Edgelist))
+      W <- 1
       for (i in 1:(nM+nL))
       {
         if (Vcolors[i]=="")
         {
           cons <- c(Edgelist[Edgelist[,1]==i,2],Edgelist[Edgelist[,2]==i,1])
+          if (ncol(Edgelist) == 3)
+          {
+            W <- c(Edgelist[Edgelist[,1]==i,3],Edgelist[Edgelist[,2]==i,3])
+            W <- W[VcolorsBU[cons]!=""]
+          }
           cons <- cons[VcolorsBU[cons]!=""]
           if (length(cons)>0)
           {
-            Vcolors[i] <- mixCols(VcolorsBU[cons],W[cons])
+            Vcolors[i] <- mixCols(VcolorsBU[cons],W)
           } else Vcolors[i] <- NA
         }
       }
@@ -894,6 +900,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
             residuals=LoopAsResid,
             residScale = residScale,
             residEdge = isResid,
+            edgelist = TRUE,
             ...)
     
     if (thresholds)
