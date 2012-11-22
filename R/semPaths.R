@@ -685,7 +685,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
           cons <- c(Edgelist[Edgelist[,1]==i,2],Edgelist[Edgelist[,2]==i,1])
           if (ncol(Edgelist) == 3)
           {
-            W <- c(Edgelist[Edgelist[,1]==i,3],Edgelist[Edgelist[,2]==i,3])
+            W <- abs(c(Edgelist[Edgelist[,1]==i,3],Edgelist[Edgelist[,2]==i,3]))
             W <- W[VcolorsBU[cons]!=""]
           }
           cons <- cons[VcolorsBU[cons]!=""]
