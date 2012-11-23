@@ -122,7 +122,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,...){
 
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
@@ -153,6 +153,8 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   {
     edge.labels <- FALSE    
   }
+  
+  if (missing(as.expression)) as.expression <- ""
   
   # Set and check style: 
   if (missing(style)) style <- "OpenMx"
@@ -555,8 +557,8 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       
       if (any(GroupVars$exogenous))
       {
-        ### For latents, find opposite of mean angle
-        for (i in which(Labels%in%latNames))
+        ### For latents that have loops, find opposite of mean angle
+        for (i in which(Labels%in%latNames & Labels%in%GroupRAM$lhs[GroupRAM$lhs==GroupRAM$rhs]))
         {
           # Layout subset of all connected:
           subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),,drop=FALSE]              
@@ -743,11 +745,11 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     }
 
       # Abbreviate:
-      if (nCharEdges>0)
+      if (nCharEdges>0 & !"edges"%in%as.expression)
       {
         eLabels <- abbreviate(eLabels,nCharEdges)
       }
-      if (nCharNodes>0)
+      if (nCharNodes>0 & !"nodes"%in%as.expression)
       {
         Labels <- abbreviate(Labels,nCharNodes)
       }
@@ -881,6 +883,16 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     # Directed settings:
     
     Directed <- GroupRAM$edge!="--"
+    
+    # Convert labels to expressions:
+    if ("edges"%in%as.expression)
+    {
+      eLabels <- as.expression(parse(text=eLabels))
+    }    # Convert labels to expressions:
+    if ("nodes"%in%as.expression)
+    {
+      Labels <- as.expression(parse(text=Labels))
+    }
 
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
            labels=Labels,

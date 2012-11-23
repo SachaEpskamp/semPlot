@@ -142,7 +142,7 @@ semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object)
   semModel@Computed <- TRUE
   semModel@Original <- list(object)
   semModel@ObsCovs <- object$S
-  semModel@ImpCovs <- object$S
+  semModel@ImpCovs <- object$C
   
   return(semModel)
 }
