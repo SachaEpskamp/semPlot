@@ -55,6 +55,7 @@ semPlotModel.sem <- function(object)
   Vars <- data.frame(
     name = object$var.names,
     manifest = object$var.names %in% colnames(object$S),
+    exogenous = NA,
     stringsAsFactors=FALSE)
   
   # Define operators:
@@ -131,6 +132,7 @@ semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object)
   Vars <- data.frame(
     name = unique(unlist(object$var.names)),
     manifest = unique(unlist(object$var.names)) %in% unique(c(sapply(object$S,colnames))),
+    exogenous = NA,
     stringsAsFactors=FALSE)
   
   

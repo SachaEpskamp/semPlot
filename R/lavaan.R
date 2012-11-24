@@ -69,6 +69,7 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   semModel@Vars <- data.frame(
     name = c(varNames,factNames),
     manifest = c(varNames,factNames)%in%varNames,
+    exogenous = NA,
     stringsAsFactors=FALSE)
   
   semModel@ObsCovs <- object@SampleStats@cov

@@ -111,6 +111,7 @@ semPlotModel.mplus.model <- function(object)
   Vars <- data.frame(
     name = var,
     manifest = !var%in%Latents,
+    exogenous = NA,
     stringsAsFactors=FALSE)
   
 

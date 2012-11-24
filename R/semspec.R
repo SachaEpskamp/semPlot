@@ -74,6 +74,7 @@ semPlotModel.semspec <- function(object)
   Vars <- data.frame(
     name = sumObject$variables$details$Variable,
     manifest = sumObject$variables$details$Type == "Manifest",
+    exogenous = NA,
     stringsAsFactors=FALSE)
   
   # If all are latent, make guess at which are latent:

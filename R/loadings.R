@@ -34,6 +34,7 @@ semPlotModel.loadings <- function(object)
   Vars <- data.frame(
     name = c(manNames[order(apply(abs(object),1,which.max))],latNames),
     manifest = c(rep(TRUE,nrow(object)),rep(FALSE,ncol(object))),
+    exogenous = NA,
     stringsAsFactors=FALSE)
   
   semModel <- new("semPlotModel")

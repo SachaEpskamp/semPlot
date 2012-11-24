@@ -1,4 +1,4 @@
-export(semPaths,semPaths.S4,semPlotModel,semPlotModel.S4,semPathsGUI,semCors,matModel)
+export(semPaths,semPaths.S4,semPlotModel,semPlotModel.S4,semPathsGUI,semCors,lisrelModel)
 
 # export Classes
 exportClasses(

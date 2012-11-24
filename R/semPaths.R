@@ -122,7 +122,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,...){
+setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
 
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
 
@@ -249,37 +249,49 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     } 
   }
   
-  # Define exogenous variables:
-  object@Vars$exogenous <- FALSE
-  for (i in which(!object@Vars$manifest))
+  # Define exogenous variables (only if any is NA):
+  if (any(is.na(object@Vars$exogenous)))
   {
-    if (!any(object@RAM$edge[object@RAM$rhs==object@Vars$name[i]] %in% c("~>","->") & object@RAM$lhs[object@RAM$rhs==object@Vars$name[i]]%in%latNames))
+    if (any(!is.na(object@Vars$exogenous)))
     {
-      object@Vars$exogenous[i] <- TRUE
+      exoOrig <- object@Vars$exogenous
+      repExo <- TRUE
+    } else repExo <- FALSE
+    object@Vars$exogenous <- FALSE
+    for (i in which(!object@Vars$manifest))
+    {
+      if (!any(object@RAM$edge[object@RAM$rhs==object@Vars$name[i]] %in% c("~>","->") & object@RAM$lhs[object@RAM$rhs==object@Vars$name[i]]%in%latNames))
+      {
+        object@Vars$exogenous[i] <- TRUE
+      }
     }
-  }
-  for (i in which(object@Vars$manifest))
-  {
-    if (all(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$lhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-      all(object@RAM$rhs[object@RAM$lhs==object@Vars$name[i] & object@RAM$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-      !any(object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"))
+    for (i in which(object@Vars$manifest))
     {
-      object@Vars$exogenous[i] <- TRUE
+      if (all(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$lhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
+        all(object@RAM$rhs[object@RAM$lhs==object@Vars$name[i] & object@RAM$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
+        !any(object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"))
+      {
+        object@Vars$exogenous[i] <- TRUE
+      }
+    }
+    
+    # If all exo, treat all as endo:
+    if (all(object@Vars$exogenous) | layout=="circle")
+    {
+      object@Vars$exogenous <- FALSE
+    }
+    # If al endo, treat formative manifest as exo (MIMIC mode), unless all manifest are formative.
+    if (!any(object@Vars$exogenous))
+    {
+      if (any(object@Vars$manifest & (object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])))
+      object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])] <- TRUE
+    }
+    if (repExo)
+    {
+      object@Vars$exogenous[!is.na(exoOrig)] <- exoOrig[!is.na(exoOrig)]
     }
   }
   
-  # If all exo, treat all as endo:
-  if (all(object@Vars$exogenous) | layout=="circle")
-  {
-    object@Vars$exogenous <- FALSE
-  }
-  # If al endo, treat formative manifest as exo (MIMIC mode), unless all manifest are formative.
-  if (!any(object@Vars$exogenous))
-  {
-    if (any(object@Vars$manifest & (object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])))
-    object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])] <- TRUE
-  }
-    
   Groups <- unique(object@RAM$group)
   qgraphRes <- list()
   if (missing(ask))
@@ -555,7 +567,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       loopRotation[exoLat] <- pi
       loopRotation <- loopRotation - 0.5 * (rotation-1) *pi
       
-      if (any(GroupVars$exogenous))
+      if (any(GroupVars$exogenous) & optimizeLatRes)
       {
         ### For latents that have loops, find opposite of mean angle
         for (i in which(Labels%in%latNames & Labels%in%GroupRAM$lhs[GroupRAM$lhs==GroupRAM$rhs]))

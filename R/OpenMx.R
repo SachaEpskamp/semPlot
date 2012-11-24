@@ -76,6 +76,7 @@ semPlotModel_MxRAMModel <- function(object){
   Vars <- data.frame(
     name = c(varNames,factNames),
     manifest = c(varNames,factNames)%in%varNames,
+    exogenous = NA,
     stringsAsFactors=FALSE)
   
   # Define RAM:
