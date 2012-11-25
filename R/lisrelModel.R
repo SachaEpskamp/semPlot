@@ -1,5 +1,5 @@
 ### SINGLE GROUP MODEL ###
-lisrelModel <- function(LY,Psi,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,TX,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
+lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,TX,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
 {
   
   ### ENDOGENOUS MODEL ###
@@ -23,9 +23,9 @@ lisrelModel <- function(LY,Psi,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,T
     if (!missing(LY)) 
     {
       latNamesEndo <- paste0("eta[",1:ncol(LY),"]")
-    } else if (!missing(Psi))
+    } else if (!missing(PS))
     {
-      latNamesEndo <- paste0("eta[",1:ncol(Psi),"]")
+      latNamesEndo <- paste0("eta[",1:ncol(PS),"]")
     } else if (!missing(BE))
     {
       latNamesEndo <- paste0("eta[",1:ncol(BE),"]")
@@ -83,24 +83,24 @@ lisrelModel <- function(LY,Psi,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,T
       stringsAsFactors=FALSE)
   } else TERAM <- dumdf
 
-  # Define Psi RAM:
-  if (!missing(Psi))
+  # Define PS RAM:
+  if (!missing(PS))
   {
-    if (!isSymmetric(Psi)) stop("'Psi' matrix must be symmetrical.")
-    Psi[upper.tri(Psi)] <- 0
+    if (!isSymmetric(PS)) stop("'PS' matrix must be symmetrical.")
+    PS[upper.tri(PS)] <- 0
     
-    PsiRAM <- data.frame(
-      label = c(outer(1:nrow(Psi),1:ncol(Psi),function(x,y)paste0("psi[",x,y,"]"))), 
+    PSRAM <- data.frame(
+      label = c(outer(1:nrow(PS),1:ncol(PS),function(x,y)paste0("psi[",x,y,"]"))), 
       lhs = rep(latNamesEndo,each=length(latNamesEndo)),
       edge = "<->",
       rhs = rep(latNamesEndo,times=length(latNamesEndo)),
-      est = c(Psi),
-      std = c(Psi),
+      est = c(PS),
+      std = c(PS),
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else PsiRAM <- dumdf
+  } else PSRAM <- dumdf
   
   # Define BE RAM:
   if (!missing(BE))
@@ -289,7 +289,7 @@ lisrelModel <- function(LY,Psi,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,T
   #######
   
   # Combine RAMS:
-  RAM <- rbind(LYRAM,TERAM,PsiRAM,BERAM,LXRAM,TXRAM,PhiRAM,GARAM,TYRAM,TXRAM,ALRAM,KARAM)
+  RAM <- rbind(LYRAM,TERAM,PSRAM,BERAM,LXRAM,TXRAM,PhiRAM,GARAM,TYRAM,TXRAM,ALRAM,KARAM)
   
   # Remove zeroes:
   RAM <- RAM[RAM$est!=0,]
