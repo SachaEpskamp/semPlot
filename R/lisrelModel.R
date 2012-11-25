@@ -1,37 +1,74 @@
-### SINGLE GROUP MODEL ###
-lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,TX,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
+fixMatrix <- function(m)
 {
+  if (!is.list(m))
+  {
+    m <- list(est=m)
+  }
+  if (is.null(m[['fixed']]))
+  {
+    if (!is.null(m[['par']]))
+    {
+      m[['fixed']] <- m[['par']]==0
+    } else if (!is.null(m[['parSpec']]))
+    {
+      m[['fixed']] <- m[['parSpec']]==0
+    }
+  }
+  if (!is.null(m[['stdComp']]))
+  {
+    m[['std']] <- m[['stdComp']]
+  }
+  if (is.null(m[['est']])) m <- list()
+  return(m)
+}
+
+
+### SINGLE GROUP MODEL ###
+lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
+{
+  # Input matrices either in matrix form or list containing  'est', 'std', ; fixed', and 'par' or 'parSpec' matrices. If 'stdComp' is in the list it overwrites 'std' (compatibility with 'lisrelToR' package):
+  # Check input, replace matrices with list: 
+  mats <- c("LY","PS","BE","TE","TY","AL","LX","PH","GA","TD","TX","KA")
+  for (m in mats)
+  {
+    if (!do.call(missing,list(m)))
+    {
+      assign(m,fixMatrix(get(m)))
+    } else {
+      assign(m,list())
+    }
+  }
   
   ### ENDOGENOUS MODEL ###
   # If names missing, set default::
   if (missing(manNamesEndo))
   {
-    if (!missing(LY)) 
+    if (length(LY)>0) 
     {
-      manNamesEndo <- paste0("y[",1:nrow(LY),"]")
-    } else if (!missing(TE))
+      manNamesEndo <- paste0("y[",1:nrow(LY$est),"]")
+    } else if (length(TE)>0)
     {
-      manNamesEndo <- paste0("y[",1:nrow(TE),"]")
-    } else if (!missing(TY))
+      manNamesEndo <- paste0("y[",1:nrow(TE$est),"]")
+    } else if (length(TY)>0)
     {
-      manNamesEndo <- paste0("y[",1:length(TY),"]")
+      manNamesEndo <- paste0("y[",1:length(TY$est),"]")
     } else manNamesEndo <- character(0)
   }
   
   if (missing(latNamesEndo))
   {
-    if (!missing(LY)) 
+    if (length(LY)>0) 
     {
-      latNamesEndo <- paste0("eta[",1:ncol(LY),"]")
-    } else if (!missing(PS))
+      latNamesEndo <- paste0("eta[",1:ncol(LY$est),"]")
+    } else if (length(PS)>0)
     {
-      latNamesEndo <- paste0("eta[",1:ncol(PS),"]")
-    } else if (!missing(BE))
+      latNamesEndo <- paste0("eta[",1:ncol(PS$est),"]")
+    } else if (length(BE)>0)
     {
-      latNamesEndo <- paste0("eta[",1:ncol(BE),"]")
-    } else if (!missing(AL))
+      latNamesEndo <- paste0("eta[",1:ncol(BE$est),"]")
+    } else if (length(AL)>0)
     {
-      latNamesEndo <- paste0("eta[",1:length(AL),"]")
+      latNamesEndo <- paste0("eta[",1:length(AL$est),"]")
     } else latNamesEndo <- character(0)
   }
   
@@ -49,247 +86,407 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,TX
     stringsAsFactors=FALSE)
   
   # Define LY RAM:
-  if (!missing(LY))
+  if (length(LY)>0)
   {
     LYRAM <- data.frame(
-      label = c(outer(1:nrow(LY),1:ncol(LY),function(x,y)paste0("lambda[",x,y,"]^{(y)}"))), 
+      label = c(outer(1:nrow(LY$est),1:ncol(LY$est),function(x,y)paste0("lambda[",x,y,"]^{(y)}"))), 
       lhs = rep(latNamesEndo,each=length(manNamesEndo)),
       edge = "->",
       rhs = rep(manNamesEndo,times=length(latNamesEndo)),
-      est = c(LY),
+      est = c(LY$est),
       std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(LY[['std']]))
+    {
+      LYRAM[['std']] <- c(LY[['std']])
+    }
+    if (!is.null(LY[['par']]))
+    {
+      LYRAM[['par']] <- c(LY[['par']])
+    }
+    if (!is.null(LY[['fixed']]))
+    {
+      LYRAM[['fixed']] <- c(LY[['fixed']])
+    }
   } else LYRAM <- dumdf
   
+  
   # Define TE RAM:
-  if (!missing(TE))
+  if (length(TE)>0)
   {
-    if (!isSymmetric(TE)) stop("'TE' matrix must be symmetrical.")
-    TE[upper.tri(TE)] <- 0
+    if (!isSymmetric(TE$est)) stop("'TE' matrix must be symmetrical.")
+    TE$est[upper.tri(TE$est)] <- 0
     
     TERAM <- data.frame(
-      label = c(outer(1:nrow(TE),1:ncol(TE),function(x,y)paste0("theta[",x,y,"]^{(y)}"))), 
+      label = c(outer(1:nrow(TE$est),1:ncol(TE$est),function(x,y)paste0("theta[",x,y,"]^{(y)}"))), 
       lhs = rep(manNamesEndo,each=length(manNamesEndo)),
       edge = "<->",
       rhs = rep(manNamesEndo,times=length(manNamesEndo)),
-      est = c(TE),
-      std = c(TE),
+      est = c(TE$est),
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(TE[['std']]))
+    {
+      TERAM[['std']] <- c(TE[['std']])
+    }
+    if (!is.null(TE[['par']]))
+    {
+      TERAM[['par']] <- c(TE[['par']])
+    }
+    if (!is.null(TE[['fixed']]))
+    {
+      TERAM[['fixed']] <- c(TE[['fixed']])
+    }
+    
   } else TERAM <- dumdf
 
+  
+  
   # Define PS RAM:
-  if (!missing(PS))
+  if (length(PS)>0)
   {
-    if (!isSymmetric(PS)) stop("'PS' matrix must be symmetrical.")
-    PS[upper.tri(PS)] <- 0
+    if (!isSymmetric(PS$est)) stop("'PS' matrix must be symmetrical.")
+    PS$est[upper.tri(PS$est)] <- 0
     
     PSRAM <- data.frame(
-      label = c(outer(1:nrow(PS),1:ncol(PS),function(x,y)paste0("psi[",x,y,"]"))), 
+      label = c(outer(1:nrow(PS$est),1:ncol(PS$est),function(x,y)paste0("psi[",x,y,"]"))), 
       lhs = rep(latNamesEndo,each=length(latNamesEndo)),
       edge = "<->",
       rhs = rep(latNamesEndo,times=length(latNamesEndo)),
-      est = c(PS),
-      std = c(PS),
+      est = c(PS$est),
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(PS[['std']]))
+    {
+      PSRAM[['std']] <- c(PS[['std']])
+    }
+    if (!is.null(PS[['par']]))
+    {
+      PSRAM[['par']] <- c(PS[['par']])
+    }
+    if (!is.null(PS[['fixed']]))
+    {
+      PSRAM[['fixed']] <- c(PS[['fixed']])
+    }
   } else PSRAM <- dumdf
   
   # Define BE RAM:
-  if (!missing(BE))
+  if (length(BE)>0)
   {
     BERAM <- data.frame(
-      label = c(outer(1:nrow(BE),1:ncol(BE),function(x,y)paste0("beta[",x,y,"]"))), 
+      label = c(outer(1:nrow(BE$est),1:ncol(BE$est),function(x,y)paste0("beta[",x,y,"]"))), 
       lhs = rep(latNamesEndo,each=length(latNamesEndo)),
       edge = "->",
       rhs = rep(latNamesEndo,times=length(latNamesEndo)),
-      est = c(BE),
-      std = c(BE),
+      est = c(BE$est),
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(BE[['std']]))
+    {
+      BERAM[['std']] <- c(BE[['std']])
+    }
+    if (!is.null(BE[['par']]))
+    {
+      BERAM[['par']] <- c(BE[['par']])
+    }
+    if (!is.null(BE[['fixed']]))
+    {
+      BERAM[['fixed']] <- c(BE[['fixed']])
+    }
   } else BERAM <- dumdf
 
   # Define TY RAM:
-  if (!missing(TY))
+  if (length(TY)>0)
   {
     TYRAM <- data.frame(
-      label = paste0("tau[",1:length(TY),"]^{(y)}"), 
+      label = paste0("tau[",1:length(TY$est),"]^{(y)}"), 
       lhs = "",
       edge = "int",
       rhs = manNamesEndo,
-      est = TY,
-      std = TY,
+      est = TY$est,
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(TY[['std']]))
+    {
+      TYRAM[['std']] <- c(TY[['std']])
+    }
+    if (!is.null(TY[['par']]))
+    {
+      TYRAM[['par']] <- c(TY[['par']])
+    }
+    if (!is.null(TY[['fixed']]))
+    {
+      TYRAM[['fixed']] <- c(TY[['fixed']])
+    }
   } else TYRAM <- dumdf
   
   # Define AL RAM:
-  if (!missing(AL))
+  if (length(AL)>0)
   {
     ALRAM <- data.frame(
-      label = paste0("alpha[",1:length(AL),"]"), 
+      label = paste0("alpha[",1:length(AL$est),"]"), 
       lhs = "",
       edge = "int",
       rhs = latNamesEndo,
-      est = AL,
-      std = AL,
+      est = AL$est,
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(AL[['std']]))
+    {
+      ALRAM[['std']] <- c(AL[['std']])
+    }
+    if (!is.null(AL[['par']]))
+    {
+      ALRAM[['par']] <- c(AL[['par']])
+    }
+    if (!is.null(AL[['fixed']]))
+    {
+      ALRAM[['fixed']] <- c(AL[['fixed']])
+    }
   } else ALRAM <- dumdf
   
     ### ExoGENOUS MODEL ###
   # If names missing, set default::
   if (missing(manNamesExo))
   {
-    if (!missing(LX)) 
+    if (length(LX)>0) 
     {
-      manNamesExo <- paste0("x[",1:nrow(LX),"]")
-    } else if (!missing(TX))
+      manNamesExo <- paste0("x[",1:nrow(LX$est),"]")
+    } else if (length(TD)>0)
     {
-      manNamesExo <- paste0("x[",1:nrow(TX),"]")
-    } else if (!missing(TX))
+      manNamesExo <- paste0("x[",1:nrow(TD$est),"]")
+    } else if (length(TX)>0)
     {
-      manNamesExo <- paste0("x[",1:length(TX),"]")
+      manNamesExo <- paste0("x[",1:length(TX$est),"]")
     } else manNamesExo <- character(0)
   }
   
   if (missing(latNamesExo))
   {
-    if (!missing(LX)) 
+    if (length(LX)>0) 
     {
-      latNamesExo <- paste0("xi[",1:ncol(LX),"]")
-    } else if (!missing(Phi))
+      latNamesExo <- paste0("xi[",1:ncol(LX$est),"]")
+    } else if (length(PH)>0)
     {
-      latNamesExo <- paste0("xi[",1:ncol(Phi),"]")
-    } else if (!missing(GA))
+      latNamesExo <- paste0("xi[",1:ncol(PH$est),"]")
+    } else if (length(GA)>0)
     {
-      latNamesExo <- paste0("xi[",1:ncol(GA),"]")
-    } else  if (!missing(KA))
+      latNamesExo <- paste0("xi[",1:ncol(GA$est),"]")
+    } else  if (length(KA)>0)
     {
-      latNamesExo <- paste0("xi[",1:length(KA),"]")
+      latNamesExo <- paste0("xi[",1:length(KA$est),"]")
     } else latNamesExo <- character(0)
   }  
   
   # Define LX RAM:
-  if (!missing(LX))
+  if (length(LX)>0)
   {
     LXRAM <- data.frame(
-      label = c(outer(1:nrow(LX),1:ncol(LX),function(x,y)paste0("lambda[",x,y,"]^{(x)}"))), 
+      label = c(outer(1:nrow(LX$est),1:ncol(LX$est),function(x,y)paste0("lambda[",x,y,"]^{(x)}"))), 
       lhs = rep(latNamesExo,each=length(manNamesExo)),
       edge = "->",
       rhs = rep(manNamesExo,times=length(latNamesExo)),
-      est = c(LX),
+      est = c(LX$est),
       std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(LX[['std']]))
+    {
+      LXRAM[['std']] <- c(LX[['std']])
+    }
+    if (!is.null(LX[['par']]))
+    {
+      LXRAM[['par']] <- c(LX[['par']])
+    }
+    if (!is.null(LX[['fixed']]))
+    {
+      LXRAM[['fixed']] <- c(LX[['fixed']])
+    }
   } else LXRAM <- dumdf
   
-  # Define TX RAM:
-  if (!missing(TX))
+  # Define TD RAM:
+  if (length(TD)>0)
   {
-    if (!isSymmetric(TX)) stop("'TX' matrix must be symmetrical.")
-    TX[upper.tri(TX)] <- 0
+    if (!isSymmetric(TD$est)) stop("'TD' matrix must be symmetrical.")
+    TD[upper.tri(TD$est)] <- 0
     
-    TXRAM <- data.frame(
-      label = c(outer(1:nrow(TX),1:ncol(TX),function(x,y)paste0("theta[",x,y,"]^{(x)}"))), 
+    TDRAM <- data.frame(
+      label = c(outer(1:nrow(TD$est),1:ncol(TD$est),function(x,y)paste0("theta[",x,y,"]^{(x)}"))), 
       lhs = rep(manNamesExo,each=length(manNamesExo)),
       edge = "<->",
       rhs = rep(manNamesExo,times=length(manNamesExo)),
-      est = c(TX),
-      std = c(TX),
+      est = c(TD$est),
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else TXRAM <- dumdf
-
-  # Define Phi RAM:
-  if (!missing(Phi))
-  {
-    if (!isSymmetric(Phi)) stop("'Phi' matrix must be symmetrical.")
-    Phi[upper.tri(Phi)] <- 0
     
-    PhiRAM <- data.frame(
-      label = c(outer(1:nrow(Phi),1:ncol(Phi),function(x,y)paste0("phi[",x,y,"]"))), 
+    if (!is.null(TD[['std']]))
+    {
+      TDRAM[['std']] <- c(TD[['std']])
+    }
+    if (!is.null(TD[['par']]))
+    {
+      TDRAM[['par']] <- c(TD[['par']])
+    }
+    if (!is.null(TD[['fixed']]))
+    {
+      TDRAM[['fixed']] <- c(TD[['fixed']])
+    }
+  } else TDRAM <- dumdf
+
+  # Define PH RAM:
+  if (length(PH)>0)
+  {
+    if (!isSymmetric(PH$est)) stop("'PH' matrix must be symmetrical.")
+    PH[upper.tri(PH$est)] <- 0
+    
+    PHRAM <- data.frame(
+      label = c(outer(1:nrow(PH$est),1:ncol(PH$est),function(x,y)paste0("phi[",x,y,"]"))), 
       lhs = rep(latNamesExo,each=length(latNamesExo)),
       edge = "<->",
       rhs = rep(latNamesExo,times=length(latNamesExo)),
-      est = c(Phi),
-      std = c(Phi),
+      est = c(PH$est),
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else PhiRAM <- dumdf
+    
+    if (!is.null(PH[['std']]))
+    {
+      PHRAM[['std']] <- c(PH[['std']])
+    }
+    if (!is.null(PH[['par']]))
+    {
+      PHRAM[['par']] <- c(PH[['par']])
+    }
+    if (!is.null(PH[['fixed']]))
+    {
+      PHRAM[['fixed']] <- c(PH[['fixed']])
+    }
+  } else PHRAM <- dumdf
   
   # Define GA RAM:
-  if (!missing(GA))
+  if (length(GA)>0)
   {
     GARAM <- data.frame(
-      label = c(outer(1:nrow(GA),1:ncol(GA),function(x,y)paste0("beta[",x,y,"]"))), 
+      label = c(outer(1:nrow(GA$est),1:ncol(GA$est),function(x,y)paste0("beta[",x,y,"]"))), 
       lhs = rep(latNamesExo,each=length(latNamesEndo)),
       edge = "->",
       rhs = rep(latNamesEndo,times=length(latNamesExo)),
-      est = c(GA),
-      std = c(GA),
+      est = c(GA$est),
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(GA[['std']]))
+    {
+      GARAM[['std']] <- c(GA[['std']])
+    }
+    if (!is.null(GA[['par']]))
+    {
+      GARAM[['par']] <- c(GA[['par']])
+    }
+    if (!is.null(GA[['fixed']]))
+    {
+      GARAM[['fixed']] <- c(GA[['fixed']])
+    }
   } else GARAM <- dumdf
 
   # Define TY RAM:
-  if (!missing(TX))
+  if (length(TX)>0)
   {
     TXRAM <- data.frame(
-      label = paste0("tau[",1:length(TX),"]^{(x)}"), 
+      label = paste0("tau[",1:length(TX$est),"]^{(x)}"), 
       lhs = "",
       edge = "int",
       rhs = manNamesExo,
-      est = TX,
-      std = TX,
+      est = TX$est,
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(TX[['std']]))
+    {
+      TXRAM[['std']] <- c(TX[['std']])
+    }
+    if (!is.null(TX[['par']]))
+    {
+      TXRAM[['par']] <- c(TX[['par']])
+    }
+    if (!is.null(TX[['fixed']]))
+    {
+      TXRAM[['fixed']] <- c(TX[['fixed']])
+    }
   } else TXRAM <- dumdf
   
   # Define KA RAM:
-  if (!missing(KA))
+  if (length(KA)>0)
   {
     KARAM <- data.frame(
-      label = paste0("kappa[",1:length(AL),"]"), 
+      label = paste0("kappa[",1:length(KA$est),"]"), 
       lhs = "",
       edge = "int",
       rhs = latNamesExo,
-      est = KA,
-      std = KA,
+      est = KA$est,
+      std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
+    
+    if (!is.null(KA[['std']]))
+    {
+      KARAM[['std']] <- c(KA[['std']])
+    }
+    if (!is.null(KA[['par']]))
+    {
+      KARAM[['par']] <- c(KA[['par']])
+    }
+    if (!is.null(KA[['fixed']]))
+    {
+      KARAM[['fixed']] <- c(KA[['fixed']])
+    }
   } else KARAM <- dumdf
   
   
   #######
   
   # Combine RAMS:
-  RAM <- rbind(LYRAM,TERAM,PSRAM,BERAM,LXRAM,TXRAM,PhiRAM,GARAM,TYRAM,TXRAM,ALRAM,KARAM)
+  RAM <- rbind(LYRAM,TERAM,PSRAM,BERAM,LXRAM,TDRAM,PHRAM,GARAM,TYRAM,TXRAM,ALRAM,KARAM)
   
   # Remove zeroes:
   RAM <- RAM[RAM$est!=0,]
@@ -304,7 +501,7 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,TX
   # Set exogenous:
   if (missing(setExo))
   { 
-	setExo <- !(missing(TX) & missing(LX) & missing(Phi) & missing(GA))
+	setExo <- !(length(TD)>0 & length(LX)>0 & length(PH)>0 & length(GA)>0)
   }
   
   if (setExo)
