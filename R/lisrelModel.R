@@ -1,37 +1,37 @@
 ### SINGLE GROUP MODEL ###
-lisrelModel <- function(LambdaY,Psi,Beta,ThetaY,TauY,Alpha,manNamesEndo,latNamesEndo,LambdaX,Phi,Gamma,ThetaX,TauX,Kappa,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
+lisrelModel <- function(LY,Psi,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,Phi,GA,TX,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
 {
   
   ### ENDOGENOUS MODEL ###
   # If names missing, set default::
   if (missing(manNamesEndo))
   {
-    if (!missing(LambdaY)) 
+    if (!missing(LY)) 
     {
-      manNamesEndo <- paste0("y[",1:nrow(LambdaY),"]")
-    } else if (!missing(ThetaY))
+      manNamesEndo <- paste0("y[",1:nrow(LY),"]")
+    } else if (!missing(TE))
     {
-      manNamesEndo <- paste0("y[",1:nrow(ThetaY),"]")
-    } else if (!missing(TauY))
+      manNamesEndo <- paste0("y[",1:nrow(TE),"]")
+    } else if (!missing(TY))
     {
-      manNamesEndo <- paste0("y[",1:length(TauY),"]")
+      manNamesEndo <- paste0("y[",1:length(TY),"]")
     } else manNamesEndo <- character(0)
   }
   
   if (missing(latNamesEndo))
   {
-    if (!missing(LambdaY)) 
+    if (!missing(LY)) 
     {
-      latNamesEndo <- paste0("eta[",1:ncol(LambdaY),"]")
+      latNamesEndo <- paste0("eta[",1:ncol(LY),"]")
     } else if (!missing(Psi))
     {
       latNamesEndo <- paste0("eta[",1:ncol(Psi),"]")
-    } else if (!missing(Beta))
+    } else if (!missing(BE))
     {
-      latNamesEndo <- paste0("eta[",1:ncol(Beta),"]")
-    } else if (!missing(Alpha))
+      latNamesEndo <- paste0("eta[",1:ncol(BE),"]")
+    } else if (!missing(AL))
     {
-      latNamesEndo <- paste0("eta[",1:length(Alpha),"]")
+      latNamesEndo <- paste0("eta[",1:length(AL),"]")
     } else latNamesEndo <- character(0)
   }
   
@@ -48,40 +48,40 @@ lisrelModel <- function(LambdaY,Psi,Beta,ThetaY,TauY,Alpha,manNamesEndo,latNames
     par = numeric(0),
     stringsAsFactors=FALSE)
   
-  # Define LambdaY RAM:
-  if (!missing(LambdaY))
+  # Define LY RAM:
+  if (!missing(LY))
   {
-    LambdaYRAM <- data.frame(
-      label = c(outer(1:nrow(LambdaY),1:ncol(LambdaY),function(x,y)paste0("lambda[",x,y,"]^{(y)}"))), 
+    LYRAM <- data.frame(
+      label = c(outer(1:nrow(LY),1:ncol(LY),function(x,y)paste0("lambda[",x,y,"]^{(y)}"))), 
       lhs = rep(latNamesEndo,each=length(manNamesEndo)),
       edge = "->",
       rhs = rep(manNamesEndo,times=length(latNamesEndo)),
-      est = c(LambdaY),
+      est = c(LY),
       std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else LambdaYRAM <- dumdf
+  } else LYRAM <- dumdf
   
-  # Define ThetaY RAM:
-  if (!missing(ThetaY))
+  # Define TE RAM:
+  if (!missing(TE))
   {
-    if (!isSymmetric(ThetaY)) stop("'ThetaY' matrix must be symmetrical.")
-    ThetaY[upper.tri(ThetaY)] <- 0
+    if (!isSymmetric(TE)) stop("'TE' matrix must be symmetrical.")
+    TE[upper.tri(TE)] <- 0
     
-    ThetaYRAM <- data.frame(
-      label = c(outer(1:nrow(ThetaY),1:ncol(ThetaY),function(x,y)paste0("theta[",x,y,"]^{(y)}"))), 
+    TERAM <- data.frame(
+      label = c(outer(1:nrow(TE),1:ncol(TE),function(x,y)paste0("theta[",x,y,"]^{(y)}"))), 
       lhs = rep(manNamesEndo,each=length(manNamesEndo)),
       edge = "<->",
       rhs = rep(manNamesEndo,times=length(manNamesEndo)),
-      est = c(ThetaY),
-      std = c(ThetaY),
+      est = c(TE),
+      std = c(TE),
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else ThetaYRAM <- dumdf
+  } else TERAM <- dumdf
 
   # Define Psi RAM:
   if (!missing(Psi))
@@ -102,121 +102,121 @@ lisrelModel <- function(LambdaY,Psi,Beta,ThetaY,TauY,Alpha,manNamesEndo,latNames
       stringsAsFactors=FALSE)
   } else PsiRAM <- dumdf
   
-  # Define Beta RAM:
-  if (!missing(Beta))
+  # Define BE RAM:
+  if (!missing(BE))
   {
-    BetaRAM <- data.frame(
-      label = c(outer(1:nrow(Beta),1:ncol(Beta),function(x,y)paste0("beta[",x,y,"]"))), 
+    BERAM <- data.frame(
+      label = c(outer(1:nrow(BE),1:ncol(BE),function(x,y)paste0("beta[",x,y,"]"))), 
       lhs = rep(latNamesEndo,each=length(latNamesEndo)),
       edge = "->",
       rhs = rep(latNamesEndo,times=length(latNamesEndo)),
-      est = c(Beta),
-      std = c(Beta),
+      est = c(BE),
+      std = c(BE),
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else BetaRAM <- dumdf
+  } else BERAM <- dumdf
 
-  # Define TauY RAM:
-  if (!missing(TauY))
+  # Define TY RAM:
+  if (!missing(TY))
   {
-    TauYRAM <- data.frame(
-      label = paste0("tau[",1:length(TauY),"]^{(y)}"), 
+    TYRAM <- data.frame(
+      label = paste0("tau[",1:length(TY),"]^{(y)}"), 
       lhs = "",
       edge = "int",
       rhs = manNamesEndo,
-      est = TauY,
-      std = TauY,
+      est = TY,
+      std = TY,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else TauYRAM <- dumdf
+  } else TYRAM <- dumdf
   
-  # Define Alpha RAM:
-  if (!missing(Alpha))
+  # Define AL RAM:
+  if (!missing(AL))
   {
-    AlphaRAM <- data.frame(
-      label = paste0("alpha[",1:length(Alpha),"]"), 
+    ALRAM <- data.frame(
+      label = paste0("alpha[",1:length(AL),"]"), 
       lhs = "",
       edge = "int",
       rhs = latNamesEndo,
-      est = Alpha,
-      std = Alpha,
+      est = AL,
+      std = AL,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else AlphaRAM <- dumdf
+  } else ALRAM <- dumdf
   
     ### ExoGENOUS MODEL ###
   # If names missing, set default::
   if (missing(manNamesExo))
   {
-    if (!missing(LambdaX)) 
+    if (!missing(LX)) 
     {
-      manNamesExo <- paste0("x[",1:nrow(LambdaX),"]")
-    } else if (!missing(ThetaX))
+      manNamesExo <- paste0("x[",1:nrow(LX),"]")
+    } else if (!missing(TX))
     {
-      manNamesExo <- paste0("x[",1:nrow(ThetaX),"]")
-    } else if (!missing(TauX))
+      manNamesExo <- paste0("x[",1:nrow(TX),"]")
+    } else if (!missing(TX))
     {
-      manNamesExo <- paste0("x[",1:length(TauX),"]")
+      manNamesExo <- paste0("x[",1:length(TX),"]")
     } else manNamesExo <- character(0)
   }
   
   if (missing(latNamesExo))
   {
-    if (!missing(LambdaX)) 
+    if (!missing(LX)) 
     {
-      latNamesExo <- paste0("xi[",1:ncol(LambdaX),"]")
+      latNamesExo <- paste0("xi[",1:ncol(LX),"]")
     } else if (!missing(Phi))
     {
       latNamesExo <- paste0("xi[",1:ncol(Phi),"]")
-    } else if (!missing(Gamma))
+    } else if (!missing(GA))
     {
-      latNamesExo <- paste0("xi[",1:ncol(Gamma),"]")
-    } else  if (!missing(Kappa))
+      latNamesExo <- paste0("xi[",1:ncol(GA),"]")
+    } else  if (!missing(KA))
     {
-      latNamesExo <- paste0("xi[",1:length(Kappa),"]")
+      latNamesExo <- paste0("xi[",1:length(KA),"]")
     } else latNamesExo <- character(0)
   }  
   
-  # Define LambdaX RAM:
-  if (!missing(LambdaX))
+  # Define LX RAM:
+  if (!missing(LX))
   {
-    LambdaXRAM <- data.frame(
-      label = c(outer(1:nrow(LambdaX),1:ncol(LambdaX),function(x,y)paste0("lambda[",x,y,"]^{(x)}"))), 
+    LXRAM <- data.frame(
+      label = c(outer(1:nrow(LX),1:ncol(LX),function(x,y)paste0("lambda[",x,y,"]^{(x)}"))), 
       lhs = rep(latNamesExo,each=length(manNamesExo)),
       edge = "->",
       rhs = rep(manNamesExo,times=length(latNamesExo)),
-      est = c(LambdaX),
+      est = c(LX),
       std = NA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else LambdaXRAM <- dumdf
+  } else LXRAM <- dumdf
   
-  # Define ThetaX RAM:
-  if (!missing(ThetaX))
+  # Define TX RAM:
+  if (!missing(TX))
   {
-    if (!isSymmetric(ThetaX)) stop("'ThetaX' matrix must be symmetrical.")
-    ThetaX[upper.tri(ThetaX)] <- 0
+    if (!isSymmetric(TX)) stop("'TX' matrix must be symmetrical.")
+    TX[upper.tri(TX)] <- 0
     
-    ThetaXRAM <- data.frame(
-      label = c(outer(1:nrow(ThetaX),1:ncol(ThetaX),function(x,y)paste0("theta[",x,y,"]^{(x)}"))), 
+    TXRAM <- data.frame(
+      label = c(outer(1:nrow(TX),1:ncol(TX),function(x,y)paste0("theta[",x,y,"]^{(x)}"))), 
       lhs = rep(manNamesExo,each=length(manNamesExo)),
       edge = "<->",
       rhs = rep(manNamesExo,times=length(manNamesExo)),
-      est = c(ThetaX),
-      std = c(ThetaX),
+      est = c(TX),
+      std = c(TX),
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else ThetaXRAM <- dumdf
+  } else TXRAM <- dumdf
 
   # Define Phi RAM:
   if (!missing(Phi))
@@ -237,59 +237,59 @@ lisrelModel <- function(LambdaY,Psi,Beta,ThetaY,TauY,Alpha,manNamesEndo,latNames
       stringsAsFactors=FALSE)
   } else PhiRAM <- dumdf
   
-  # Define Gamma RAM:
-  if (!missing(Gamma))
+  # Define GA RAM:
+  if (!missing(GA))
   {
-    GammaRAM <- data.frame(
-      label = c(outer(1:nrow(Gamma),1:ncol(Gamma),function(x,y)paste0("beta[",x,y,"]"))), 
+    GARAM <- data.frame(
+      label = c(outer(1:nrow(GA),1:ncol(GA),function(x,y)paste0("beta[",x,y,"]"))), 
       lhs = rep(latNamesExo,each=length(latNamesEndo)),
       edge = "->",
       rhs = rep(latNamesEndo,times=length(latNamesExo)),
-      est = c(Gamma),
-      std = c(Gamma),
+      est = c(GA),
+      std = c(GA),
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else GammaRAM <- dumdf
+  } else GARAM <- dumdf
 
-  # Define TauY RAM:
-  if (!missing(TauX))
+  # Define TY RAM:
+  if (!missing(TX))
   {
-    TauXRAM <- data.frame(
-      label = paste0("tau[",1:length(TauX),"]^{(x)}"), 
+    TXRAM <- data.frame(
+      label = paste0("tau[",1:length(TX),"]^{(x)}"), 
       lhs = "",
       edge = "int",
       rhs = manNamesExo,
-      est = TauX,
-      std = TauX,
+      est = TX,
+      std = TX,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else TauXRAM <- dumdf
+  } else TXRAM <- dumdf
   
-  # Define Kappa RAM:
-  if (!missing(Kappa))
+  # Define KA RAM:
+  if (!missing(KA))
   {
-    KappaRAM <- data.frame(
-      label = paste0("kappa[",1:length(Alpha),"]"), 
+    KARAM <- data.frame(
+      label = paste0("kappa[",1:length(AL),"]"), 
       lhs = "",
       edge = "int",
       rhs = latNamesExo,
-      est = Kappa,
-      std = Kappa,
+      est = KA,
+      std = KA,
       group = "",
       fixed = FALSE,
       par = 0,
       stringsAsFactors=FALSE)
-  } else KappaRAM <- dumdf
+  } else KARAM <- dumdf
   
   
   #######
   
   # Combine RAMS:
-  RAM <- rbind(LambdaYRAM,ThetaYRAM,PsiRAM,BetaRAM,LambdaXRAM,ThetaXRAM,PhiRAM,GammaRAM,TauYRAM,TauXRAM,AlphaRAM,KappaRAM)
+  RAM <- rbind(LYRAM,TERAM,PsiRAM,BERAM,LXRAM,TXRAM,PhiRAM,GARAM,TYRAM,TXRAM,ALRAM,KARAM)
   
   # Remove zeroes:
   RAM <- RAM[RAM$est!=0,]
@@ -304,7 +304,7 @@ lisrelModel <- function(LambdaY,Psi,Beta,ThetaY,TauY,Alpha,manNamesEndo,latNames
   # Set exogenous:
   if (missing(setExo))
   { 
-	setExo <- !(missing(ThetaX) & missing(LambdaX) & missing(Phi) & missing(Gamma))
+	setExo <- !(missing(TX) & missing(LX) & missing(Phi) & missing(GA))
   }
   
   if (setExo)
