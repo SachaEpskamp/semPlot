@@ -27,6 +27,9 @@ fixMatrix <- function(m)
 lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
 {
   # Input matrices either in matrix form or list containing  'est', 'std', ; fixed', and 'par' or 'parSpec' matrices. If 'stdComp' is in the list it overwrites 'std' (compatibility with 'lisrelToR' package):
+  
+  # Or a list of such lists for each group.
+  
   # Check input, replace matrices with list: 
   mats <- c("LY","PS","BE","TE","TY","AL","LX","PH","GA","TD","TX","KA")
   for (m in mats)
