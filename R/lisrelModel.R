@@ -138,21 +138,32 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   Ng <- max(Len)
   
   RAMs <- list()
+  dumRAM <- data.frame(
+    label = character(0), 
+    lhs = character(0),
+    edge = character(0),
+    rhs = character(0),
+    est = numeric(0),
+    std = numeric(0),
+    group = character(0),
+    fixed = logical(0),
+    par = numeric(0),
+    stringsAsFactors=FALSE)
   for (g in 1:Ng)
   {
     # Extract matrices:
-    if (length(LY)>0) LYRAM <- lisrelMat2RAM(LY[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(y)}")
-    if (length(TE)>0) TERAM <- lisrelMat2RAM(TE[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(epsilon)}")
-    if (length(PS)>0) PSRAM <- lisrelMat2RAM(PS[[g]],"<->","psi",symmetric=TRUE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")
-    if (length(BE)>0) BERAM <- lisrelMat2RAM(BE[[g]],"->","beta",symmetric=FALSE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")
-    if (length(LX)>0) LXRAM <- lisrelMat2RAM(LX[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(x)}")
-    if (length(TD)>0) TDRAM <- lisrelMat2RAM(TD[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(delta)}")
-    if (length(PH)>0) PHRAM <- lisrelMat2RAM(PH[[g]],"<->","phi",symmetric=TRUE,vec=FALSE,latNamesExo,latNamesExo,group=paste("Group",g),exprsup="")
-    if (length(GA)>0) GARAM <- lisrelMat2RAM(GA[[g]],"->","gamma",symmetric=FALSE,vec=FALSE,latNamesExo,latNamesEndo,group=paste("Group",g),exprsup="")
-    if (length(TY)>0) TYRAM <- lisrelMat2RAM(TY[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesEndo,group=paste("Group",g),exprsup="^{(y)}")
-    if (length(TX)>0) TXRAM <- lisrelMat2RAM(TX[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesExo,group=paste("Group",g),exprsup="^{(x)}")
-    if (length(AL)>0) ALRAM <- lisrelMat2RAM(AL[[g]],"int","alpha",symmetric=FALSE,vec=TRUE,"",latNamesEndo,group=paste("Group",g),exprsup="")
-    if (length(KA)>0) KARAM <- lisrelMat2RAM(KA[[g]],"int","kappa",symmetric=FALSE,vec=TRUE,"",latNamesExo,group=paste("Group",g),exprsup="")
+    if (length(LY)>0) LYRAM <- lisrelMat2RAM(LY[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(y)}") else LYRAM <- dumRAM
+    if (length(TE)>0) TERAM <- lisrelMat2RAM(TE[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(epsilon)}")  else TERAM <- dumRAM
+    if (length(PS)>0) PSRAM <- lisrelMat2RAM(PS[[g]],"<->","psi",symmetric=TRUE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")  else PSRAM <- dumRAM
+    if (length(BE)>0) BERAM <- lisrelMat2RAM(BE[[g]],"->","beta",symmetric=FALSE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")  else BERAM <- dumRAM
+    if (length(LX)>0) LXRAM <- lisrelMat2RAM(LX[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(x)}")  else LXRAM <- dumRAM
+    if (length(TD)>0) TDRAM <- lisrelMat2RAM(TD[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(delta)}")  else TDRAM <- dumRAM
+    if (length(PH)>0) PHRAM <- lisrelMat2RAM(PH[[g]],"<->","phi",symmetric=TRUE,vec=FALSE,latNamesExo,latNamesExo,group=paste("Group",g),exprsup="")  else PHRAM <- dumRAM
+    if (length(GA)>0) GARAM <- lisrelMat2RAM(GA[[g]],"->","gamma",symmetric=FALSE,vec=FALSE,latNamesExo,latNamesEndo,group=paste("Group",g),exprsup="")  else GARAM <- dumRAM
+    if (length(TY)>0) TYRAM <- lisrelMat2RAM(TY[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesEndo,group=paste("Group",g),exprsup="^{(y)}")  else TYRAM <- dumRAM
+    if (length(TX)>0) TXRAM <- lisrelMat2RAM(TX[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesExo,group=paste("Group",g),exprsup="^{(x)}")  else TXRAM <- dumRAM
+    if (length(AL)>0) ALRAM <- lisrelMat2RAM(AL[[g]],"int","alpha",symmetric=FALSE,vec=TRUE,"",latNamesEndo,group=paste("Group",g),exprsup="")  else ALRAM <- dumRAM
+    if (length(KA)>0) KARAM <- lisrelMat2RAM(KA[[g]],"int","kappa",symmetric=FALSE,vec=TRUE,"",latNamesExo,group=paste("Group",g),exprsup="")  else KARAM <- dumRAM
     
     # Combine RAMS:
     RAMs[[g]] <- rbind(LYRAM,TERAM,PSRAM,BERAM,LXRAM,TDRAM,PHRAM,GARAM,TYRAM,TXRAM,ALRAM,KARAM)
