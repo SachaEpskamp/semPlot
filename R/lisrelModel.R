@@ -49,7 +49,7 @@ fixMatrix <- function(m)
 
 
 ### SINGLE GROUP MODEL ###
-lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo)
+lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo,modelLabels = FALSE)
 {
   # Input matrices either in matrix form or list containing  'est', 'std', ; fixed', and 'par' or 'parSpec' matrices. If 'stdComp' is in the list it overwrites 'std' (compatibility with 'lisrelToR' package):
   
@@ -72,10 +72,16 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   {
     if (length(LY)>0 && !is.null(LY[[1]]$est)) 
     {
-      manNamesEndo <- paste0("y[",1:nrow(LY[[1]]$est),"]")
+      if (!is.null(rownames(LY[[1]]$est)) && !modelLabels)
+      {
+        manNamesEndo <- rownames(LY[[1]]$est)
+      } else manNamesEndo <- paste0("y[",1:nrow(LY[[1]]$est),"]")
     } else if (length(TE)>0 && !is.null(TE[[1]]$est))
     {
-      manNamesEndo <- paste0("y[",1:nrow(TE[[1]]$est),"]")
+      if (!is.null(rownames(TE[[1]]$est)) && !modelLabels)
+      {
+        manNamesEndo <- rownames(TE[[1]]$est)
+      } else manNamesEndo <- paste0("y[",1:nrow(TE[[1]]$est),"]")
     } else if (length(TY)>0 && !is.null(TY[[1]]$est))
     {
       manNamesEndo <- paste0("y[",1:length(TY[[1]]$est),"]")
@@ -86,13 +92,22 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   {
     if (length(LY)>0 && !is.null(LY[[1]]$est)) 
     {
-      latNamesEndo <- paste0("eta[",1:ncol(LY[[1]]$est),"]")
+      if (!is.null(colnames(LY[[1]]$est)) && !modelLabels)
+      {
+        latNamesEndo <- colnames(LY[[1]]$est)
+      } else latNamesEndo <- paste0("eta[",1:ncol(LY[[1]]$est),"]")
     } else if (length(PS)>0 && !is.null(PS[[1]]$est))
     {
-      latNamesEndo <- paste0("eta[",1:ncol(PS[[1]]$est),"]")
+      if (!is.null(colnames(PS[[1]]$est)) && !modelLabels)
+      {
+        latNamesEndo <- colnames(PS[[1]]$est)
+      } else latNamesEndo <- paste0("eta[",1:ncol(PS[[1]]$est),"]")
     } else if (length(BE)>0 && !is.null(BE[[1]]$est))
     {
-      latNamesEndo <- paste0("eta[",1:ncol(BE[[1]]$est),"]")
+      if (!is.null(colnames(BE[[1]]$est)) && !modelLabels)
+      {
+        latNamesEndo <- colnames(BE[[1]]$est)
+      } else latNamesEndo <- paste0("eta[",1:ncol(BE[[1]]$est),"]")
     } else if (length(AL)>0 && !is.null(AL[[1]]$est))
     {
       latNamesEndo <- paste0("eta[",1:length(AL[[1]]$est),"]")
@@ -105,10 +120,16 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   {
     if (length(LX)>0 && !is.null(LX[[1]]$est)) 
     {
-      manNamesExo <- paste0("x[",1:nrow(LX[[1]]$est),"]")
+      if (!is.null(rownames(LX[[1]]$est)) && !modelLabels)
+      {
+        manNamesExo <- rownames(LX[[1]]$est)
+      } else manNamesExo <- paste0("x[",1:nrow(LX[[1]]$est),"]")
     } else if (length(TD)>0 && !is.null(TD[[1]]$est))
     {
-      manNamesExo <- paste0("x[",1:nrow(TD[[1]]$est),"]")
+      if (!is.null(rownames(TD[[1]]$est)) && !modelLabels)
+      {
+        manNamesExo <- rownames(TD[[1]]$est)
+      } else manNamesExo <- paste0("x[",1:nrow(TD[[1]]$est),"]")
     } else if (length(TX)>0 && !is.null(TX[[1]]$est))
     {
       manNamesExo <- paste0("x[",1:length(TX[[1]]$est),"]")
@@ -119,13 +140,22 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   {
     if (length(LX)>0 && !is.null(LX[[1]]$est)) 
     {
-      latNamesExo <- paste0("xi[",1:ncol(LX[[1]]$est),"]")
+      if (!is.null(colnames(LX[[1]]$est)) && !modelLabels)
+      {
+        latNamesExo <- colnames(LX[[1]]$est)
+      } else latNamesExo <- paste0("xi[",1:ncol(LX[[1]]$est),"]")
     } else if (length(PH)>0 && !is.null(PH[[1]]$est))
     {
-      latNamesExo <- paste0("xi[",1:ncol(PH[[1]]$est),"]")
+      if (!is.null(colnames(PH[[1]]$est)) && !modelLabels)
+      {
+        latNamesExo <- colnames(PH[[1]]$est)
+      } else latNamesExo <- paste0("xi[",1:ncol(PH[[1]]$est),"]")
     } else if (length(GA)>0 && !is.null(GA[[1]]$est))
     {
-      latNamesExo <- paste0("xi[",1:ncol(GA[[1]]$est),"]")
+      if (!is.null(colnames(GA[[1]]$est)) && !modelLabels)
+      {
+        latNamesExo <- colnames(GA[[1]]$est)
+      } else latNamesExo <- paste0("xi[",1:ncol(GA[[1]]$est),"]")
     } else  if (length(KA)>0 && !is.null(KA[[1]]$est))
     {
       latNamesExo <- paste0("xi[",1:length(KA[[1]]$est),"]")
@@ -149,6 +179,12 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     fixed = logical(0),
     par = numeric(0),
     stringsAsFactors=FALSE)
+  
+  if (missing(ImpCovs))
+  {
+    modCovs <- list()
+  }
+  
   for (g in 1:Ng)
   {
     # Extract matrices:
@@ -170,7 +206,86 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     
     # Remove zeroes:
     RAMs[[g]] <- RAMs[[g]][RAMs[[g]]$est!=0,]
+    
+    # Compute model implied covariance matrix:
+    if (missing(ImpCovs))
+    {
+      # M is matrix list:
+      M <- list()
+      
+      # Exogenous:
+      if (length(LX)>0 && !is.null(LX[[g]]$est))
+      {
+        M$LX <- LX[[g]]$est
+      } else {
+        M$LX <- matrix(,0,0)
+      }
+      
+      if (length(PH)>0 && !is.null(PH[[g]]$est))
+      {
+        M$PH <- PH[[g]]$est
+      } else {
+        M$PH <- diag(1,ncol(M$LX),ncol(M$LX))
+      }
+      
+      if (length(TD)>0 && !is.null(TD[[g]]$est))
+      {
+        M$TD <- TD[[g]]$est
+      } else {
+        M$TD <- matrix(0,nrow(M$LX),nrow(M$LX))
+      }
+      
+      XX <- with(M, LX %*% PH %*% t(LX) + TD)
+      
+      # Endogenous:
+      if (length(LY)>0 && !is.null(LY[[g]]$est))
+      {
+        M$LY <- LY[[g]]$est
+      } else {
+        M$LY <- matrix(,0,0)
+      }
+      
+      if (length(PS)>0 && !is.null(PS[[g]]$est))
+      {
+        M$PS <- PS[[g]]$est
+      } else {
+        M$PS <- diag(1,ncol(M$LY),ncol(M$LY))
+      }
+      
+      if (length(TE)>0 && !is.null(TE[[g]]$est))
+      {
+        M$TE <- TE[[g]]$est
+      } else {
+        M$TE <- matrix(0,nrow(M$LY),nrow(M$LY))
+      }
+      
+      if (length(BE)>0 && !is.null(BE[[g]]$est))
+      {
+        M$BE <- BE[[g]]$est
+      } else {
+        M$BE <- matrix(0,ncol(M$LY),ncol(M$LY))
+      }
+      
+      if (length(GA)>0 && !is.null(GA[[g]]$est))
+      {
+        M$GA <- GA[[g]]$est
+      } else {
+        M$GA <- matrix(0,ncol(M$LY),ncol(M$LX))
+      }
+      
+      if (all(dim(M$BE) > 0)) ImBinv <- solve(diag(1,nrow(M$BE),ncol(M$BE)) - M$BE) else ImBinv <- matrix(,0,0)
+      
+      YY <- with(M, LY %*% ( ImBinv %*% (GA %*% PH %*% t(GA) + PS) %*% t(ImBinv)) %*% t(LY) + TE)
+      
+      ## Cross:
+      XY <- with(M, LX %*% PH %*% t(GA) %*% t(ImBinv) %*% t(LY))
+      
+      modCovs[[g]] <- rbind(cbind(YY,t(XY)),
+                            cbind(XY,XX)) 
+    }
+    
   }
+  
   RAM <- do.call(rbind,RAMs)
   
   # Variable dataframe: 
@@ -194,7 +309,6 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   semModel <- new("semPlotModel")
   semModel@RAM <- RAM
   semModel@Vars <- Vars
-  semModel@Computed <- FALSE
   semModel@Original <- list()
   
   if (!missing(ObsCovs))
@@ -208,8 +322,10 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   {
     semModel@ImpCovs <- list(ImpCovs)
   } else {
-    semModel@ImpCovs <- list()
+    semModel@ImpCovs <- modCovs
   }
+  
+  semModel@Computed <- length(semModel@ImpCovs) > 0
   
   return(semModel)
 }
