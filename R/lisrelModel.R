@@ -1,3 +1,18 @@
+InvEmp <- function(x)
+{
+  if (any(dim(x)==0)) 
+  {
+    return(array(0,dim=dim(x))) 
+  } else {
+    res <- tryCatch(solve(x), error = function(e) FALSE)
+    if (is.matrix(res)) return(res) else 
+    {
+      warning("Uninvertable matrix found. Standardized solutions are not proper.")
+      return(array(0, dim=dim(x)))
+    }
+  }
+}
+
 fixMatrix <- function(m)
 {
   # If not a list (matrix itself added) put matrix in list (group 1) in list:
@@ -187,6 +202,124 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   
   for (g in 1:Ng)
   {
+    # Compute model implied covariance matrix and standardized matrices:
+    # M is matrix list:
+    M <- list()
+    
+    # Exogenous:
+    if (length(LX)>0 && !is.null(LX[[g]]$est))
+    {
+      M$LX <- LX[[g]]$est
+    } else {
+      M$LX <- matrix(,0,0)
+    }
+    
+    if (length(PH)>0 && !is.null(PH[[g]]$est))
+    {
+      M$PH <- PH[[g]]$est
+    } else {
+      M$PH <- diag(1,ncol(M$LX),ncol(M$LX))
+    }
+    
+    if (length(TD)>0 && !is.null(TD[[g]]$est))
+    {
+      M$TD <- TD[[g]]$est
+    } else {
+      M$TD <- matrix(0,nrow(M$LX),nrow(M$LX))
+    }
+    
+    # Endogenous:
+    if (length(LY)>0 && !is.null(LY[[g]]$est))
+    {
+      M$LY <- LY[[g]]$est
+    } else {
+      M$LY <- matrix(,0,0)
+    }
+    
+    if (length(PS)>0 && !is.null(PS[[g]]$est))
+    {
+      M$PS <- PS[[g]]$est
+    } else {
+      M$PS <- diag(1,ncol(M$LY),ncol(M$LY))
+    }
+    
+    if (length(TE)>0 && !is.null(TE[[g]]$est))
+    {
+      M$TE <- TE[[g]]$est
+    } else {
+      M$TE <- matrix(0,nrow(M$LY),nrow(M$LY))
+    }
+    
+    if (length(BE)>0 && !is.null(BE[[g]]$est))
+    {
+      M$BE <- BE[[g]]$est
+    } else {
+      M$BE <- matrix(0,ncol(M$LY),ncol(M$LY))
+    }
+    
+    if (length(GA)>0 && !is.null(GA[[g]]$est))
+    {
+      M$GA <- GA[[g]]$est
+    } else {
+      M$GA <- matrix(0,ncol(M$LY),ncol(M$LX))
+    }
+    
+    ImBinv <- InvEmp(diag(1,nrow(M$BE),ncol(M$BE)) - M$BE)
+    
+    # Implied covariances:
+    XX <- with(M, LX %*% PH %*% t(LX) + TD)
+    YY <- with(M, LY %*% ( ImBinv %*% (GA %*% PH %*% t(GA) + PS) %*% t(ImBinv)) %*% t(LY) + TE)
+    XY <- with(M, LX %*% PH %*% t(GA) %*% t(ImBinv) %*% t(LY))
+    
+    if (missing(ImpCovs))
+    { 
+      modCovs[[g]] <- rbind(cbind(YY,t(XY)),
+                            cbind(XY,XX)) 
+      rownames(modCovs[[g]]) <- colnames(modCovs[[g]]) <- c(manNamesExo,manNamesEndo)
+    }
+    
+    ## Standardize matrices
+    # Diagonal matrices:
+    EE <- with(M,  ( ImBinv %*% (GA %*% PH %*% t(GA) + PS) %*% t(ImBinv)) )
+    M$De <- diag(sqrt(diag(EE)),nrow(EE),ncol(EE))
+    KK <- with(M,  ( PH ) )
+    M$Dk <- diag(sqrt(diag(KK)),nrow(KK),ncol(KK))
+    M$Dx <- diag(sqrt(diag(XX)),nrow(XX),ncol(XX))
+    M$Dy <- diag(sqrt(diag(YY)),nrow(YY),ncol(YY))
+    # Inverses
+    M$Dki <- InvEmp(M$Dk)
+    M$Dei <- InvEmp(M$De)
+    M$Dxi <- InvEmp(M$Dx)
+    M$Dyi <- InvEmp(M$Dy)
+    
+    ## Standardize structural part:
+    Mstd <- M
+    # Exo:
+    Mstd$LX <- M$LX %*% M$Dk
+    Mstd$PH <- M$Dki %*% M$PH %*% M$Dki
+    # Endo:
+    Mstd$LY <- M$LY %*% M$De
+    Mstd$PS <- M$Dei %*% M$PS %*% M$Dei
+    Mstd$BE <- M$Dei %*% M$BE %*% M$De
+    Mstd$GA <- M$Dei %*% M$GA %*% M$Dk
+    
+    ## Standardize measurment part:
+    Mstd$LY <- M$Dyi %*% Mstd$LY
+    Mstd$LX <- M$Dxi %*% Mstd$LX
+    Mstd$TE <- M$Dyi %*% Mstd$TE %*% M$Dyi
+    Mstd$TD <- M$Dxi %*% Mstd$TD %*% M$Dxi
+    
+    # Store matrices:
+    if (length(LY) > 0 && !is.null(LY[[g]]$est) && is.null(LY[[g]]$std)) LY[[g]]$std <- Mstd$LY
+    if (length(LX) > 0 && !is.null(LX[[g]]$est) && is.null(LX[[g]]$std)) LX[[g]]$std <- Mstd$LX
+    if (length(TE) > 0 && !is.null(TE[[g]]$est) && is.null(TE[[g]]$std)) TE[[g]]$std <- Mstd$TE
+    if (length(TD) > 0 && !is.null(TD[[g]]$est) && is.null(TD[[g]]$std)) TD[[g]]$std <- Mstd$TD
+    if (length(PH) > 0 && !is.null(PH[[g]]$est) && is.null(PH[[g]]$std)) PH[[g]]$std <- Mstd$PH
+    if (length(PS) > 0 && !is.null(PS[[g]]$est) && is.null(PS[[g]]$std)) PS[[g]]$std <- Mstd$PS
+    if (length(GA) > 0 && !is.null(GA[[g]]$est) && is.null(GA[[g]]$std)) GA[[g]]$std <- Mstd$GA
+    if (length(BE) > 0 && !is.null(BE[[g]]$est) && is.null(BE[[g]]$std)) BE[[g]]$std <- Mstd$BE
+    
+    
     # Extract matrices:
     if (length(LY)>0) LYRAM <- lisrelMat2RAM(LY[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(y)}") else LYRAM <- dumRAM
     if (length(TE)>0) TERAM <- lisrelMat2RAM(TE[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(epsilon)}")  else TERAM <- dumRAM
@@ -206,83 +339,6 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     
     # Remove zeroes:
     RAMs[[g]] <- RAMs[[g]][RAMs[[g]]$est!=0,]
-    
-    # Compute model implied covariance matrix:
-    if (missing(ImpCovs))
-    {
-      # M is matrix list:
-      M <- list()
-      
-      # Exogenous:
-      if (length(LX)>0 && !is.null(LX[[g]]$est))
-      {
-        M$LX <- LX[[g]]$est
-      } else {
-        M$LX <- matrix(,0,0)
-      }
-      
-      if (length(PH)>0 && !is.null(PH[[g]]$est))
-      {
-        M$PH <- PH[[g]]$est
-      } else {
-        M$PH <- diag(1,ncol(M$LX),ncol(M$LX))
-      }
-      
-      if (length(TD)>0 && !is.null(TD[[g]]$est))
-      {
-        M$TD <- TD[[g]]$est
-      } else {
-        M$TD <- matrix(0,nrow(M$LX),nrow(M$LX))
-      }
-      
-      XX <- with(M, LX %*% PH %*% t(LX) + TD)
-      
-      # Endogenous:
-      if (length(LY)>0 && !is.null(LY[[g]]$est))
-      {
-        M$LY <- LY[[g]]$est
-      } else {
-        M$LY <- matrix(,0,0)
-      }
-      
-      if (length(PS)>0 && !is.null(PS[[g]]$est))
-      {
-        M$PS <- PS[[g]]$est
-      } else {
-        M$PS <- diag(1,ncol(M$LY),ncol(M$LY))
-      }
-      
-      if (length(TE)>0 && !is.null(TE[[g]]$est))
-      {
-        M$TE <- TE[[g]]$est
-      } else {
-        M$TE <- matrix(0,nrow(M$LY),nrow(M$LY))
-      }
-      
-      if (length(BE)>0 && !is.null(BE[[g]]$est))
-      {
-        M$BE <- BE[[g]]$est
-      } else {
-        M$BE <- matrix(0,ncol(M$LY),ncol(M$LY))
-      }
-      
-      if (length(GA)>0 && !is.null(GA[[g]]$est))
-      {
-        M$GA <- GA[[g]]$est
-      } else {
-        M$GA <- matrix(0,ncol(M$LY),ncol(M$LX))
-      }
-      
-      if (all(dim(M$BE) > 0)) ImBinv <- solve(diag(1,nrow(M$BE),ncol(M$BE)) - M$BE) else ImBinv <- matrix(,0,0)
-      
-      YY <- with(M, LY %*% ( ImBinv %*% (GA %*% PH %*% t(GA) + PS) %*% t(ImBinv)) %*% t(LY) + TE)
-      
-      ## Cross:
-      XY <- with(M, LX %*% PH %*% t(GA) %*% t(ImBinv) %*% t(LY))
-      
-      modCovs[[g]] <- rbind(cbind(YY,t(XY)),
-                            cbind(XY,XX)) 
-    }
     
   }
   
