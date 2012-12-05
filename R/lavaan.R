@@ -60,6 +60,7 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   semModel@RAM$edge[pars$op=="~"] <- "~>"
   semModel@RAM$edge[pars$op=="=~"] <- "->"
   semModel@RAM$edge[pars$op=="~1"] <- "int"
+  semModel@RAM$edge[grepl("\\|",pars$op)] <- "|"
   
   # Move thresholds to Thresholds slot:
   semModel@Thresholds <- semModel@RAM[grepl("\\|",semModel@RAM$edge),-(3:4)]
