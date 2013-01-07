@@ -1,13 +1,13 @@
 ### Path diagrams ###
-
-semPaths_MxRAMModel <- function(object,...){
-  invisible(semPaths(semPlotModel(object),...))
-}
-          
-semPaths_MxModel <- function(object,...){
-  invisible(semPaths(semPlotModel(object),...))
-}
- 
+# 
+# semPaths_MxRAMModel <- function(object,...){
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+#           
+# semPaths_MxModel <- function(object,...){
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+#  
 ### EXTRACT MODEL ###
           
 ### SINGLE GROUP ###

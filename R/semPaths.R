@@ -46,7 +46,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
       {
         sq <- c(0,0.5) 
       } else {
-      sq <- seq(-1,1,length=n+nrow(intMap))
+        sq <- seq(-1,1,length=n+nrow(intMap))
       }
     } else {
       if (n+nrow(intMap) == 2)
@@ -122,10 +122,31 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
+# setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
 
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
+  
+  # Check if input is combination of models:
+  call <- deparse(substitute(object))
+  if (grepl("\\+",call)) 
+  {
+    args <- unlist(strsplit(call,split="\\+"))
+    obs <- lapply(args,function(x)semPlotModel(eval(parse(text=x))))
+    object <- obs[[1]]
+    for (i in 2:length(obs)) object <- object + obs[[i]]
+  }
+  
+  # Check if text file and read:
+  if (is.character(object) && grepl("\\.out",object))
+  {
+    object <- readModels(object)
+  }
+  
+  if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object)
+  stopifnot("semPlotModel"%in%class(object))
+  
   if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
-
+  
   # Check:
   if (!rotation%in%1:4)
   {
@@ -134,6 +155,8 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   if (any(object@RAM$edge=="int")) 
   {
     object@Vars$name[object@Vars$name=="1"] <- "_1"
+    object@RAM$lhs[object@RAM$lhs=="1"] <- "_1"
+    object@RAM$rhs[object@RAM$rhs=="1"] <- "_1"
   }
   
   if (missing(curve))
@@ -145,6 +168,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       curve <- 0
     }
   }
+  curveDefault <- curve
   
   if (missing(whatLabels))
   {
@@ -159,10 +183,10 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   # Set and check style: 
   if (missing(style)) style <- "OpenMx"
   if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only OpenMx or LISREL style is currently supported.")
-#   if (grepl("mx",style,ignore.case=TRUE) & !missing(residScale)) warning("'residScale' ingored in OpenMx style")
+  #   if (grepl("mx",style,ignore.case=TRUE) & !missing(residScale)) warning("'residScale' ingored in OpenMx style")
   if (missing(residScale)) residScale <- 2*sizeMan
   
-#   residScale <- residScale * 1.75
+  #   residScale <- residScale * 1.75
   # Remove means if means==FALSE
   if (means==FALSE)
   {
@@ -173,10 +197,15 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
   {
     object@RAM <- object@RAM[!(object@RAM$edge=="<->"&object@RAM$lhs==object@RAM$rhs),]
   }  
+  # Combine groups if combineGroups=TRUE:
+  if (combineGroups)
+  {
+    object@RAM$group <- ""
+  }
   # If structural, remove all manifest from RAM:
   if (structural)
   {
-#     browser()
+    #     browser()
     object@RAM <- object@RAM[!(object@RAM$lhs %in% object@Vars$name[object@Vars$manifest] | object@RAM$rhs %in% object@Vars$name[object@Vars$manifest]),]
     object@Vars <- object@Vars[!object@Vars$manifest,]
     object@Thresholds <- data.frame()
@@ -268,8 +297,8 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     for (i in which(object@Vars$manifest))
     {
       if (all(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$lhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-        all(object@RAM$rhs[object@RAM$lhs==object@Vars$name[i] & object@RAM$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-        !any(object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"))
+            all(object@RAM$rhs[object@RAM$lhs==object@Vars$name[i] & object@RAM$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
+            !any(object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"))
       {
         object@Vars$exogenous[i] <- TRUE
       }
@@ -284,7 +313,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     if (!any(object@Vars$exogenous))
     {
       if (any(object@Vars$manifest & (object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])))
-      object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])] <- TRUE
+        object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])] <- TRUE
     }
     if (repExo)
     {
@@ -354,7 +383,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       manNames <- GroupVars$name[GroupVars$manifest]
       Labels <- c(manNames,latNames)
     }
-        
+    
     Ni <- sum(GroupRAM$edge=="int")
     # Add intercept:
     if (any(object@RAM$edge=="int")) 
@@ -386,7 +415,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     {
       NodesInGroup <- sort(unique(c(Edgelist[,1],Edgelist[,2])))
       incl <- 1:nN %in% NodesInGroup
-          
+      
       Edgelist[,1] <- match(Edgelist[,1],NodesInGroup)
       Edgelist[,2] <- match(Edgelist[,2],NodesInGroup)
       
@@ -398,7 +427,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     nL <- sum(latNames%in%Labels)
     
     GroupVars <- GroupVars[GroupVars$name%in%Labels,]
-
+    
     manInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%manNames,,drop=FALSE]
     latInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,,drop=FALSE]
     
@@ -424,137 +453,137 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     if (any(GroupRAM$edge=="int")) Shape <- c(Shape,rep("triangle",Ni))
     
     Curve <- curve
-      
+    
     # Layout:
     if (layout=="tree" | layout=="circle" | layout=="circular")
     {
-#       if (all(!object@Vars$exogenous))
-#       {
-        if (meanStyle=="single")
-        {
-          # Curves:
-          Curve <- ifelse(GroupRAM$lhs != GroupRAM$rhs & ((GroupRAM$lhs%in%manNames & GroupRAM$rhs%in%manNames) | (GroupRAM$lhs%in%latNames & GroupRAM$rhs%in%latNames)),curve,0)
-          Curve <- ifelse(GroupRAM$lhs%in%manNames,Curve,-1*Curve)
-          Curve <- ifelse(GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,curve,-1*Curve)
-          
-          # Empty layout:
-          Layout <- matrix(,length(Labels),2)
-          
-          # Add vertical levels:
-          Layout[,2] <- ifelse(Labels%in%manNames,1,2)
-          
-          # Add vertical levels:
-          Layout[Labels%in%manNames,1] <- seq(-1,1,length=nM)
-          if (any(GroupRAM$edge=="int"))
-          {
-            sq <- seq(-1,1,length=nL+1)
-            cent <- floor(median(1:(nL+1)))
-            Layout[!Labels%in%manNames,1] <- sq[c(which(1:(nL+1) < cent),which(1:(nL+1) > cent),cent)]
-          } else
-          {
-            Layout[Labels%in%latNames,1] <- seq(-1,1,length=nL)
-          }
-          
-        } else if (meanStyle=="multi")
-        {          
-                
-          # Empty layout:
-          Layout <- matrix(,length(Labels),2)
-          
-          # Add vertical levels:
-          Layout[endoMan,2] <- 1
-          Layout[endoLat,2] <- 2
-          Layout[exoLat,2] <- 3
-          Layout[exoMan,2] <- 4
-          Layout[latIntsEndo[,1],2] <- 2
-          Layout[latIntsExo[,1],2] <- 3
-
-          if (residuals)
-          {
-            Layout[manIntsExo[,1],2] <- 4
-            Layout[manIntsEndo[,1],2] <- 1
-          } else {
-            Layout[manIntsExo[,1],2] <- 5
-            Layout[manIntsEndo[,1],2] <- 0            
-          }
-          
-          # Add horizontal levels:
-          if (nrow(manIntsEndo)>0)
-          {
-            Layout <- mixInts(endoMan,manIntsEndo,Layout,residuals=residuals)
-          } else
-          {
-            if (length(endoMan)==1) Layout[endoMan,1] <- 0 else Layout[endoMan,1] <- seq(-1,1,length=length(endoMan))
-          }
-          if (nrow(manIntsExo)>0)
-          {
-            Layout <- mixInts(exoMan,manIntsExo,Layout,residuals=residuals)
-          } else
-          {
-            if (length(exoMan)==1) Layout[exoMan,1] <- 0 else Layout[exoMan,1] <- seq(-1,1,length=length(exoMan))
-          }
-          
-          if (nrow(latIntsEndo)>0)
-          {
-            Layout <- mixInts(endoLat,latIntsEndo,Layout,trim=TRUE)
-          } else
-          {
-            Layout[endoLat,1] <- seq(-1,1,length=length(endoLat)+2)[-c(1,length(endoLat)+2)]
-          }
-          if (nrow(latIntsExo)>0)
-          {
-            Layout <- mixInts(exoLat,latIntsExo,Layout,trim=TRUE)
-          } else
-          {
-            Layout[exoLat,1] <- seq(-1,1,length=length(exoLat)+2)[-c(1,length(exoLat)+2)]
-          }
-        } else stop("MeanStyle not supported")
-        
-        # Optimize layout if reorder = TRUE
-       
-        inBetween <- function(x)
-        {
-          if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
-        }
+      #       if (all(!object@Vars$exogenous))
+      #       {
+      if (meanStyle=="single")
+      {
         # Curves:
-        inBet <- apply(Edgelist,1,inBetween)
-        inBet[inBet>0] <- as.numeric(as.factor(inBet[inBet>0]))
-        if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
-        {
-          Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",curve+inBet/max(inBet)*curve,0))
-        } else {
-          Curve <- ifelse(inBet<1,0,ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,curve+inBet/max(inBet)*curve,0))
-        }
-        ### If origin node is "right" of  destination node, flip curve:
-        Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
-        ## If endo man, flip again:
-        Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
+        Curve <- ifelse(GroupRAM$lhs != GroupRAM$rhs & ((GroupRAM$lhs%in%manNames & GroupRAM$rhs%in%manNames) | (GroupRAM$lhs%in%latNames & GroupRAM$rhs%in%latNames)),curve,NA)
+        Curve <- ifelse(GroupRAM$lhs%in%manNames,Curve,-1*Curve)
+        Curve <- ifelse(GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,curve,-1*Curve)
         
-        ### ORDINALIZE LAYOUT ###
-        Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
-        Layout[Layout[,2]==0,2] <- 0.5
-        Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + 0.5
-#         for (i in unique(Layout[,2]))
-#         {
-#           Layout[Layout[,2]==i,1] <- (as.numeric(as.factor(Layout[Layout[,2]==i,1])) - 1) / (sum(Layout[,2]==i) - 1)
-#         }
-        # FLIP LAYOUT ###
-        if (rotation==2) 
+        # Empty layout:
+        Layout <- matrix(,length(Labels),2)
+        
+        # Add vertical levels:
+        Layout[,2] <- ifelse(Labels%in%manNames,1,2)
+        
+        # Add vertical levels:
+        Layout[Labels%in%manNames,1] <- seq(-1,1,length=nM)
+        if (any(GroupRAM$edge=="int"))
         {
-          Layout <- Layout[,2:1]
-          Layout[,1] <- -1 * Layout[,1]
-        }
-        if (rotation==3) 
+          sq <- seq(-1,1,length=nL+1)
+          cent <- floor(median(1:(nL+1)))
+          Layout[!Labels%in%manNames,1] <- sq[c(which(1:(nL+1) < cent),which(1:(nL+1) > cent),cent)]
+        } else
         {
-          Layout[,1] <- -1 * Layout[,1]
-          Layout[,2] <- -1 * Layout[,2]
+          Layout[Labels%in%latNames,1] <- seq(-1,1,length=nL)
         }
-        if (rotation==4) 
+        
+      } else if (meanStyle=="multi")
+      {          
+        
+        # Empty layout:
+        Layout <- matrix(,length(Labels),2)
+        
+        # Add vertical levels:
+        Layout[endoMan,2] <- 1
+        Layout[endoLat,2] <- 2
+        Layout[exoLat,2] <- 3
+        Layout[exoMan,2] <- 4
+        Layout[latIntsEndo[,1],2] <- 2
+        Layout[latIntsExo[,1],2] <- 3
+        
+        if (residuals)
         {
-          Layout <- Layout[,2:1]
-          Layout[,2] <- -1 * Layout[,2]
+          Layout[manIntsExo[,1],2] <- 4
+          Layout[manIntsEndo[,1],2] <- 1
+        } else {
+          Layout[manIntsExo[,1],2] <- 5
+          Layout[manIntsEndo[,1],2] <- 0            
         }
-        Layout[,2] <- Layout[,2]-max(Layout[,2]) + 0.5
+        
+        # Add horizontal levels:
+        if (nrow(manIntsEndo)>0)
+        {
+          Layout <- mixInts(endoMan,manIntsEndo,Layout,residuals=residuals)
+        } else
+        {
+          if (length(endoMan)==1) Layout[endoMan,1] <- 0 else Layout[endoMan,1] <- seq(-1,1,length=length(endoMan))
+        }
+        if (nrow(manIntsExo)>0)
+        {
+          Layout <- mixInts(exoMan,manIntsExo,Layout,residuals=residuals)
+        } else
+        {
+          if (length(exoMan)==1) Layout[exoMan,1] <- 0 else Layout[exoMan,1] <- seq(-1,1,length=length(exoMan))
+        }
+        
+        if (nrow(latIntsEndo)>0)
+        {
+          Layout <- mixInts(endoLat,latIntsEndo,Layout,trim=TRUE)
+        } else
+        {
+          Layout[endoLat,1] <- seq(-1,1,length=length(endoLat)+2)[-c(1,length(endoLat)+2)]
+        }
+        if (nrow(latIntsExo)>0)
+        {
+          Layout <- mixInts(exoLat,latIntsExo,Layout,trim=TRUE)
+        } else
+        {
+          Layout[exoLat,1] <- seq(-1,1,length=length(exoLat)+2)[-c(1,length(exoLat)+2)]
+        }
+      } else stop("MeanStyle not supported")
+      
+      # Optimize layout if reorder = TRUE
+      
+      inBetween <- function(x)
+      {
+        if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
+      }
+      # Curves:
+      inBet <- apply(Edgelist,1,inBetween)
+      inBet[inBet>0] <- as.numeric(as.factor(inBet[inBet>0]))
+      if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
+      {
+        Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
+      } else {
+        Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
+      }
+      ### If origin node is "right" of  destination node, flip curve:
+      Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
+      ## If endo man, flip again:
+      Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
+      
+      ### ORDINALIZE LAYOUT ###
+      Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
+      Layout[Layout[,2]==0,2] <- 0.5
+      Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + 0.5
+      #         for (i in unique(Layout[,2]))
+      #         {
+      #           Layout[Layout[,2]==i,1] <- (as.numeric(as.factor(Layout[Layout[,2]==i,1])) - 1) / (sum(Layout[,2]==i) - 1)
+      #         }
+      # FLIP LAYOUT ###
+      if (rotation==2) 
+      {
+        Layout <- Layout[,2:1]
+        Layout[,1] <- -1 * Layout[,1]
+      }
+      if (rotation==3) 
+      {
+        Layout[,1] <- -1 * Layout[,1]
+        Layout[,2] <- -1 * Layout[,2]
+      }
+      if (rotation==4) 
+      {
+        Layout <- Layout[,2:1]
+        Layout[,2] <- -1 * Layout[,2]
+      }
+      Layout[,2] <- Layout[,2]-max(Layout[,2]) + 0.5
     } else Layout <- layout
     
     # loopRotation:
@@ -578,12 +607,12 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
           
           # Test for empty:
           if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
-            
+          
           subLayout <- Layout[conNodes,,drop=FALSE]
           Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
           if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->"))
           {
-              loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
+            loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
           } else {
             # Layout subset of all connected:
             subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->",]
@@ -611,9 +640,9 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     vSize[Labels%in%manNames] <- sizeMan
     vSize[Labels%in%latNames] <- sizeLat
     vSize[Labels=="1"] <- sizeInt
-
+    
     eColor <- rep(NA,nrow(Edgelist))
-#     tColor <- rep(rgb(0.5,0.5,0.5),nrow(GroupThresh))
+    #     tColor <- rep(rgb(0.5,0.5,0.5),nrow(GroupThresh))
     if (missing(threshold.color)) 
     {
       tColor <- rep("black",nrow(GroupThresh)) 
@@ -635,7 +664,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       if (edge.labels) eLabels <- as.character(round(GroupRAM$est,2))
     } else if (grepl("eq|cons",what,ignore.case=TRUE))
     {
-#       eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
+      #       eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
       unPar <- unique(object@RAM$par[object@RAM$par>0 & duplicated(object@RAM$par)])
       cols <- rainbow(max(c(object@RAM$par,GroupThresh$par)))
       for (i in unPar)
@@ -653,7 +682,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
         }
       }
     } else if (!grepl("col",what,ignore.case=TRUE)) stop("Could not detect use of 'what' argument")
-
+    
     ### VERTEX COLOR ###
     if (!missing(groups))
     {
@@ -686,7 +715,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
           Vcolors[NodeGroups[[g]]] <- color[g]
         }
         
-#         Vcolors[Vcolors=="" & Labels%in%manNames] <- "white"
+        #         Vcolors[Vcolors=="" & Labels%in%manNames] <- "white"
       }
       
       # If missing color, obtain weighted mix of connected colors:
@@ -725,10 +754,10 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
         Vcolors <- color  
       } else stop("'color' vector not of appropriate length")
     }
-
+    
     if (grepl("col",what,ignore.case=TRUE))
     {
-#       eColor <- character(nrow(Edgelist))
+      #       eColor <- character(nrow(Edgelist))
       for (i in 1:nrow(Edgelist))
       {
         cols <- Vcolors[Edgelist[i,]]
@@ -755,44 +784,44 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
         eLabels <- rep("",nrow(Edgelist))
       } else stop("Could not detect use of 'whatLabels' argument")
     }
-
-      # Abbreviate:
-      if (nCharEdges>0 & !"edges"%in%as.expression)
-      {
-        eLabels <- abbreviate(eLabels,nCharEdges)
-      }
-      if (nCharNodes>0 & !"nodes"%in%as.expression)
-      {
-        Labels <- abbreviate(Labels,nCharNodes)
-      }
     
-#     ### CONVERT TO LISREL STYLE ###
+    # Abbreviate:
+    if (nCharEdges>0 & !"edges"%in%as.expression)
+    {
+      eLabels <- abbreviate(eLabels,nCharEdges)
+    }
+    if (nCharNodes>0 & !"nodes"%in%as.expression)
+    {
+      Labels <- abbreviate(Labels,nCharNodes)
+    }
+    
+    #     ### CONVERT TO LISREL STYLE ###
     if (grepl("lisrel",style,ignore.case=TRUE) & residuals)
     {
       isResid <- GroupRAM$edge == "<->" & GroupRAM$lhs != GroupRAM$rhs
     } else isResid <- rep(FALSE,nrow(Edgelist))
     
     
-#       nResid <- length(whichResid)
-#       Edgelist[whichResid,1] <- (nN+1):(nN+nResid)
-#       rots <- loopRotation[Edgelist[whichResid,2]]
-#       Lresid <- matrix(,nResid,2)
-#       hLength <- diff(range(Layout[,1]))
-#       vLength <- diff(range(Layout[,2]))
-#       for (i in 1:nResid)
-#       {
-#         Lresid[i,1] <- Layout[Edgelist[whichResid[i],2],1] + sin(rots[i]) * residScale * 0.25 * hLength/vLength
-#         Lresid[i,2] <- Layout[Edgelist[whichResid[i],2],2] + cos(rots[i]) * residScale * 0.25
-#       }
-#       
-#       # Add nodes:
-#       Layout <- rbind(Layout,Lresid)
-#       Labels <- c(Labels,rep("",nResid))
-#       Shape <- c(Shape,rep("circle",nResid))
-#       loopRotation <- NULL
-#       vSize <- c(vSize,rep(0,nResid))
-#       Vcolors <- c(Vcolors,rep(rgb(0,0,0,0),nResid))
-#     }
+    #       nResid <- length(whichResid)
+    #       Edgelist[whichResid,1] <- (nN+1):(nN+nResid)
+    #       rots <- loopRotation[Edgelist[whichResid,2]]
+    #       Lresid <- matrix(,nResid,2)
+    #       hLength <- diff(range(Layout[,1]))
+    #       vLength <- diff(range(Layout[,2]))
+    #       for (i in 1:nResid)
+    #       {
+    #         Lresid[i,1] <- Layout[Edgelist[whichResid[i],2],1] + sin(rots[i]) * residScale * 0.25 * hLength/vLength
+    #         Lresid[i,2] <- Layout[Edgelist[whichResid[i],2],2] + cos(rots[i]) * residScale * 0.25
+    #       }
+    #       
+    #       # Add nodes:
+    #       Layout <- rbind(Layout,Lresid)
+    #       Labels <- c(Labels,rep("",nResid))
+    #       Shape <- c(Shape,rep("circle",nResid))
+    #       loopRotation <- NULL
+    #       vSize <- c(vSize,rep(0,nResid))
+    #       Vcolors <- c(Vcolors,rep(rgb(0,0,0,0),nResid))
+    #     }
     
     if (grepl("mx",style,ignore.case=TRUE)) LoopAsResid <- FALSE else LoopAsResid <- TRUE
     
@@ -821,7 +850,7 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
       loopRotation <- apply(Layout,1,function(x)atan2(x[1],x[2]))
       loopRotation <- ifelse(underMean,loopRotation,(loopRotation+pi)%%(2*pi))
     }
-        
+    
     if (layout=="spring") loopRotation <- NULL
     
     
@@ -905,27 +934,28 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     {
       Labels <- as.expression(parse(text=Labels))
     }
-
+    
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
-           labels=Labels,
-           bidirectional=Bidir,
-          directed=Directed,
-           shape=Shape,
-           layout=Layout,
-           lty=lty,
-           loopRotation=loopRotation,
-           curve=Curve,
-           edge.labels=eLabels,
-           mar=Mar,
-            vsize = vSize,
-           edge.color=eColor,
-            groups=NodeGroups2,
-            color=Vcolors,
-            residuals=LoopAsResid,
-            residScale = residScale,
-            residEdge = isResid,
-            edgelist = TRUE,
-            ...)
+                                             labels=Labels,
+                                             bidirectional=Bidir,
+                                             directed=Directed,
+                                             shape=Shape,
+                                             layout=Layout,
+                                             lty=lty,
+                                             loopRotation=loopRotation,
+                                             curve=Curve,
+                                             edge.labels=eLabels,
+                                             mar=Mar,
+                                             vsize = vSize,
+                                             edge.color=eColor,
+                                             groups=NodeGroups2,
+                                             color=Vcolors,
+                                             residuals=LoopAsResid,
+                                             residScale = residScale,
+                                             residEdge = isResid,
+                                             edgelist = TRUE,
+                                             curveDefault = curveDefault,
+                                             ...)
     
     if (thresholds)
     {
@@ -959,11 +989,11 @@ setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",w
     
     if (title)
     {
-#       if (length(Groups)==1) title("Path Diagram",line=3) else title(paste0("Path Diagram for group '",gr,"'"),line=3)
-        title(gr,line=3,col.main=title.color)
+      #       if (length(Groups)==1) title("Path Diagram",line=3) else title(paste0("Path Diagram for group '",gr,"'"),line=3)
+      title(gr,line=3,col.main=title.color)
     }
   }
   par(ask=askOrig)
   if (length(qgraphRes)==1) qgraphRes <- qgraphRes[[1]]
   invisible(qgraphRes)
-  })
+}

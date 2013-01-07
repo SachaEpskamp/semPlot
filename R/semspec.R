@@ -1,9 +1,9 @@
-
-semPaths.semspec <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
+# 
+# semPaths.semspec <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
 
 
 ### SINGLE GROUP MODEL ###

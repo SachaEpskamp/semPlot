@@ -1,8 +1,8 @@
-semPaths.princomp <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
+# semPaths.princomp <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
 
 
 ### SINGLE GROUP MODEL ###

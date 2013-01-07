@@ -1,18 +1,18 @@
-semPaths.sem <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
-semPaths.msem <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
-semPaths.msemObjectiveML <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
+# semPaths.sem <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
+# semPaths.msem <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
+# semPaths.msemObjectiveML <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
 
 
 ### SINGLE GROUP MODEL ###

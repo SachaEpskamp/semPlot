@@ -1,8 +1,8 @@
-semPaths.factanal <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
+# semPaths.factanal <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
 
 
 ### SINGLE GROUP MODEL ###

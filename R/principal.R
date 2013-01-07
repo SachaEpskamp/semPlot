@@ -1,8 +1,8 @@
-semPaths.principal <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
+# semPaths.principal <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
 
 
 ### SINGLE GROUP MODEL ###

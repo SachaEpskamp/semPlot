@@ -2,6 +2,9 @@ Changes in Version 0.2.0-4
 	o Added support for 'principal' and 'princomp' objects
 	o Nodes with missing colors are now properly mixed from connected nodes.
 	o Single manifest variables are now placed at the center
+  o Combining SEM models:
+   o The '+' function is now overloaded to combine 'semPlotModel' objects
+   o The '+' operator can also be used in semPlotModel and semPaths calls. E.g., semPaths( fit1 + fit2 ).
 
 Changes in Version 0.2.0-3
 	o Added '--' specifier for unknown edge (undirected)

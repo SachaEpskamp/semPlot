@@ -1,8 +1,8 @@
-semPaths.loadings <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
-
+# semPaths.loadings <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
+# 
 
 ### SINGLE GROUP MODEL ###
 semPlotModel.loadings <- function(object)

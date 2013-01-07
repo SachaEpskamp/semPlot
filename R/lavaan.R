@@ -1,9 +1,9 @@
 ### Path diagrams ###
-
-setMethod("semPaths.S4",signature("lavaan"),function(object,...){
-  invisible(semPaths(semPlotModel(object),...))
-})
-
+# 
+# setMethod("semPaths.S4",signature("lavaan"),function(object,...){
+#   invisible(semPaths(semPlotModel(object),...))
+# })
+# 
 
 
 ## EXTRACT MODEL ###

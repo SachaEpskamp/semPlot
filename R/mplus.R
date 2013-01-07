@@ -1,9 +1,9 @@
-
-# object <- readModels(file.choose())
-semPaths.mplus.model <- function(object,...) 
-{
-  invisible(semPaths(semPlotModel(object),...))
-}
+# 
+# # object <- readModels(file.choose())
+# semPaths.mplus.model <- function(object,...) 
+# {
+#   invisible(semPaths(semPlotModel(object),...))
+# }
 
 semPlotModel.mplus.model <- function(object)
 {
