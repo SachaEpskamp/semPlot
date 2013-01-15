@@ -5,6 +5,7 @@ Changes in Version 0.2.0-4
   o Combining SEM models:
    o The '+' function is now overloaded to combine 'semPlotModel' objects
    o The '+' operator can also be used in semPlotModel and semPaths calls. E.g., semPaths( fit1 + fit2 ).
+  o Onyx model can now be imported
 
 Changes in Version 0.2.0-3
 	o Added '--' specifier for unknown edge (undirected)

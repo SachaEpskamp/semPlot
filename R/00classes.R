@@ -71,8 +71,13 @@ semPlotModel.semPlotModel <- function(object) object
 
 semPlotModel.default <- function(object)
 {
-  if (is.character(object) && grepl("\\.out",object))
+  if (is.character(object) && grepl("\\.out",object,ignore.case=TRUE))
   {
     return(semPlotModel(readModels(object)))
   }
+  if (is.character(object) && grepl("\\.xml",object,ignore.case=TRUE))
+  {
+    return(semPlotModel.Onyx(object))
+  }
+  else stop("Object not recognized as SEM model")
 }

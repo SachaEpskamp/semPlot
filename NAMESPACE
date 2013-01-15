@@ -39,3 +39,5 @@ importFrom(lavaan,"lavaan","cfa","standardizedSolution", "standardizedsolution",
 importClassesFrom(lavaan,"lavaan")
 importFrom(stats,"factanal")
 import(plyr)
+import(XML)
+export(semPlotModel.Onyx)
