@@ -157,7 +157,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
 
 # setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,layout.par=list(),...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=FALSE,layout.par=list(),...){
   
   # Check if input is combination of models:
   call <- deparse(substitute(object))
@@ -647,8 +647,76 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
       
     } else Layout <- layout
     
-    # Set curves and rotate:
     
+    # loopRotation:
+    if (layout%in%c("tree","tree2"))
+    {
+      loopRotation <- rep(0,nN)
+      loopRotation[endoMan] <- pi
+      loopRotation[exoMan] <- 0
+      
+      loopRotation[endoLat] <- 0
+      noCons <- sapply(endoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%endoMan|Edgelist[,2]%in%endoMan),])==0)
+      if (length(noCons)==0) noCons <- logical(0)
+      loopRotation[endoLat][noCons] <- pi
+      if (length(endoLat) > 1)
+      {
+        loopRotation[endoLat[which.min(Layout[endoLat,1])]] <- ifelse(noCons[which.min(Layout[endoLat,1])],5/4*pi,7/4*pi)
+        loopRotation[endoLat[which.max(Layout[endoLat,1])]] <- ifelse(noCons[which.min(Layout[endoLat,1])],3/4*pi,1/4*pi)
+      } else if (length(endoLat) == 1 && endoLat %in% latIntsEndo[,2])
+      {
+        loopRotation[endoLat] <- 6/4 * pi
+      }
+      
+      loopRotation[exoLat] <- pi
+      noCons <- sapply(exoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%exoMan|Edgelist[,2]%in%exoMan),])==0)
+      if (length(noCons)==0) noCons <- logical(0)
+      loopRotation[exoLat][noCons] <- 0
+      if (length(exoLat) > 1)
+      {
+        loopRotation[exoLat[which.min(Layout[exoLat,1])]] <- ifelse(noCons[which.min(Layout[exoLat,1])],7/4*pi,5/4*pi)
+        loopRotation[exoLat[which.max(Layout[exoLat,1])]] <- ifelse(noCons[which.min(Layout[exoLat,1])],1/4*pi,3/4*pi)
+      } else if (length(exoLat) == 1 && exoLat %in% latIntsExo[,2])
+      {
+        loopRotation[exoLat] <- 6/4 * pi
+      }
+      
+      loopRotation <- loopRotation - 0.5 * (rotation-1) *pi
+      
+      if (any(GroupVars$exogenous) & optimizeLatRes)
+      {
+        ### For latents that have loops, find opposite of mean angle
+        for (i in which(Labels%in%latNames & Labels%in%GroupRAM$lhs[GroupRAM$lhs==GroupRAM$rhs]))
+        {
+          # Layout subset of all connected:
+          subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),,drop=FALSE]              
+          conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
+          
+          # Test for empty:
+          if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
+          
+          subLayout <- Layout[conNodes,,drop=FALSE]
+          Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
+          if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->"))
+          {
+            loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
+          } else {
+            # Layout subset of all connected:
+            subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->",]
+            conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
+            
+            # Test for empty:
+            if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
+            
+            subLayout <- Layout[conNodes,]
+            goodDegrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
+            loopRotation[i] <- optimize(loopOptim,c(min(goodDegrees-pi/4),max(goodDegrees+pi/4)),Degrees=Degrees,maximum=TRUE)$maximum
+          }
+        }
+      }
+    } else loopRotation <- NULL
+    
+    # Set curves and rotate:    
     if (layout %in% c("tree","tree2"))
     {
       
@@ -700,49 +768,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
       }
       Layout[,2] <- Layout[,2]-max(Layout[,2]) + 0.5
     }
-    
-    # loopRotation:
-    if (layout%in%c("tree","tree2"))
-    {
-      loopRotation <- rep(0,nN)
-      loopRotation[endoMan] <- pi
-      loopRotation[exoMan] <- 0
-      loopRotation[endoLat] <- 0
-      loopRotation[exoLat] <- pi
-      loopRotation <- loopRotation - 0.5 * (rotation-1) *pi
-      
-      if (any(GroupVars$exogenous) & optimizeLatRes)
-      {
-        ### For latents that have loops, find opposite of mean angle
-        for (i in which(Labels%in%latNames & Labels%in%GroupRAM$lhs[GroupRAM$lhs==GroupRAM$rhs]))
-        {
-          # Layout subset of all connected:
-          subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),,drop=FALSE]              
-          conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
-          
-          # Test for empty:
-          if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
-          
-          subLayout <- Layout[conNodes,,drop=FALSE]
-          Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
-          if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->"))
-          {
-            loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
-          } else {
-            # Layout subset of all connected:
-            subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->",]
-            conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
-            
-            # Test for empty:
-            if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
-            
-            subLayout <- Layout[conNodes,]
-            goodDegrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
-            loopRotation[i] <- optimize(loopOptim,c(min(goodDegrees-pi/4),max(goodDegrees+pi/4)),Degrees=Degrees,maximum=TRUE)$maximum
-          }
-        }
-      }
-    } else loopRotation <- NULL
+
     
     # Edge labels:
     if (edge.labels)

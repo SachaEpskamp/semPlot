@@ -1,6 +1,8 @@
 
 semPlotModel.list <- function(object)
 {
+  if ("mplus.model"%in%class(object)) return(semPlotModel.mplus.model(object))
+  
   isModel <- sapply(object,function(x)"semPlotModel"%in%class(x))
   object[!isModel] <- lapply(object[!isModel],semPlotModel)
   if (length(object)>1) 
