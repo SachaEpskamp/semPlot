@@ -5,10 +5,43 @@
 # 4 = endo man left
 # allVars: TRUE includes variables that are not in model (e.g. with between-within group models)
 
+# Layout modes:
+# "tree"
+# "circle"
+# "spring"
+# igraph function
+# "tree2" and  "circle2" for layout.reingold.tilford
+
 # manifests: vector of manifest labels ordered
 # latents: vector of latents ordered
 # fixedStyle: if coercible to numeric lty is assigned this value, else a color for color representation. If this argument is not a number or color representation the edge is not displayed differently.
 
+
+## Mode function:
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+## Function to compute reingold-tilford layout using igraph:
+rtLayout <- function(roots,GroupRAM,Edgelist,layout,exoMan)
+{
+#   browser()
+  # Reverse intercepts in graph:
+  revNodes <- which((GroupRAM$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
+  Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
+  # Remove double headed arrows:
+  Edgelist <- Edgelist[GroupRAM$edge != "<->",]
+  
+  # Make igraph object:
+  Graph <- graph.edgelist(Edgelist, TRUE)
+  # Compute layout:
+  Layout <- layout.reingold.tilford(Graph,root=roots,circular = FALSE) 
+  
+  return(Layout)
+}
+
+## Function to mix color vector x with weight w
 mixCols <- function(x,w)
 {
   # x = vector of colors
@@ -124,7 +157,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
 
 # setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,layout.par=list(),...){
   
   # Check if input is combination of models:
   call <- deparse(substitute(object))
@@ -158,6 +191,14 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
     object@RAM$lhs[object@RAM$lhs=="1"] <- "_1"
     object@RAM$rhs[object@RAM$rhs=="1"] <- "_1"
   }
+  
+  # Check if layout is function. If so, set layout <- "spring" as dummy:
+  if (is.function(layout))
+  {
+    layoutFun <- layout
+    layout <- "spring"
+  } else layoutFun <- NULL
+  
   
   if (missing(curve))
   {
@@ -305,7 +346,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
     }
     
     # If all exo, treat all as endo:
-    if (all(object@Vars$exogenous) | layout=="circle")
+    if (all(object@Vars$exogenous) | layout%in%c("circle","circle2"))
     {
       object@Vars$exogenous <- FALSE
     }
@@ -541,6 +582,76 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
       
       # Optimize layout if reorder = TRUE
       
+    } else if (layout %in% c("tree2","circle2"))
+    {
+      # reingold-tilford layout
+#       Layout <- layout.reingold.tilford
+      
+      # Set roots, in order of precedence:
+        # exo man intercepts (incomming edges on exo man reversed)
+        # Any exo man with outward edges (incomming edges on exo man reversed)
+        # All exo man
+        # Exo latent intercept
+        # Exo latentes
+        # Endo latent intercept
+        # Endo latents
+        # Manifest intercepts
+        # Endo man with most outgoing edges
+        # Endo man with least incoming edges
+      # For all roots, base graph on graph with:
+        # Double headed arrows removed
+        # Arrow on other intercepts reversed
+#       
+#       if (any(GroupRAM$lhs %in% GroupVars$name[exoMan] & GroupRAM$edge %in% c("->","~>")))
+#       {
+#         roots <- sort(unique(Edgelist[,1][which(GroupRAM$lhs %in% GroupVars$name[exoMan] & GroupRAM$edge %in% c("->","~>"))]))
+#         if (any(roots %in% manIntsExo[,2]))
+#         {
+#           roots <- manIntsExo[match(roots,manIntsExo[,2]),1]
+#         } 
+#       } else 
+#         
+      if (nrow(manIntsExo) > 0)
+      {
+        roots <- manIntsExo[,1]
+      } else if (length(exoMan) > 0)
+      {
+        roots <- exoMan
+      } else if (nrow(latIntsExo) > 0)
+      {
+        roots <- latIntsExo[,1]
+      } else if (length(exoLat) > 0)
+      {
+        roots <- exoLat
+      } else if (nrow(latIntsEndo) > 0)
+      {
+        roots <- latIntsEndo[,1]
+      } else if (length(endoLat) > 0)
+      {
+        roots <- endoLat
+      } else if (nrow(rbind(manIntsExo,manIntsEndo)) > 0)
+      {
+        roots <- rbind(manIntsExo,manIntsEndo)[,1]
+      } else if (any(GroupRAM$edge %in% c("->","~>")))
+      {
+        roots <- Mode(Edgelist[,1][GroupRAM$edge %in% c("->","~>")])
+      } else {
+        roots <- Mode(c(Edgelist[,1],Edgelist[,2]))
+      }
+      
+      Layout <- rtLayout(roots,GroupRAM,Edgelist,layout,exoMan)
+      # Fix top level to use entire range:
+      # Layout[Layout[,2]==max(Layout[,2]),1] <- seq(min(Layout[,1]),max(Layout[,1]),length.out=sum(Layout[,2]==max(Layout[,2])))
+      # Center all horizontal levels:
+      if (length(roots)>1) Layout[,1] <- ave(Layout[,1],Layout[,2],FUN = function(x) scale(x,TRUE,FALSE))
+      
+    } else Layout <- layout
+    
+    # Set curves and rotate:
+    
+    if (layout %in% c("tree","tree2"))
+    {
+      
       inBetween <- function(x)
       {
         if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
@@ -560,9 +671,13 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
       Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
       
       ### ORDINALIZE LAYOUT ###
-      Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
-      Layout[Layout[,2]==0,2] <- 0.5
-      Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + 0.5
+      if (layout=="tree")
+      {
+        Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
+        Layout[Layout[,2]==0,2] <- 0.5
+        Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + 0.5        
+      }
+
       #         for (i in unique(Layout[,2]))
       #         {
       #           Layout[Layout[,2]==i,1] <- (as.numeric(as.factor(Layout[Layout[,2]==i,1])) - 1) / (sum(Layout[,2]==i) - 1)
@@ -584,10 +699,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
         Layout[,2] <- -1 * Layout[,2]
       }
       Layout[,2] <- Layout[,2]-max(Layout[,2]) + 0.5
-    } else Layout <- layout
+    }
     
     # loopRotation:
-    if (layout=="tree")
+    if (layout%in%c("tree","tree2"))
     {
       loopRotation <- rep(0,nN)
       loopRotation[endoMan] <- pi
@@ -826,7 +941,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
     if (grepl("mx",style,ignore.case=TRUE)) LoopAsResid <- FALSE else LoopAsResid <- TRUE
     
     ### ROTATE IF CIRCLE:
-    if (layout=="circle")
+    if (layout%in%c("circle","circle2"))
     {
       if (rotation%in%c(2,4)) stop("Circle layout only supported if rotation is 1 or 3")
       underMean <- Layout[,2] < mean(Layout[,2])
@@ -840,7 +955,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
         c <- 1
         for (j in order(Layout[Layout[,2]==i,1]))
         {
-          Ltemp[Layout[,2]==i,][j,] <- RotMat(sq[c])%*%c(0,i)
+          Ltemp[which(Layout[,2]==i)[j],] <- c(RotMat(sq[c])%*%c(0,i))
           c <- c + 1
         }
       }
@@ -851,7 +966,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
       loopRotation <- ifelse(underMean,loopRotation,(loopRotation+pi)%%(2*pi))
     }
     
-    if (layout=="spring") loopRotation <- NULL
+    if (layout == "spring") loopRotation <- NULL
     
     
     if (!allVars)
@@ -934,6 +1049,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
     {
       Labels <- as.expression(parse(text=Labels))
     }
+    # Restore layout function:
+    if (!is.null(layoutFun)) Layout <- layoutFun
     
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
                                              labels=Labels,
@@ -955,6 +1072,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
                                              residEdge = isResid,
                                              edgelist = TRUE,
                                              curveDefault = curveDefault,
+                                             layout.par = layout.par,
                                              ...)
     
     if (thresholds)
