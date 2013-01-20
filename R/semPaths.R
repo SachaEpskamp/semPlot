@@ -155,9 +155,9 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-# setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
+# setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,meanStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=FALSE,layout.par=list(),...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,...){
   
   # Check if input is combination of models:
   call <- deparse(substitute(object))
@@ -167,12 +167,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
     obs <- lapply(args,function(x)semPlotModel(eval(parse(text=x))))
     object <- obs[[1]]
     for (i in 2:length(obs)) object <- object + obs[[i]]
-  }
-  
-  # Check if text file and read:
-  if (is.character(object) && grepl("\\.out",object))
-  {
-    object <- readModels(object)
   }
   
   if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object)
@@ -229,7 +223,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
   
   #   residScale <- residScale * 1.75
   # Remove means if means==FALSE
-  if (means==FALSE)
+  if (intercepts==FALSE)
   {
     object@RAM <- object@RAM[object@RAM$edge!="int",]
   }
@@ -430,10 +424,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
     if (any(object@RAM$edge=="int")) 
     {
       Labels[Labels=="1"] <- "_1"
-      if (meanStyle == "single") 
+      if (intStyle == "single") 
       {
         Labels <- c(Labels,"1")
-      } else if (meanStyle == "multi")
+      } else if (intStyle == "multi")
       {
         Labels <- c(Labels,rep("1",Ni))
       } 
@@ -500,7 +494,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
     {
       #       if (all(!object@Vars$exogenous))
       #       {
-      if (meanStyle=="single")
+      if (intStyle=="single")
       {
         # Curves:
         Curve <- ifelse(GroupRAM$lhs != GroupRAM$rhs & ((GroupRAM$lhs%in%manNames & GroupRAM$rhs%in%manNames) | (GroupRAM$lhs%in%latNames & GroupRAM$rhs%in%latNames)),curve,NA)
@@ -525,7 +519,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
           Layout[Labels%in%latNames,1] <- seq(-1,1,length=nL)
         }
         
-      } else if (meanStyle=="multi")
+      } else if (intStyle=="multi")
       {          
         
         # Empty layout:
@@ -1098,7 +1092,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",means=TR
                                              residEdge = isResid,
                                              edgelist = TRUE,
                                              curveDefault = curveDefault,
-                                             layout.par = layout.par,
+                                             knots = GroupRAM$knot,
                                              ...)
     
     if (thresholds)

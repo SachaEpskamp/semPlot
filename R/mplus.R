@@ -7,6 +7,32 @@
 
 semPlotModel.mplus.model <- function(object)
 {
+  addInteractions <- FALSE
+  if (is.character(object))
+  {
+    modfile <- object
+    object <- readModels(object)
+    
+    mod <- readLines(modfile)
+    # Find XWITH:
+    xs <- grep("XWITH",mod)
+    if (length(xs)>0)
+    {
+      # Split:
+      spl <- strsplit(mod[xs],split="\\|")
+      # Find vars that interact:
+      vars <- lapply(spl,function(x)strsplit(x[2],split="XWITH")[[1]])
+      # Extract Vars
+      newvars <- sapply(spl,'[',1)
+      # sanitize:
+      newvars <- gsub("\\W","",newvars)
+      vars <- lapply(vars,gsub,pattern="\\W",replacement="")
+      
+      addInteractions <- TRUE
+    }
+    
+  } else warning("Interactions are ommited. Use semPlotModel.mplus.model on the path to mplus output file for semPlot to attempt to find assigned interactions.")
+  
   if (length(object$parameters)==0) stop("No parameters detected in mplus output.")
   
   parsUS <- object$parameters$unstandardized
@@ -15,6 +41,7 @@ semPlotModel.mplus.model <- function(object)
   
   if (any(grepl("\\|",parsUS$paramHeader)))
   {
+    browser()
     parsUS <- parsUS[!grepl("\\|",parsUS$paramHeader),]
     warning("'|' operator is not yet supported by semPlot. Parameters using this operator will not be shown and unexpected results might occur.")
   }
@@ -114,6 +141,36 @@ semPlotModel.mplus.model <- function(object)
     exogenous = NA,
     stringsAsFactors=FALSE)
   
+  
+  ### Add interactions and remove dummy variables:
+  if (addInteractions)
+  {
+    Vars <- Vars[!tolower(Vars$name)%in%tolower(newvars),]
+    
+    RAM$knot <- 0
+    k <- 1
+    for (i in rev(seq_along(newvars)))
+    {
+      varlocs <- which(tolower(RAM$lhs)==tolower(newvars[i])|tolower(RAM$rhs)==tolower(newvars[i]))
+      for (v in seq_along(varlocs))
+      {
+        for (j in 1:length(vars[[i]]))
+        {
+          RAMnew <- RAM[varlocs[v],]
+          RAMnew$lhs[tolower(RAMnew$lhs)==tolower(newvars[i])] <- Vars$name[match(tolower(vars[[i]][j]),tolower(Vars$name))]
+          RAMnew$rhs[tolower(RAMnew$rhs)==tolower(newvars[i])] <- Vars$name[match(tolower(vars[[i]][j]),tolower(Vars$name))]
+          if (RAMnew$knot==0)
+          {
+            RAMnew$knot <- k
+          }
+          RAM <- rbind(RAM,RAMnew)
+        } 
+        if (any(RAM$knot==k)) k <- k + 1
+      }
+      RAM <- RAM[-varlocs,]
+    }
+    
+  }
 
   
   semModel <- new("semPlotModel")

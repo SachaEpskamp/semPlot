@@ -75,7 +75,7 @@ semPlotModel.default <- function(object)
   {
     if (grepl("\\.out",object,ignore.case=TRUE))
     {
-      return(semPlotModel(readModels(object)))
+      return(semPlotModel.mplus.model(object))
     }
     if (grepl("\\.xml",object,ignore.case=TRUE))
     {

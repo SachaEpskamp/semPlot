@@ -17,8 +17,15 @@ semPlotModel.lm <- function(object)
     paste(LETTERS[f(x)],collapse="")
   }
   
-  if (is.null(rownames(coef))) rownames(coef) <- combLetters(1:Nr)
-  if (is.null(colnames(coef))) colnames(coef) <- combLetters(1:Nc)
+  if (is.null(rownames(coef)))
+  {
+    rownames(coef) <- names(object$model)[(Nc+1):length(object$model)] 
+  }
+  
+  if (is.null(colnames(coef)))
+  {
+    colnames(coef) <- names(object$model)[1:Nc]
+  }
   
   NamesR <- rownames(coef)
   NamesC <- colnames(coef)
@@ -33,24 +40,36 @@ semPlotModel.lm <- function(object)
     group = "",
     fixed = FALSE,
     par = 1:(Nr*Nc),
+    knot = 0,
     stringsAsFactors=FALSE)
+  
+  ## Split interactions:
+  if (any(grepl(":",RAM$lhs)))
+  {
+    colons <- grep(":",RAM$lhs)
+    for (i in seq_along(colons))
+    {
+      labs <- strsplit(RAM$lhs[colons[i]],split=":")[[1]]
+      RAM$lhs[colons[i]] <- labs[1]
+      RAM$knot[colons[i]] <- i
+      for (j in 2:length(labs))
+      {
+        RAM <- rbind(RAM,RAM[colons[i],])
+        RAM$lhs[nrow(RAM)] <- labs[j]
+      }
+    }
+  }
   
   RAM$edge[grepl("intercept",RAM$lhs,ignore.case=TRUE)] <- "int"
   RAM$lhs[grepl("intercept",RAM$lhs,ignore.case=TRUE)] <- ""
   
-  ## Remove interactions plus warning:
-  if (any(grepl("\\:",RAM$lhs)))
-  {
-    warning("Interaction terms are not yet supported by semPlot, and are removed.")
-    RAM <- RAM[!grepl("\\:",RAM$lhs),]  
-  }
-  
   # Variable dataframe: 
   Vars <- data.frame(
-    name = c(NamesR[!grepl("intercept",NamesR,ignore.case=TRUE)],NamesC),
+    name = unique(c(RAM$lhs,RAM$rhs)),
     manifest = TRUE,
     exogenous = NA,
     stringsAsFactors=FALSE)
+  Vars <- Vars[Vars$name!="",]
   
   semModel <- new("semPlotModel")
   semModel@RAM <- RAM
