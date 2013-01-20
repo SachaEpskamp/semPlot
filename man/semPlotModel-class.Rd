@@ -5,7 +5,7 @@
 
 \title{Class \code{"semPlotModel"}}
 \description{
-Representation of SEM models
+Representation of SEM models, can be used by \code{\link{semPaths}}, \code{\link{semCors}} and \code{\link{semSyntax}.} See \code{\link{semPlotModel-edit}} for utility functions on how to edit this model.
 }
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("semPlotModel", ...)}.
@@ -71,6 +71,8 @@ Sacha Epskamp <mail@sachaepskamp.com>
 \code{\link{semPlotModel}}
 \code{\link{semPaths}}
 \code{\link{semCors}}
+\code{\link{semsyntax}}
+\code{\link{semPlotModel-edit}}
 }
 \examples{
 showClass("semPlotModel")

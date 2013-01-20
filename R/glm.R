@@ -36,7 +36,7 @@ semPlotModel.lm <- function(object)
     edge = "->",
     rhs = rep(NamesC,each=Nr),
     est = c(coef),
-    std = NA,
+    std = c(coef(standardize(object))),
     group = "",
     fixed = FALSE,
     par = 1:(Nr*Nc),

@@ -17,8 +17,8 @@ IntInNode <- function(layout,cex,shape,m,width=0.2,triangles=TRUE,col="black",si
       #       browser()
       x <- layout[i,1]
       y <- layout[i,2]
-      xran <- qgraph:::Cent2Edge(layout[i,1],layout[i,2],pi/2,cex[i],shape[i])[1] - x
-      yran <- qgraph:::Cent2Edge(layout[i,1],layout[i,2],0,cex[i],shape[i])[2] - y
+      xran <- qgraph:::Cent2Edge(layout[i,1],layout[i,2],pi/2,cex[i],cex[i],shape[i])[1] - x
+      yran <- qgraph:::Cent2Edge(layout[i,1],layout[i,2],0,cex[i],cex[i],shape[i])[2] - y
       
       if (!inside)
       {

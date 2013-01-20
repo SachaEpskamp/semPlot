@@ -1,3 +1,5 @@
+semPlotModel.lisrel <- function(object) do.call(lisrelModel, object$matrices)
+
 InvEmp <- function(x)
 {
   if (any(dim(x)==0)) 

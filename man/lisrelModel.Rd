@@ -5,7 +5,7 @@
 Construct SEM model using LISREL matrix specification.
 }
 \description{
-This function creates a 'semPlotModel' object using matrices of the extended LISREL model (Joreskog & Sorbom, 1996). This function has two main purposes. First, it can be used to easilly create path diagrams of arbitrary SEM models without having to run an actual analysis. And second, it is specifically designed to work with the output of the 'lisrelToR' package (using \code{do.call(lisrelModel,output)}). Using  \code{\link{semPaths}} or  \code{\link{semPlotModel}} on the file path of a LISREL output file will automatically first run \code{\link[lisrelToR]{readLisrel}} and then this function.
+This function creates a 'semPlotModel' object using matrices of the extended LISREL model (Joreskog & Sorbom, 1996). This function has two main purposes. First, it can be used to easilly create path diagrams of arbitrary SEM models without having to run an actual analysis. And second, it is specifically designed to work with the output of the 'lisrelToR' package (using \code{do.call(lisrelModel,output$matrices)}). Using  \code{\link{semPaths}} or  \code{\link{semPlotModel}} on the file path of a LISREL output file will automatically first run \code{\link[lisrelToR]{readLisrel}} and then this function.
 }
 \usage{
 lisrelModel(LY, PS, BE, TE, TY, AL, manNamesEndo, latNamesEndo, LX, PH, GA, TD, TX, KA, manNamesExo, latNamesExo, ObsCovs, ImpCovs, setExo, modelLabels = FALSE)

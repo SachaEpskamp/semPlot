@@ -37,7 +37,8 @@ setGeneric("semPlotModel.S4", function(object) {
 
 semPlotModel <- function (object) {
   # Check if call contains a + operator, if so combine models:
-  call <- deparse(substitute(object))
+  
+  call <- paste(deparse(substitute(object)), collapse = "")
   if (grepl("\\+",call)) 
   {
     args <- unlist(strsplit(call,split="\\+"))
@@ -73,10 +74,8 @@ semPlotModel.default <- function(object)
 {
   if (is.character(object))
   {
-    if (grepl("\\.out",object,ignore.case=TRUE))
-    {
-      return(semPlotModel.mplus.model(object))
-    }
+    if (!file.exists(object)) stop("file does not exist.")
+    # Find file:
     if (grepl("\\.xml",object,ignore.case=TRUE))
     {
       return(semPlotModel.Onyx(object))
@@ -85,6 +84,34 @@ semPlotModel.default <- function(object)
     {
       return(semPlotModel.Amos(object))
     }
+    
+    # Read first 100 lines:
+    head <- readLines(object, 10)
+    if (any(grepl("mplus",head,ignore.case=TRUE)))
+    {
+      return(semPlotModel.mplus.model(object))
+    }
+    
+    if (any(grepl("l\\s*i\\s*s\\s*r\\s*e\\s*l",head,ignore.case=TRUE)))
+    {
+      return(semPlotModel(readLisrel(object)))
+    }
+    
+    # If all else fais, just try everything and assume you get errors 
+    # if it is wrong:
+    mod <- try(semPlotModel.mplus.model(object),silent=TRUE)
+    if (!"try-error"%in%class(mod)) return(mod)
+
+    mod <- try(semPlotModel(readLisrel(object)),silent=TRUE)
+    if (!"try-error"%in%class(mod)) return(mod)
+    
+    mod <- try(semPlotModel.Onyx(object),silent=TRUE)
+    if (!"try-error"%in%class(mod)) return(mod)
+    
+    mod <- try(semPlotModel.Amos(object),silent=TRUE)
+    if (!"try-error"%in%class(mod)) return(mod)
+    
+    # Well, we failed...
   }
   
   stop("Object not recognized as SEM model")

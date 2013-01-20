@@ -12,7 +12,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
         intercepts = TRUE, residuals = TRUE, thresholds = TRUE, 
         intStyle = "multi", rotation = 1, curve, nCharNodes = 3, 
         nCharEdges = 3, sizeMan = 5, sizeLat = 8, sizeInt = 2, ask, 
-        mar, title = TRUE, title.color = "black", include, 
+        mar, title, title.color = "black", include, 
         combineGroups = FALSE, manifests, latents, groups, color, 
         residScale, gui = FALSE, allVars = FALSE, edge.color, 
         reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, 
@@ -136,7 +136,7 @@ Controls the color of nodes. Similar to 'color' in \code{\link[qgraph]{qgraph}}.
 The size of residual edges if \code{style = "lisrel"}. Defaults to two times the value of 'sizeMan'.
 }
   \item{gui}{
-Logical. If TRUE a GUI is opened to control the most important arguments of this function. This is done with the \code{\link{semPathsGUI}} function.
+Not yet implemented.
 }
   \item{allVars}{
 Logical. If TRUE all variables are plotted in the path diagrams for each group. If FALSE only variables are plotted that are used in the group.
@@ -202,3 +202,86 @@ Sacha Epskamp <mail@sachaepskamp.com>
  \code{\link{lisrelModel}}
 }
 
+\examples{
+# Regression analysis with interaction effects ----------------------------
+
+# A silly dataset:
+X <- rnorm(100)
+Y <- rnorm(100)
+Z <- rnorm(1)*X + rnorm(1)*Y + rnorm(1)*X*Y
+DF <- data.frame(X,Y,Z)
+
+# Regression including interaction:
+res <- lm(Z ~ X*Y, data = DF)
+
+# Path diagram:
+semPaths(res)
+
+# Standardized estimates:
+semPaths(res,"std","hide")
+
+
+
+# MIMIC model (Lavaan) ----------------------------------------------------
+
+library("lavaan")
+
+# Example 5.8 from mplus user guide:
+Data <- read.table("http://www.statmodel.com/usersguide/chap5/ex5.8.dat")
+names(Data) <- c(paste("y", 1:6, sep=""),
+                 paste("x", 1:3, sep=""))
+
+# Model:
+model.Lavaan <- 'f1 =~ y1 + y2 + y3
+f2 =~ y4 + y5 + y6
+f1 + f2 ~ x1 + x2 + x3 '
+
+# Run Lavaan:
+library("lavaan")
+fit <- lavaan:::cfa(model.Lavaan, data=Data, std.lv=TRUE)
+
+# Plot path diagram:
+semPaths(fit,title=FALSE)
+
+# Standardized parameters:
+semPaths(fit,"std",edge.label.cex=0.5)
+
+
+# MIMIC model (mplus) -----------------------------------------------------
+
+# Same model, now using mplus output:
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.8.out",outfile <- tempfile(fileext=".out"))
+
+# Plot model:
+semPaths(outfile,intercepts=FALSE)
+# Note that mplus did not report the fixed variances of the exogenous variables.
+
+
+
+
+# Thresholds (Lavaan) -----------------------------------------------------
+
+# Example 5.8 from mplus user guide:
+Data <- read.table("http://www.statmodel.com/usersguide/chap5/ex5.2.dat")
+names(Data) <- c("u1","u2","u3","u4","u5","u6")
+Data <- as.data.frame(lapply(Data, ordered))
+
+# Lavaan model:
+model <- ' f1 =~ u1 + u2 + u3; f2 =~ u4 + u5 + u6 '
+
+# Run Lavaan:
+fit <- cfa(model, data=Data)
+
+# Plot path diagram:
+semPaths(fit,intercepts=FALSE)
+
+
+
+# Thresholds (mplus) ------------------------------------------------------
+
+# Same model, now using mplus output:
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile <- tempfile(fileext=".out"))
+
+# Plot model:
+semPaths(outfile)
+}

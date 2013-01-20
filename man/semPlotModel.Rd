@@ -1,76 +1,61 @@
 \name{semPlotModel}
 \alias{semPlotModel}
+\alias{semPlotModel.lm}
+\alias{semPlotModel.principal}
+\alias{semPlotModel.princomp}
+\alias{semPlotModel.loadings}
+\alias{semPlotModel.factanal}
 \alias{semPlotModel.lavaan}
+\alias{semPlotModel.lisrel}
+\alias{semPlotModel.semspec}
+\alias{semPlotModel.mplus.model}
+\alias{semPlotModel.sem}
+\alias{semPlotModel.msem}
+\alias{semPlotModel.msemObjectiveML}
+\alias{semPlotModel.Amos}
+\alias{semPlotModel.Onyx}
 \title{
 SEM model representation
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Methods to read a SEM object and return a \code{\link{semPlotModel-class}} object.
 }
 \usage{
-semPlotModel(object)
+\method{semPlotModel}{default}(object)
+\method{semPlotModel}{lm}(object)
+\method{semPlotModel}{principal}(object)
+\method{semPlotModel}{princomp}(object)
+\method{semPlotModel}{loadings}(object)
+\method{semPlotModel}{factanal}(object)
 \method{semPlotModel}{lavaan}(object)
+\method{semPlotModel}{lisrel}(object)
+\method{semPlotModel}{semspec}(object)
+\method{semPlotModel}{mplus.model}(object)
+\method{semPlotModel}{sem}(object)
+\method{semPlotModel}{msem}(object)
+\method{semPlotModel}{msemObjectiveML}(object)
+semPlotModel.Amos(object)
+semPlotModel.Onyx(object)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
-%%     ~~Describe \code{object} here~~
+An object contaning the result of a SEM or GLM analysis, or a string contaning the file path to the output file of a sEM program.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+A detailed overview of which packages are supported and what is supported for each of them will soon be on my website.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
-}
-\author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+A \code{"semPlotModel"} object. See \code{link{semPlotModel-class}}
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+\author{
+Sacha Epskamp <mail@sachaepskamp.com>
+}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{semPaths}}
+\code{\link{semCors}}
+\code{\link{semPlotModel-class}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (object) 
-{
-    call <- deparse(substitute(object))
-    if (grepl("\\+", call)) {
-        args <- unlist(strsplit(call, split = "\\+"))
-        obs <- lapply(args, function(x) semPlotModel(eval(parse(text = x))))
-        Res <- obs[[1]]
-        for (i in 2:length(obs)) Res <- Res + obs[[i]]
-        return(Res)
-    }
-    if ("MxRAMModel" \%in\% class(object)) 
-        return(semPlotModel_MxRAMModel(object))
-    if ("MxModel" \%in\% class(object)) 
-        return(semPlotModel_MxModel(object))
-    if (isS4(object)) {
-        semPlotModel.S4(object)
-    }
-    else {
-        UseMethod("semPlotModel", object)
-    }
-  }
-}
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

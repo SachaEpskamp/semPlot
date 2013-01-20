@@ -1,14 +1,14 @@
 Package: semPlot
 Type: Package
 Title: Path diagrams and visual analysis of various SEM packages' output
-Version: 0.2.0-4
-Date: 2012-11-22
+Version: 0.3
+Date: 2013-01-20
 Author: Sacha Epskamp
 Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
 Depends: R (>= 2.15.0)
-Depends: qgraph
-Suggests: lavaan, sem, MplusAutomation, OpenMx, rpanel
-Imports:  lavaan, sem, MplusAutomation, plyr, methods, XML, igraph
+Depends: qgraph (>= 1.2)
+Suggests: lavaan, sem, MplusAutomation
+Imports:  lavaan, sem, MplusAutomation, plyr, methods, XML, igraph, lisrelToR, rockchalk
 ByteCompile: yes
 Description:  Path diagrams and visual analysis of various SEM packages' output
 URL: https://github.com/SachaEpskamp/semPlot

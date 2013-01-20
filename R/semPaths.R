@@ -157,10 +157,10 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
 
 # setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,...){
   
   # Check if input is combination of models:
-  call <- deparse(substitute(object))
+  call <- paste(deparse(substitute(object)), collapse = "")
   if (grepl("\\+",call)) 
   {
     args <- unlist(strsplit(call,split="\\+"))
@@ -172,7 +172,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object)
   stopifnot("semPlotModel"%in%class(object))
   
-  if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
+  # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
   
   # Check:
   if (!rotation%in%1:4)
@@ -236,6 +236,12 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   if (combineGroups)
   {
     object@RAM$group <- ""
+  }
+  # Set title:
+  if (missing(title))
+  {
+    # Check titles:
+    title <- length(unique(object@RAM$group))>1
   }
   # If structural, remove all manifest from RAM:
   if (structural)
@@ -653,10 +659,17 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       noCons <- sapply(endoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%endoMan|Edgelist[,2]%in%endoMan),])==0)
       if (length(noCons)==0) noCons <- logical(0)
       loopRotation[endoLat][noCons] <- pi
-      if (length(endoLat) > 1)
+      if (length(endoLat) > 1 & !(length(exoLat)==0&length(exoMan)==0))
       {
-        loopRotation[endoLat[which.min(Layout[endoLat,1])]] <- ifelse(noCons[which.min(Layout[endoLat,1])],5/4*pi,7/4*pi)
-        loopRotation[endoLat[which.max(Layout[endoLat,1])]] <- ifelse(noCons[which.min(Layout[endoLat,1])],3/4*pi,1/4*pi)
+        if (length(exoLat) > 0 | any(endoLat %in% latIntsEndo[,2]))
+        {
+          loopRotation[endoLat[which.min(Layout[endoLat,1])]] <- ifelse(noCons[which.min(Layout[endoLat,1])],5/4*pi,7/4*pi)
+          loopRotation[endoLat[which.max(Layout[endoLat,1])]] <- ifelse(noCons[which.min(Layout[endoLat,1])],3/4*pi,1/4*pi)          
+        } else {
+          loopRotation[endoLat[which.min(Layout[endoLat,1])]] <- 6/4 * pi
+          loopRotation[endoLat[which.max(Layout[endoLat,1])]] <- 2/4 * pi
+        }
+
       } else if (length(endoLat) == 1 && endoLat %in% latIntsEndo[,2])
       {
         loopRotation[endoLat] <- 6/4 * pi
@@ -666,10 +679,16 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       noCons <- sapply(exoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%exoMan|Edgelist[,2]%in%exoMan),])==0)
       if (length(noCons)==0) noCons <- logical(0)
       loopRotation[exoLat][noCons] <- 0
-      if (length(exoLat) > 1)
+      if (length(exoLat) > 1 & length(exoMan)>0)
       {
-        loopRotation[exoLat[which.min(Layout[exoLat,1])]] <- ifelse(noCons[which.min(Layout[exoLat,1])],7/4*pi,5/4*pi)
-        loopRotation[exoLat[which.max(Layout[exoLat,1])]] <- ifelse(noCons[which.min(Layout[exoLat,1])],1/4*pi,3/4*pi)
+        if (length(endoLat) > 0 | any(exoLat %in% latIntsExo[,2]))
+        {
+          loopRotation[exoLat[which.min(Layout[exoLat,1])]] <- ifelse(noCons[which.min(Layout[exoLat,1])],7/4*pi,5/4*pi)
+          loopRotation[exoLat[which.max(Layout[exoLat,1])]] <- ifelse(noCons[which.min(Layout[exoLat,1])],1/4*pi,3/4*pi)
+        } else {
+          loopRotation[exoLat[which.min(Layout[exoLat,1])]] <- 6/4*pi
+          loopRotation[exoLat[which.max(Layout[exoLat,1])]] <- 2/4*pi          
+        }
       } else if (length(exoLat) == 1 && exoLat %in% latIntsExo[,2])
       {
         loopRotation[exoLat] <- 6/4 * pi
@@ -1006,21 +1025,27 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     ### Compute margins ###
     if (missing(mar))
     {
-      Mar <- c(3,3,3,3)
+      Mar <- c(5,5,5,5)
       
       # Add 3 to top and bottom for residuals if lisrel style is used:
       if (grepl("lisrel",style,ignore.case=TRUE)) Mar[c(1,3)] <- Mar[c(1,3)] + 3
       
-      # Add 4 to bottom if there are endo man residual correlations:
-      if (any(Edgelist[,1]%in%endoMan & Edgelist[,2]%in%endoMan & Edgelist[,1]!=Edgelist[,2]))
+#       # Add 4 to bottom if there are endo man residual correlations:
+#       if (any(Edgelist[,1]%in%endoMan & Edgelist[,2]%in%endoMan & Edgelist[,1]!=Edgelist[,2]))
+#       {
+#         Mar[1] <- Mar[1] + 4
+#       }
+#       
+#       # Add 4 to top if there are endo man residual correlations:
+#       if (any(Edgelist[,1]%in%exoMan & Edgelist[,2]%in%exoMan & Edgelist[,1]!=Edgelist[,2]))
+#       {
+#         Mar[3] <- Mar[3] + 4
+#       }
+#       
+      # Add 3 to top if top consist of latent residuals:
+      if (length(exoMan)==0)
       {
-        Mar[1] <- Mar[1] + 4
-      }
-      
-      # Add 2 to top if there are endo man residual correlations:
-      if (any(Edgelist[,1]%in%exoMan & Edgelist[,2]%in%exoMan & Edgelist[,1]!=Edgelist[,2]))
-      {
-        Mar[3] <- Mar[3] + 4
+        Mar[3] <- Mar[3] + 3
       }
       
       # Rotate:
