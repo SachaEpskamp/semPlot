@@ -222,7 +222,8 @@ semPaths(res,"std","hide")
 
 
 
-# MIMIC model (Lavaan) ----------------------------------------------------
+# MIMIC model ----------------------------------------------------
+## Lavaan
 
 library("lavaan")
 
@@ -247,7 +248,7 @@ semPaths(fit,title=FALSE)
 semPaths(fit,"std",edge.label.cex=0.5)
 
 
-# MIMIC model (mplus) -----------------------------------------------------
+## Mplus
 
 # Same model, now using mplus output:
 download.file("http://www.statmodel.com/usersguide/chap5/ex5.8.out",outfile <- tempfile(fileext=".out"))
@@ -259,7 +260,8 @@ semPaths(outfile,intercepts=FALSE)
 
 
 
-# Thresholds (Lavaan) -----------------------------------------------------
+# Thresholds  -----------------------------------------------------
+## Lavaan
 
 # Example 5.8 from mplus user guide:
 Data <- read.table("http://www.statmodel.com/usersguide/chap5/ex5.2.dat")
@@ -276,12 +278,16 @@ fit <- cfa(model, data=Data)
 semPaths(fit,intercepts=FALSE)
 
 
-
-# Thresholds (mplus) ------------------------------------------------------
+## Mplus
 
 # Same model, now using mplus output:
 download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile <- tempfile(fileext=".out"))
 
 # Plot model:
 semPaths(outfile)
+}
+
+\seealso{
+
+
 }
