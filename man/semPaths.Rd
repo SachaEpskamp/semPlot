@@ -242,10 +242,10 @@ library("lavaan")
 fit <- lavaan:::cfa(model.Lavaan, data=Data, std.lv=TRUE)
 
 # Plot path diagram:
-semPaths(fit,title=FALSE)
+semPaths(fit,title=FALSE, curvePivot = TRUE)
 
 # Standardized parameters:
-semPaths(fit,"std",edge.label.cex=0.5)
+semPaths(fit,"std",edge.label.cex=0.5, curvePivot = TRUE)
 
 
 ## Mplus
@@ -272,7 +272,7 @@ Data <- as.data.frame(lapply(Data, ordered))
 model <- ' f1 =~ u1 + u2 + u3; f2 =~ u4 + u5 + u6 '
 
 # Run Lavaan:
-fit <- cfa(model, data=Data)
+fit <- lavaan::cfa(model, data=Data)
 
 # Plot path diagram:
 semPaths(fit,intercepts=FALSE)
