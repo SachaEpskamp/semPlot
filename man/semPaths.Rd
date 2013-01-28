@@ -286,8 +286,3 @@ download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile <- t
 # Plot model:
 semPaths(outfile)
 }
-
-\seealso{
-
-
-}
