@@ -1,5 +1,5 @@
 \name{semPlot-tricks}
-\alias{'+.semPlotModel'}
+\alias{+.semPlotModel}
 \alias{semPlotModel.list}
 \title{
 Tricks that can be used in semPlot.
@@ -8,7 +8,7 @@ Tricks that can be used in semPlot.
 Use a list contaning several SEM objects (from any source) to plot them as the same model. Also, the '+' operator can be used to combine two models, including in calls in \code{\link{semPaths}} and \code{\link{semPlotModel}}. See examples.
 }
 \usage{
-\method{'+'}{semPlotModel}(x,y)
+\method{+}{semPlotModel}(x,y)
 \method{semPlotModel}{list}(object)
 }
 %- maybe also 'usage' for other objects documented here.

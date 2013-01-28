@@ -78,11 +78,11 @@ semPlotModel.default <- function(object)
     # Find file:
     if (grepl("\\.xml",object,ignore.case=TRUE))
     {
-      return(semPlotModel.Onyx(object))
+      return(semPlotModel_Onyx(object))
     }
     if (grepl("\\.AmosOutput",object,ignore.case=TRUE))
     {
-      return(semPlotModel.Amos(object))
+      return(semPlotModel_Amos(object))
     }
     
     # Read first 100 lines:
@@ -105,10 +105,10 @@ semPlotModel.default <- function(object)
     mod <- try(semPlotModel(readLisrel(object)),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
     
-    mod <- try(semPlotModel.Onyx(object),silent=TRUE)
+    mod <- try(semPlotModel_Onyx(object),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
     
-    mod <- try(semPlotModel.Amos(object),silent=TRUE)
+    mod <- try(semPlotModel_Amos(object),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
     
     # Well, we failed...

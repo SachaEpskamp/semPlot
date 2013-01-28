@@ -26,9 +26,9 @@ Mode <- function(x) {
 ## Function to compute reingold-tilford layout using igraph:
 rtLayout <- function(roots,GroupRAM,Edgelist,layout,exoMan)
 {
-#   browser()
   # Reverse intercepts in graph:
-  revNodes <- which((GroupRAM$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
+#   revNodes <- which((GroupRAM$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
+  revNodes <- which((GroupRAM$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
   Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
   # Remove double headed arrows:
   Edgelist <- Edgelist[GroupRAM$edge != "<->",]
@@ -42,7 +42,7 @@ rtLayout <- function(roots,GroupRAM,Edgelist,layout,exoMan)
 }
 
 ## Function to mix color vector x with weight w
-mixCols <- function(x,w)
+mixColfun <- function(x,w)
 {
   # x = vector of colors
   # w = weights
@@ -157,7 +157,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
 
 # setMethod("semPaths.S4",signature("semPlotModel"),function(object,what="paths",whatLabels,style,layout="tree",means=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title=TRUE,title.color="black",include,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression,optimizeLatRes=TRUE,...){
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -838,6 +838,25 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     } else if (!grepl("col",what,ignore.case=TRUE)) stop("Could not detect use of 'what' argument")
     
     ### VERTEX COLOR ###
+    # Set default if list:
+    if (is.list(color))
+    {
+      colList <- color
+      color <- rep("",nN)
+      if (!is.null(colList$man))
+      {
+        color[Labels%in%manNames] <- colList$man
+      }
+      if (!is.null(colList$lat))
+      {
+        color[Labels%in%latNames] <- colList$lat
+      }
+      if (!is.null(colList$int))
+      {
+        color[Labels=="1"] <- colList$int
+      }
+    }
+    
     if (!missing(groups))
     {
       NodeGroups <- groups
@@ -872,27 +891,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         #         Vcolors[Vcolors=="" & Labels%in%manNames] <- "white"
       }
       
-      # If missing color, obtain weighted mix of connected colors:
-      VcolorsBU <- Vcolors
-      W <- 1
-      for (i in 1:(nM+nL))
-      {
-        if (Vcolors[i]=="")
-        {
-          cons <- c(Edgelist[Edgelist[,1]==i,2],Edgelist[Edgelist[,2]==i,1])
-          if (ncol(Edgelist) == 3)
-          {
-            W <- abs(c(Edgelist[Edgelist[,1]==i,3],Edgelist[Edgelist[,2]==i,3]))
-            W <- W[VcolorsBU[cons]!=""]
-          }
-          cons <- cons[VcolorsBU[cons]!=""]
-          if (length(cons)>0)
-          {
-            Vcolors[i] <- mixCols(VcolorsBU[cons],W)
-          } else Vcolors[i] <- NA
-        }
-      }
-      Vcolors[Vcolors==""] <- NA
     } else 
     {
       NodeGroups <- NULL
@@ -909,13 +907,43 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       } else stop("'color' vector not of appropriate length")
     }
     
+    # If missing color, obtain weighted mix of connected colors:
+    if (any(Vcolors==""))
+    {
+      if (mixCols)
+      {
+        VcolorsBU <- Vcolors
+        W <- 1
+  #       for (i in 1:(nM+nL))
+        for (i in 1:nN)
+        {
+          if (Vcolors[i]=="")
+          {
+            cons <- c(Edgelist[Edgelist[,1]==i,2],Edgelist[Edgelist[,2]==i,1])
+            if (ncol(Edgelist) == 3)
+            {
+              W <- abs(c(Edgelist[Edgelist[,1]==i,3],Edgelist[Edgelist[,2]==i,3]))
+              W <- W[VcolorsBU[cons]!=""]
+            }
+            cons <- cons[VcolorsBU[cons]!=""]
+            if (length(cons)>0)
+            {
+              Vcolors[i] <- mixColfun(VcolorsBU[cons],W)
+            } else Vcolors[i] <- NA
+          }
+        }
+      }
+      Vcolors[Vcolors==""] <- NA
+    }
+    
+    
     if (grepl("col",what,ignore.case=TRUE))
     {
       #       eColor <- character(nrow(Edgelist))
       for (i in 1:nrow(Edgelist))
       {
         cols <- Vcolors[Edgelist[i,]]
-        if (!all(cols=="background")) eColor[i] <- mixCols(cols[cols!="background"])
+        if (!all(cols=="background")) eColor[i] <- mixColfun(cols[cols!="background"])
       }
     }
     

@@ -1,9 +1,5 @@
-# library("XML")
-# object <- file.choose()
-# object <- "C:\\Users\\Sacha\\Documents\\Amos\\English\\Ex06-all.AmosOutput"
 
-
-semPlotModel.Amos <- function(object)
+semPlotModel_Amos <- function(object)
 {
   ## Warnings:
   warning("(Residual) variances of Amos model is not yet supported")

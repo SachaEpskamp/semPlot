@@ -1,4 +1,5 @@
 \name{semPlotModel-edit}
+\alias{semPlotModel-edit}
 \alias{exo}
 \alias{exo<-}
 \alias{endo}

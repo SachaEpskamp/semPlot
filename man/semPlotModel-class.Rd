@@ -25,7 +25,7 @@ Objects can be created by calls of the form \code{new("semPlotModel", ...)}.
       \item{\code{~>}}{Regression. The same as \code{'->'} in that it results in a directed edge from the left hand side to the right hand side, but \code{'~>'} differs in that if the right hand side is manifest and the left hand side is an exogenous latent the right hand side is interpreted as an endogenous variable rather than an exogenous variable.}
       \item{\code{<->}}{(co)variance}
       \item{\code{int}}{intercept, The left hand side should be "" and the right hand side indicates the variable to which the intercept belongs.}
-      \item{\code{\code{--}}}{Undirected edge. Only used as dummy encoding and in cases the parameter can not be interpreted (usually this indicates something that is not yet supported)}
+      \item{\code{--}}{Undirected edge. Only used as dummy encoding and in cases the parameter can not be interpreted (usually this indicates something that is not yet supported)}
 
     }}
     
@@ -71,7 +71,7 @@ Sacha Epskamp <mail@sachaepskamp.com>
 \code{\link{semPlotModel}}
 \code{\link{semPaths}}
 \code{\link{semCors}}
-\code{\link{semsyntax}}
+\code{\link{semSyntax}}
 \code{\link{semPlotModel-edit}}
 }
 \examples{
