@@ -1,19 +1,20 @@
 \name{semPlotModel}
 \alias{semPlotModel}
+\alias{semPlotModel.default}
 \alias{semPlotModel.lm}
 \alias{semPlotModel.principal}
 \alias{semPlotModel.princomp}
 \alias{semPlotModel.loadings}
 \alias{semPlotModel.factanal}
-\alias{semPlotModel.lavaan}
+% \alias{semPlotModel.lavaan}
 \alias{semPlotModel.lisrel}
-\alias{semPlotModel.semspec}
+% \alias{semPlotModel.semspec}
 \alias{semPlotModel.mplus.model}
 \alias{semPlotModel.sem}
 \alias{semPlotModel.msem}
 \alias{semPlotModel.msemObjectiveML}
-\alias{semPlotModel.Amos}
-\alias{semPlotModel.Onyx}
+\alias{semPlotModel_Amos}
+\alias{semPlotModel_Onyx}
 \title{
 SEM model representation
 }
@@ -27,20 +28,20 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 \method{semPlotModel}{princomp}(object)
 \method{semPlotModel}{loadings}(object)
 \method{semPlotModel}{factanal}(object)
-\method{semPlotModel}{lavaan}(object)
+% \method{semPlotModel}{lavaan}(object)
 \method{semPlotModel}{lisrel}(object)
-\method{semPlotModel}{semspec}(object)
+% \method{semPlotModel}{semspec}(object)
 \method{semPlotModel}{mplus.model}(object)
 \method{semPlotModel}{sem}(object)
 \method{semPlotModel}{msem}(object)
 \method{semPlotModel}{msemObjectiveML}(object)
-semPlotModel.Amos(object)
-semPlotModel.Onyx(object)
+semPlotModel_Amos(object)
+semPlotModel_Onyx(object)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
-An object contaning the result of a SEM or GLM analysis, or a string contaning the file path to the output file of a sEM program.
+An object contaning the result of a SEM or GLM analysis, or a string contaning the file path to the output file of a SEM program.
 }
 }
 \details{

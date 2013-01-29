@@ -17,7 +17,9 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
         residScale, gui = FALSE, allVars = FALSE, edge.color, 
         reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, 
         threshold.color, fixedStyle = 2, freeStyle = 1, 
-        as.expression, optimizeLatRes = FALSE, curvePivot, ...)
+        as.expression, optimizeLatRes = FALSE, mixCols = TRUE, 
+        curvePivot, ...)
+
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -77,7 +79,7 @@ A string indicating how the nodes should be placed. Similar to the 'layout' argu
 }
 
   \item{intStyle}{
-  Style of the intercepts. "multi" plots a separate unit vector node for each intercept and "single" plots a single unit vector node. Currently, "single" is not well supported and might lead to unexpected results.
+  Style of the intercepts. \code{"multi"} plots a separate unit vector node for each intercept and \code{"single"} plots a single unit vector node. Currently, \code{"single"} is not well supported and might lead to unexpected results.
 }
   \item{rotation}{
   An integer indicating the rotation of the layout when "tree" or "tree2" layout is used. 1, 2, 3 and 4 indicate that exogenous variables are placed at the top, left side, bottom and right side respectively.
@@ -130,7 +132,12 @@ A character vector in which every element is the name of a latent variable in th
   In addition, this argument can be assigned a single character: "manifests", "latents" or "both" to make a single group for each manifest, latent or both manifest and latent variables. e.g., \code{groups = "latents"} will color each latent variable uniquely, and color all manifest variables a mixture of the colors of latents they load on.
 }
   \item{color}{
-Controls the color of nodes. Similar to 'color' in \code{\link[qgraph]{qgraph}}. A color vector indicating the color for each group, a single color character indicating the color for all nodes or a color vector indicating the color for each node separately.
+Controls the color of nodes. Similar to 'color' in \code{\link[qgraph]{qgraph}}. A color vector indicating the color for each group, a single color character indicating the color for all nodes or a color vector indicating the color for each node separately. Can also be a list contaning one or more of the following elements (using fuzzy matching):
+\describe{
+\item{man}{The colors for manifest nodes}
+\item{lat}{The colors for latent nodes}
+\item{int}{The color for intercepts}
+}
 }
   \item{residScale}{
 The size of residual edges if \code{style = "lisrel"}. Defaults to two times the value of 'sizeMan'.
@@ -170,6 +177,9 @@ A character vector indicating which labels should be treated as an \code{\link[b
   \item{optimizeLatRes}{
 Logical. If this is TRUE, the angle of the incoming residuals on latent variables is attempted to be optimally chosen so its position conflicts with the least amount of connected edges.
 }
+  \item{mixCols}{
+Logical, should uncolored nodes obtain a mix of connected colored nodes? Defaults to \code{TRUE}.
+}
 \item{curvePivot}{
   Same as the \code{curvePivot} argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{TRUE} in tree layouts and FALSE otherwise.
 }
@@ -177,9 +187,29 @@ Logical. If this is TRUE, the angle of the incoming residuals on latent variable
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
 }
 }
+
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The default \code{"tree"} layout under default rotation places the nodes in one of four horizontal levels. At the top the exogenous manifest variables, under that the exogenous latent variables, under that the endogenous latent variables and at the bottom the endogenous manifest variables. If one of these kinds of variables does not exist its level is omitted. Afterwards, the \code{rotation} argument will rotate the graph and the \code{"circle"} layout will make the layout circular using these levels as nested circles.
+
+If not manually set (see \code{\link{semPlotModel-edit}}), \code{semPath} will automatically try to set the endogenous and exogenous variables, such that the resulting layout looks good. A latent variable is identified as \emph{exogenous} if it is not on the right hand side of a directed edge (\code{->} or \code{~>}) with another latent variable as node of origin. A manifest variable is set as \emph{exogenous} if it is only connected, in any way, to exogenous latent variables and if it is not the right hand side (dependent variable) of a regression edge (\code{~>}). If all variables are set to exogenous this way, they are all set to endogenous for consistency in the layouts. Afterwards, manifest variables only used in formative measurement models (only outgoing directed edges to latents) are set to exogenous again so that MIMIC models are displayed properly.
+
+Intercepts are placed on the same level as the variable, either on the left or right side of the node (pointing outward from the center). Residuals for manifest variables are placed at the top or bottom (for exogenous and endogenous manifests respectively). Residuals of latents are placed at the bottom or top respectively for exogenous and endogenous variables, but is switched if the latent is not connected to a manifest. Residuals for the leftmost and rightmost latent are placed at the left and right side respectively, or diagonal if the latent is connected to an intercept.
+
+The \code{"tree2"} and \code{"circle2"} layouts call the \code{\link[igraph]{layout.reingold.tilford}} function from the \code{igraph} package. As roots are used the first available variables of the following list:
+\itemize{
+\item Intercepts of exogenous manifests
+\item Exogenous manifest
+\item Intercepts of exogenous latents
+\item Exogenous latents
+\item Interceots of endogenous latents
+\item Endogenous latents
+\item Intercepts of endogenous manifests
+\item The endogenous manifest with the most outgoing edges (this should not be possible by default, but can be manually set)
+\item The most connected endogenous manigest.
 }
+To compute an optimal layout \code{\link[igraph]{layout.reingold.tilford}} is run on a slightly altered version of the path diagram. In this version, the direction of edges from all intercepts that are not roots is reversed, the direction of all edges leading to exogenous manifests is reversed and all bidirectional edges are removed.
+}
+
 \value{
 A \code{"qgraph"} object as returned by \code{\link[qgraph]{qgraph}}. This object can be used to alter the graph (such as manually redefining the layout) and to plot the graph again with different arguments.
 
@@ -203,10 +233,10 @@ Sacha Epskamp <mail@sachaepskamp.com>
  \code{\link{semPlotModel-class}}
  \code{\link{semCors}}
  \code{\link{lisrelModel}}
+ \code{\link{semSyntax}}
 }
 
-\examples{
-# Regression analysis with interaction effects ----------------------------
+\examples{ # Regression analysis with interaction effects ----------------------------
 
 # A silly dataset:
 X <- rnorm(100)
@@ -288,4 +318,55 @@ download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile <- t
 
 # Plot model:
 semPaths(outfile)
+<<<<<<< HEAD
+=======
+
+
+
+
+# OpenMx ----------------------------------------------------------
+\dontrun{
+# To isntall OpenMx see:
+# http://openmx.psyc.virginia.edu/
+
+library("OpenMx")
+
+# Example from mxRun help page:
+# Create and run the 1-factor CFA on the openmx.psyc.virginia.edu front page
+data(demoOneFactor)  # load the demoOneFactor dataframe
+manifests <- names(demoOneFactor) # set the manifest to the 5 demo variables
+latents   <- c("G")  # define 1 latent variable
+model <- mxModel("One Factor", type="RAM",
+  manifestVars = manifests,
+	latentVars   = latents,
+	mxPath(from=latents  , to=manifests),
+	mxPath(from=manifests, arrows=2),
+	mxPath(from=latents  , arrows=2, free=FALSE, values=1.0),
+	mxData(cov(demoOneFactor), type="cov", numObs=500)
+)
+model <- mxRun(model) #run model, returning the result
+
+# Plot with colors from OpenMx front page:
+semPaths(model, color = list(
+              lat = rgb(245, 253, 118, maxColorValue = 255), 
+              man = rgb(155, 253, 175, maxColorValue = 255)),
+          mar = c(10, 5, 10, 5))
+
+## Factor Analysis:
+source("http://openmx.psyc.virginia.edu/svn/trunk/demo/TwoFactorModel_PathCov.R")
+semPaths(twoFactorFit, layout = "tree2")
+
+
+
+
+
+# Multi-group analysis -------------------------------------------
+## LISREL:
+# Download measurment invariance example:
+download.file("http://sachaepskamp.com/files/mi1.OUT",modFile <- tempfile(fileext=".OUT"))
+layout(t(1:2))
+semPaths(modFile,"eq",ask=FALSE,as.expression = "edges",mar=c(3,1,5,1))
+# Color indicates equality constraints.
+}
+>>>>>>> 0acf578b2dcdc5def4024f1d35f70501076e86cb
 }

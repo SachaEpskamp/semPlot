@@ -1,5 +1,5 @@
 
-semPlotModel.Onyx <- function(object)
+semPlotModel_Onyx <- function(object)
 {
   # Parse Onyx model:
   doc <- xmlParse(object)

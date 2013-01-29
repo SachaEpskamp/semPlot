@@ -67,10 +67,10 @@ The observed covariance matrix, or a list of such matrices for each group.
 The implied covariance matrix, or a list of such matrices for each group.
 }
   \item{setExo}{
-Logical. If TRUE the 'exogenous' variable in the Variables data frame is specified. This forces \code{\link{sempaths}} to not attempt to identify which variables are endogenous and exogenous.
+Logical. If TRUE the 'exogenous' variable in the Variables data frame is specified. This forces \code{\link{semPaths}} to not attempt to identify which variables are endogenous and exogenous.
 }
   \item{modelLabels}{
-Logical. If TRUE all labels are set to the LISREL model matrix terms, as expressions. When plotted with \code{\link{sempaths}} this requires the argument \code{as.expression=c("nodes","edges")}.
+Logical. If TRUE all labels are set to the LISREL model matrix terms, as expressions. When plotted with \code{\link{semPaths}} this requires the argument \code{as.expression=c("nodes","edges")}.
 }
 }
 \details{
