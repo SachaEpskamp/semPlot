@@ -318,8 +318,6 @@ download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile <- t
 
 # Plot model:
 semPaths(outfile)
-<<<<<<< HEAD
-=======
 
 
 
@@ -368,5 +366,4 @@ layout(t(1:2))
 semPaths(modFile,"eq",ask=FALSE,as.expression = "edges",mar=c(3,1,5,1))
 # Color indicates equality constraints.
 }
->>>>>>> 0acf578b2dcdc5def4024f1d35f70501076e86cb
 }
