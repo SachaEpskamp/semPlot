@@ -17,7 +17,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
         residScale, gui = FALSE, allVars = FALSE, edge.color, 
         reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, 
         threshold.color, fixedStyle = 2, freeStyle = 1, 
-        as.expression, optimizeLatRes = FALSE, ...)
+        as.expression, optimizeLatRes = FALSE, curvePivot, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -170,6 +170,9 @@ A character vector indicating which labels should be treated as an \code{\link[b
   \item{optimizeLatRes}{
 Logical. If this is TRUE, the angle of the incoming residuals on latent variables is attempted to be optimally chosen so its position conflicts with the least amount of connected edges.
 }
+\item{curvePivot}{
+  Same as the \code{curvePivot} argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{TRUE} in tree layouts and FALSE otherwise.
+}
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
 }
@@ -285,9 +288,4 @@ download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile <- t
 
 # Plot model:
 semPaths(outfile)
-}
-
-\seealso{
-
-
 }
