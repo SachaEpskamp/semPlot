@@ -1,4 +1,4 @@
-semPlotModel.lisrel <- function(object) do.call(lisrelModel, object$matrices)
+semPlotModel.lisrel <- function(object,...) do.call(lisrelModel, c(object$matrices,list(...)))
 
 InvEmp <- function(x)
 {
@@ -66,7 +66,7 @@ fixMatrix <- function(m)
 
 
 ### SINGLE GROUP MODEL ###
-lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo,modelLabels = FALSE)
+lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo,modelLabels = FALSE, reduce = TRUE)
 {
   # Input matrices either in matrix form or list containing  'est', 'std', ; fixed', and 'par' or 'parSpec' matrices. If 'stdComp' is in the list it overwrites 'std' (compatibility with 'lisrelToR' package):
   
@@ -178,6 +178,23 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
       latNamesExo <- paste0("xi[",1:length(KA[[1]]$est),"]")
     } else latNamesExo <- character(0)
   }  
+  
+  # Check for duplicate names:
+  if (!reduce)
+  {
+    redFun <- function(x,y,app)
+    {
+      x[x%in%y] <- paste0(x[x%in%y],app)
+      return(x)
+    }
+    latNamesEndo <- redFun(latNamesEndo,c(latNamesExo,manNamesExo,manNamesEndo),"_Len")
+    latNamesExo <- redFun(latNamesExo,c(latNamesEndo,manNamesEndo,manNamesExo),"_Lex")
+    manNamesEndo <- redFun(manNamesEndo,c(manNamesExo,latNamesEndo,latNamesExo),"_Men")
+    manNamesExo <- redFun(manNamesExo,c(manNamesEndo,latNamesEndo,latNamesExo),"_Mex")
+    
+  }
+  
+  
   
   Len <- sapply(mats,function(x)length(get(x)))
   Len <- Len[Len>0]
@@ -352,6 +369,10 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     manifest = c(manNamesEndo,manNamesExo,latNamesEndo,latNamesExo)%in%c(manNamesEndo,manNamesExo),
     exogenous = rep(NA,length(c(manNamesEndo,manNamesExo,latNamesEndo,latNamesExo))),
     stringsAsFactors=FALSE)
+
+  # Remove duplicates plus factor loadings betwen mans and lats of same name:
+  Vars <- Vars[!duplicated(Vars$name),]
+  RAM <- RAM[!(RAM$lhs==RAM$rhs&RAM$edge!="<->"),]
   
   # Set exogenous:
   if (missing(setExo))

@@ -8,7 +8,7 @@ Construct SEM model using LISREL matrix specification.
 This function creates a 'semPlotModel' object using matrices of the extended LISREL model (Joreskog & Sorbom, 1996). This function has two main purposes. First, it can be used to easilly create path diagrams of arbitrary SEM models without having to run an actual analysis. And second, it is specifically designed to work with the output of the 'lisrelToR' package (using \code{do.call(lisrelModel,output$matrices)}). Using  \code{\link{semPaths}} or  \code{\link{semPlotModel}} on the file path of a LISREL output file will automatically first run \code{\link[lisrelToR]{readLisrel}} and then this function.
 }
 \usage{
-lisrelModel(LY, PS, BE, TE, TY, AL, manNamesEndo, latNamesEndo, LX, PH, GA, TD, TX, KA, manNamesExo, latNamesExo, ObsCovs, ImpCovs, setExo, modelLabels = FALSE)
+lisrelModel(LY, PS, BE, TE, TY, AL, manNamesEndo, latNamesEndo, LX, PH, GA, TD, TX, KA, manNamesExo, latNamesExo, ObsCovs, ImpCovs, setExo, modelLabels = FALSE, reduce)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -72,6 +72,7 @@ Logical. If TRUE the 'exogenous' variable in the Variables data frame is specifi
   \item{modelLabels}{
 Logical. If TRUE all labels are set to the LISREL model matrix terms, as expressions. When plotted with \code{\link{semPaths}} this requires the argument \code{as.expression=c("nodes","edges")}.
 }
+\item{reduce}{ Logical indicating if the variable number should be reduced if multiple variables are named exactly the same. If TRUE (default) directed edges between nodes that are named the same are removed and the manifest node is kept, as this usually indicates a way to include manifest variables in regressions.}
 }
 \details{
 The LISREL matrices can be assigned in various ways, depending on the amount of information that should be stored in the resulting model.

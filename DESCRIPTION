@@ -1,8 +1,8 @@
 Package: semPlot
 Type: Package
 Title: Path diagrams and visual analysis of various SEM packages' output
-Version: 0.3.1
-Date: 2013-01-29
+Version: 0.3.2
+Date: 2013-01-31
 Author: Sacha Epskamp
 Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
 Depends: R (>= 2.15.0), qgraph (>= 1.2)

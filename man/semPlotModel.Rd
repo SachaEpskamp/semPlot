@@ -29,7 +29,7 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 \method{semPlotModel}{loadings}(object)
 \method{semPlotModel}{factanal}(object)
 % \method{semPlotModel}{lavaan}(object)
-\method{semPlotModel}{lisrel}(object)
+\method{semPlotModel}{lisrel}(object, \dots)
 % \method{semPlotModel}{semspec}(object)
 \method{semPlotModel}{mplus.model}(object)
 \method{semPlotModel}{sem}(object)
@@ -43,6 +43,7 @@ semPlotModel_Onyx(object)
   \item{object}{
 An object contaning the result of a SEM or GLM analysis, or a string contaning the file path to the output file of a SEM program.
 }
+\item{\dots}{Arguments sent to 'lisrelModel'}
 }
 \details{
 A detailed overview of which packages are supported and what is supported for each of them will soon be on my website.

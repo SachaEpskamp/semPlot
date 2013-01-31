@@ -155,7 +155,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -659,7 +659,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       loopRotation[exoMan] <- 0
       
       loopRotation[endoLat] <- 0
-      noCons <- sapply(endoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%endoMan|Edgelist[,2]%in%endoMan),])==0)
+      noCons <- sapply(endoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%endoMan|Edgelist[,2]%in%endoMan),,drop=FALSE])==0)
       if (length(noCons)==0) noCons <- logical(0)
       loopRotation[endoLat][noCons] <- pi
       if (length(endoLat) > 1 & !(length(exoLat)==0&length(exoMan)==0))
@@ -731,6 +731,21 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         }
       }
     } else loopRotation <- NULL
+
+    
+    ### ORDINALIZE LAYOUT ###
+    if (layout=="tree")
+    {
+      Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
+      Layout[Layout[,2]==0,2] <- 0.5
+      Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + 0.5        
+    }
+    # Level layout:
+    if (!missing(levels)&layout%in%c("tree","tree2","circle","circle2"))
+    {
+      if (length(levels)<length(unique(Layout[,2]))) stop(paste("'levels' argument must have at least",length(unique(Layout[,2])),"elements"))
+      Layout[,2] <- levels[as.numeric(as.factor(Layout[,2]))]
+    }
     
     # Set curves and rotate:    
     if (layout %in% c("tree","tree2"))
@@ -754,13 +769,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       ## If endo man, flip again:
       Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
       
-      ### ORDINALIZE LAYOUT ###
-      if (layout=="tree")
-      {
-        Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
-        Layout[Layout[,2]==0,2] <- 0.5
-        Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + 0.5        
-      }
 
       #         for (i in unique(Layout[,2]))
       #         {
@@ -1119,17 +1127,28 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # Convert labels to expressions:
     if ("edges"%in%as.expression)
     {
-      eLabels <- as.expression(parse(text=eLabels))
+      eLabels <- lapply(eLabels,function(x)if (x=="") x else as.expression(parse(text=x)))
     }    # Convert labels to expressions:
     if ("nodes"%in%as.expression)
     {
-      Labels <- as.expression(parse(text=Labels))
+      Labels <- lapply(Labels,function(x)if (x=="") x else as.expression(parse(text=x)))
     }
     # Restore layout function:
     if (!is.null(layoutFun)) Layout <- layoutFun
     
+    # Overwrite node and edge labels:
+    if (!missing(nodeLabels))
+    {
+      nLab <- nodeLabels[object@Vars$name %in% GroupVars$name]
+    } else nLab <- Labels
+    # Overwrite node and edge labels:
+    if (!missing(edgeLabels))
+    {
+      eLab <- edgeLabels[object@RAM$group==gr]
+    } else eLab <- eLabels
+    
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
-                                             labels=Labels,
+                                             labels=nLab,
                                              bidirectional=Bidir,
                                              directed=Directed,
                                              shape=Shape,
@@ -1137,7 +1156,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              lty=lty,
                                              loopRotation=loopRotation,
                                              curve=Curve,
-                                             edge.labels=eLabels,
+                                             edge.labels=eLab,
                                              mar=Mar,
                                              vsize = vSize,
                                              edge.color=eColor,
