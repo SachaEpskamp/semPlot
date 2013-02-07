@@ -155,7 +155,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -313,7 +313,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     
     if (missing(color)) 
     {
-      color <- rainbow(length(groups))
+      if (pastel)
+      {
+        color <- rainbow_hcl(length(groups), c = 35, l = 85)
+      } else color <- rainbow(length(groups))
     }
   } else {
     if (missing(color)) 
@@ -831,7 +834,12 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     {
       #       eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
       unPar <- unique(object@RAM$par[object@RAM$par>0 & duplicated(object@RAM$par)])
-      cols <- rainbow(max(c(object@RAM$par,GroupThresh$par)))
+      if (pastel)
+      {
+        cols <- rainbow_hcl(max(c(object@RAM$par,GroupThresh$par)), c = 35, l = 85)
+      } else {
+        cols <- rainbow(max(c(object@RAM$par,GroupThresh$par)))
+      }
       for (i in unPar)
       {
         eColor[GroupRAM$par==i] <- cols[i]

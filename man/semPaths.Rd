@@ -18,7 +18,8 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
         reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, 
         threshold.color, fixedStyle = 2, freeStyle = 1, 
         as.expression, optimizeLatRes = FALSE, mixCols = TRUE, 
-        curvePivot, levels, nodeLabels, edgeLabels, ...)
+        curvePivot, levels, nodeLabels, edgeLabels, pastel = FALSE,
+        ...)
 
 }
 %- maybe also 'usage' for other objects documented here.
@@ -186,6 +187,7 @@ Logical, should uncolored nodes obtain a mix of connected colored nodes? Default
 \item{levels}{A numeric vector usually of length 4. Controls the relative vertical position of variable levels (exogenous and endogenous latents and manifests) under default rotation in tree and circle layouts. This can be used to control the spacing between these levels. e.g., \code{c(1,5,6,7)} will create more space between endogenous manifests and latents.}
 \item{nodeLabels}{A vector or list to manually overwrite the node labels. Can include expressions.}
 \item{edgeLabels}{A vector or list to manually overwrite the edge labels. Can include expressions.}
+\item{pastel}{Logical, should default colors (for groups or edge equality constraints) be chosen from pastel colors? If TRUE then \code{\link[colorspace]{rainbow_hcl}} is used.}
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
 }
