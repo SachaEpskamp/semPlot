@@ -19,7 +19,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
         threshold.color, fixedStyle = 2, freeStyle = 1, 
         as.expression, optimizeLatRes = FALSE, mixCols = TRUE, 
         curvePivot, levels, nodeLabels, edgeLabels, pastel = FALSE,
-        ...)
+        rainbowStart=0, ...)
 
 }
 %- maybe also 'usage' for other objects documented here.
@@ -188,6 +188,7 @@ Logical, should uncolored nodes obtain a mix of connected colored nodes? Default
 \item{nodeLabels}{A vector or list to manually overwrite the node labels. Can include expressions.}
 \item{edgeLabels}{A vector or list to manually overwrite the edge labels. Can include expressions.}
 \item{pastel}{Logical, should default colors (for groups or edge equality constraints) be chosen from pastel colors? If TRUE then \code{\link[colorspace]{rainbow_hcl}} is used.}
+\item{rainbowStart}{A number between 0 and 1 indicating the offset used in rainbow functions for default node coloring.}
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
 }
