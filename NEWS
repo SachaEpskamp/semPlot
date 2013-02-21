@@ -3,6 +3,7 @@ Changes in Version 0.3.2
   o Added edgeLabels and nodeLabels arguments to manually overwrite edge and node labels, in the order they appear in the RAM and Vars elements of the 'semPlotModel' that is created internally. In addition to the qgraph change that these can now be assigned lists including expressions it should now be easier to add greek letters.
   o Added 'reduce' argumen to lisrelModel that controls if variables that are named the same should be treated as the same variable.
   o 'semPlotModel' for lisrel modes can now use dots to send arguments to 'lisrelModel'
+  o 'qgraph' is no longer on the depends list but imported instead. This makes sure that the Tcl/Tk interface (which is only suggested in qgraph) is not loaded on loading semPlot and as a result makes sure that semPlot does not result in crashes on Mac computers where Tcl/Tk is not installed.
 
 Changes in Version 0.3
   o First submit to CRAN.
