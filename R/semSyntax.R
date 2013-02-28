@@ -1,4 +1,4 @@
-semSyntax <- function(object, syntax = "lavaan", file)
+semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
 {
   if (!"semPlotModel" %in% class(object))
   {
@@ -8,6 +8,12 @@ semSyntax <- function(object, syntax = "lavaan", file)
   if (!syntax %in% c("lavaan","sem")) stop("Only 'lavaan' and 'sem' syntax is currently supported ")
  
   if (nrow(object@Thresholds) > 0) warning("Thresholds are not yet supported by semSyntax")
+  
+  # If all fixed, simply set all fixed = TRUE:
+  if (allFixed)
+  {
+    object@RAM$fixed <- TRUE
+  }
   
   ### LAVAAN ###
   if (syntax == "lavaan")
@@ -23,7 +29,9 @@ semSyntax <- function(object, syntax = "lavaan", file)
     RAM$edge[RAM$edge=='->'&(RAM$lhs%in%object@Vars$name[!object@Vars$manifest] & RAM$rhs%in%object@Vars$name[object@Vars$manifest])] <- "=~"
     RAM$edge[RAM$edge == "~>"] <- "~"
     RAM$edge[RAM$edge == "<->"] <- "~~"
-    RAM$edge[RAM$edge == "int"] <- "~1"
+    RAM$rhs[RAM$edge == "int"] <- "1"
+    RAM$edge[RAM$edge == "int"] <- "~"
+    
     
     # Fixing parameters:
     RAM$rhs <- ifelse( RAM$fixed, paste0(RAM$est,"*",RAM$rhs), RAM$rhs)

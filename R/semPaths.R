@@ -63,11 +63,11 @@ loopOptim <- function(x,Degrees)
 
 RotMat <- function(d) matrix(c(cos(-d),sin(-d),-sin(-d),cos(-d)),2,2)
 
-mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
+mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
 {
   n <- length(vars)
   
-  if (residuals)
+  if (intAtSide)
   {
     if (!trim)
     {
@@ -155,7 +155,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,residuals=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -173,6 +173,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
   
   # Check:
+  if (missing(intAtSide)) intAtSide <- !residuals
+  
   if (!rotation%in%1:4)
   {
     stop("Rotation must be 1, 2 3 or 4.")
@@ -547,7 +549,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         Layout[latIntsEndo[,1],2] <- 2
         Layout[latIntsExo[,1],2] <- 3
         
-        if (residuals)
+        if (intAtSide)
         {
           Layout[manIntsExo[,1],2] <- 4
           Layout[manIntsEndo[,1],2] <- 1
@@ -559,14 +561,14 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         # Add horizontal levels:
         if (nrow(manIntsEndo)>0)
         {
-          Layout <- mixInts(endoMan,manIntsEndo,Layout,residuals=residuals)
+          Layout <- mixInts(endoMan,manIntsEndo,Layout,intAtSide=intAtSide)
         } else
         {
           if (length(endoMan)==1) Layout[endoMan,1] <- 0 else Layout[endoMan,1] <- seq(-1,1,length=length(endoMan))
         }
         if (nrow(manIntsExo)>0)
         {
-          Layout <- mixInts(exoMan,manIntsExo,Layout,residuals=residuals)
+          Layout <- mixInts(exoMan,manIntsExo,Layout,intAtSide=intAtSide)
         } else
         {
           if (length(exoMan)==1) Layout[exoMan,1] <- 0 else Layout[exoMan,1] <- seq(-1,1,length=length(exoMan))
@@ -737,14 +739,14 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       }
     } else loopRotation <- NULL
 
-    
     ### ORDINALIZE LAYOUT ###
     if (layout=="tree")
     {
       Layout[Layout[,2]>0&Layout[,2]<5,2] <- as.numeric(as.factor(Layout[Layout[,2]>0&Layout[,2]<5,2]))
-      Layout[Layout[,2]==0,2] <- 0.5
-      Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + 0.5        
+      Layout[Layout[,2]==0,2] <- (1*!residuals) * 0.25
+      Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + (1 - (1*!residuals)*0.25)
     }
+    
     # Level layout:
     if (!missing(levels)&layout%in%c("tree","tree2","circle","circle2"))
     {
