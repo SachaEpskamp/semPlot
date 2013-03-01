@@ -48,7 +48,7 @@ semPlotModel_MxRAMModel <- function(object){
   if (!length(object@output)==0)
   {
     # Function by Ryne Estabrook (http://openmx.psyc.virginia.edu/thread/718)
-    standObj <- standardizeRAM(object,"model")
+    standObj <- standardizePars(object,"model")
     
     # Extract directed paths:
     DirpathsValuesStd <- t(standObj@matrices$A@values)[Dirpaths]
@@ -79,8 +79,8 @@ semPlotModel_MxRAMModel <- function(object){
     exogenous = NA,
     stringsAsFactors=FALSE)
   
-  # Define RAM:
-  RAM <- data.frame(
+  # Define Pars:
+  Pars <- data.frame(
     label = c(DirpathsLabels,SympathsLabels,MeansLabels), 
     lhs = c(Vars$name[c(Dirpaths[,1],Sympaths[,1])],rep("",length(Means))),
     edge = c(rep("->",nrow(Dirpaths)),rep("<->",nrow(Sympaths)),rep("int",length(Means))),
@@ -92,29 +92,29 @@ semPlotModel_MxRAMModel <- function(object){
     par = 0,
     stringsAsFactors=FALSE)
   
-  RAM$par[is.na(RAM$label)] <- seq_len(sum(is.na(RAM$label)))
-  for (lbl in unique(RAM$label[!is.na(RAM$label)]))
+  Pars$par[is.na(Pars$label)] <- seq_len(sum(is.na(Pars$label)))
+  for (lbl in unique(Pars$label[!is.na(Pars$label)]))
   {
-    RAM$par[RAM$label==lbl] <- max(RAM$par)+1
+    Pars$par[Pars$label==lbl] <- max(Pars$par)+1
   }
 #   
 #   # Add standardized:
-#   for (i in 1:nrow(standRAM))
+#   for (i in 1:nrow(standPars))
 #   {
-#     if (standRAM$matrix[i] == "A")
+#     if (standPars$matrix[i] == "A")
 #     {
-#       RAM$std[RAM$lhs == standRAM$col[i] & RAM$rhs == standRAM$row[i] & RAM$edge == "->"] <- standRAM[["Std. Estimate"]][i]
+#       Pars$std[Pars$lhs == standPars$col[i] & Pars$rhs == standPars$row[i] & Pars$edge == "->"] <- standPars[["Std. Estimate"]][i]
 #     }
-#     if (standRAM$matrix[i] == "S")
+#     if (standPars$matrix[i] == "S")
 #     {
-#       RAM$std[RAM$lhs == standRAM$col[i] & RAM$rhs == standRAM$row[i] & RAM$edge == "<->"] <- standRAM[["Std. Estimate"]][i]
+#       Pars$std[Pars$lhs == standPars$col[i] & Pars$rhs == standPars$row[i] & Pars$edge == "<->"] <- standPars[["Std. Estimate"]][i]
 #     }
 #   }
   
-  RAM$label[is.na(RAM$label)] <- ""
+  Pars$label[is.na(Pars$label)] <- ""
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- !length(object@output)==0
   semModel@Original <- list(object)
@@ -148,13 +148,13 @@ semPlotModel_MxModel <- function(object){
   S4objects <- lapply(object@submodels,semPlotModel)
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- do.call("rbind",lapply(S4objects,slot,"RAM"))
+  semModel@Pars <- do.call("rbind",lapply(S4objects,slot,"Pars"))
   
-  semModel@RAM$par <- 0
-  semModel@RAM$par[semModel@RAM$label==""] <- seq_len(sum(semModel@RAM$label==""))
-  for (lbl in unique(semModel@RAM$label[semModel@RAM$label!=""]))
+  semModel@Pars$par <- 0
+  semModel@Pars$par[semModel@Pars$label==""] <- seq_len(sum(semModel@Pars$label==""))
+  for (lbl in unique(semModel@Pars$label[semModel@Pars$label!=""]))
   {
-    semModel@RAM$par[semModel@RAM$label==lbl] <- max(semModel@RAM$par)+1
+    semModel@Pars$par[semModel@Pars$label==lbl] <- max(semModel@Pars$par)+1
   }
   
   semModel@Vars <- S4objects[[1]]@Vars

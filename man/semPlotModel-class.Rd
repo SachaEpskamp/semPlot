@@ -15,7 +15,7 @@ Objects can be created by calls of the form \code{new("semPlotModel", ...)}.
     
 \section{Slots}{
   \describe{
-    \item{\code{RAM}:}{Object of class \code{"data.frame"} indicating the parameters used in the SEM model. this must contain the following elements, in order:
+    \item{\code{Pars}:}{Object of class \code{"data.frame"} indicating the parameters used in the SEM model. this must contain the following elements, in order:
     \describe{
     \item{\code{label}}{The name of the parameter, used as edge label in the graph.}
     \item{\code{lhs}}{Name of the variable on the left hand side of the path.}
@@ -46,7 +46,7 @@ Objects can be created by calls of the form \code{new("semPlotModel", ...)}.
       \item{exogenous}{Logical indicating if the variable is exogenous. If \code{NA}} (the default) \code{\link{semPaths}} will attempt to detect which variables are exogenous.
     
     }}
-    \item{\code{Thresholds}:}{Object of class \code{"data.frame"} indicating the thresholds in the SEM model. It is the same as \code{RAM} except it does not have the elements \code{'edge'} and \code{'rhs'}.}
+    \item{\code{Thresholds}:}{Object of class \code{"data.frame"} indicating the thresholds in the SEM model. It is the same as \code{Pars} except it does not have the elements \code{'edge'} and \code{'rhs'}.}
     
     \item{\code{Computed}:}{Object of class \code{"logical"} indicating if the SEM model was computed or if the object only indicates a structure.}
     \item{\code{ObsCovs}:}{Object of class \code{"list"} containing observed covariance matrices for each group. If available.}

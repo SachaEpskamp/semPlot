@@ -15,8 +15,8 @@ semPlotModel.loadings <- function(object)
   manNames <- rownames(object)
   latNames <- colnames(object)
   
-  # Define RAM:
-  RAM <- data.frame(
+  # Define Pars:
+  Pars <- data.frame(
     label = "", 
     lhs = rep(latNames,each=length(manNames)),
     edge = "--",
@@ -38,7 +38,7 @@ semPlotModel.loadings <- function(object)
     stringsAsFactors=FALSE)
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- FALSE
   semModel@Original <- list(object)

@@ -1,6 +1,6 @@
-lisrelMat2RAM <- function(x,edge,exprname,symmetric=FALSE,vec=FALSE,cols,rows,group="",exprsup="")
+modMat2Pars <- function(x,edge,exprname,symmetric=FALSE,vec=FALSE,cols,rows,group="",exprsup="")
 {
-  # Define x RAM:
+  # Define x Pars:
   if (length(x)>0)
   {
     if (symmetric)
@@ -9,7 +9,7 @@ lisrelMat2RAM <- function(x,edge,exprname,symmetric=FALSE,vec=FALSE,cols,rows,gr
       x$est[upper.tri(x$est)] <- 0  
     }
     
-    RAM <- data.frame(
+    Pars <- data.frame(
       label = "", 
       lhs = rep(cols,each=length(rows)),
       edge = edge,
@@ -23,24 +23,24 @@ lisrelMat2RAM <- function(x,edge,exprname,symmetric=FALSE,vec=FALSE,cols,rows,gr
     
     if (!vec)
     {
-      RAM$label <- c(outer(1:nrow(x$est),1:ncol(x$est),function(x,y)paste0(exprname,"[",x,y,"]",exprsup)))
+      Pars$label <- c(outer(1:nrow(x$est),1:ncol(x$est),function(x,y)paste0(exprname,"[",x,y,"]",exprsup)))
     } else {
-      RAM$label <- paste0(exprname,"[",1:length(x$est),"]",exprsup)
+      Pars$label <- paste0(exprname,"[",1:length(x$est),"]",exprsup)
     }
     if (!is.null(x[['std']]))
     {
-      RAM[['std']] <- c(x[['std']])
+      Pars[['std']] <- c(x[['std']])
     }
     if (!is.null(x[['par']]))
     {
-      RAM[['par']] <- c(x[['par']])
+      Pars[['par']] <- c(x[['par']])
     }
     if (!is.null(x[['fixed']]))
     {
-      RAM[['fixed']] <- c(x[['fixed']])
+      Pars[['fixed']] <- c(x[['fixed']])
     }
     
-  } else RAM <- data.frame(
+  } else Pars <- data.frame(
     label = character(0), 
     lhs = character(0),
     edge = character(0),
@@ -52,6 +52,6 @@ lisrelMat2RAM <- function(x,edge,exprname,symmetric=FALSE,vec=FALSE,cols,rows,gr
     par = numeric(0),
     stringsAsFactors=FALSE)
   
-  return(RAM)
+  return(Pars)
 }
 

@@ -5,11 +5,11 @@
   stopifnot("semPlotModel"%in%class(y))
   
   # Update par in y:
-  y@RAM$par[y@RAM$par>0] <- max(x@RAM$par) + y@RAM$par[y@RAM$par>0]
+  y@Pars$par[y@Pars$par>0] <- max(x@Pars$par) + y@Pars$par[y@Pars$par>0]
   
   # New model:
   semModel <- new("semPlotModel")
-  semModel@RAM <- rbind(x@RAM,y@RAM)
+  semModel@Pars <- rbind(x@Pars,y@Pars)
   semModel@Vars <- rbind(x@Vars,y@Vars)
   semModel@Vars <- semModel@Vars[!duplicated(semModel@Vars),]
   semModel@Thresholds <- rbind(x@Thresholds,y@Thresholds)

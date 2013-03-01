@@ -201,8 +201,8 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   if (length(unique(Len))>1) stop("Number of groups are not equal across all given LISREL matrices.")
   Ng <- max(Len)
   
-  RAMs <- list()
-  dumRAM <- data.frame(
+  Parss <- list()
+  dumPars <- data.frame(
     label = character(0), 
     lhs = character(0),
     edge = character(0),
@@ -340,28 +340,28 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     
     
     # Extract matrices:
-    if (length(LY)>0) LYRAM <- lisrelMat2RAM(LY[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(y)}") else LYRAM <- dumRAM
-    if (length(TE)>0) TERAM <- lisrelMat2RAM(TE[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(epsilon)}")  else TERAM <- dumRAM
-    if (length(PS)>0) PSRAM <- lisrelMat2RAM(PS[[g]],"<->","psi",symmetric=TRUE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")  else PSRAM <- dumRAM
-    if (length(BE)>0) BERAM <- lisrelMat2RAM(BE[[g]],"->","beta",symmetric=FALSE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")  else BERAM <- dumRAM
-    if (length(LX)>0) LXRAM <- lisrelMat2RAM(LX[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(x)}")  else LXRAM <- dumRAM
-    if (length(TD)>0) TDRAM <- lisrelMat2RAM(TD[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(delta)}")  else TDRAM <- dumRAM
-    if (length(PH)>0) PHRAM <- lisrelMat2RAM(PH[[g]],"<->","phi",symmetric=TRUE,vec=FALSE,latNamesExo,latNamesExo,group=paste("Group",g),exprsup="")  else PHRAM <- dumRAM
-    if (length(GA)>0) GARAM <- lisrelMat2RAM(GA[[g]],"->","gamma",symmetric=FALSE,vec=FALSE,latNamesExo,latNamesEndo,group=paste("Group",g),exprsup="")  else GARAM <- dumRAM
-    if (length(TY)>0) TYRAM <- lisrelMat2RAM(TY[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesEndo,group=paste("Group",g),exprsup="^{(y)}")  else TYRAM <- dumRAM
-    if (length(TX)>0) TXRAM <- lisrelMat2RAM(TX[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesExo,group=paste("Group",g),exprsup="^{(x)}")  else TXRAM <- dumRAM
-    if (length(AL)>0) ALRAM <- lisrelMat2RAM(AL[[g]],"int","alpha",symmetric=FALSE,vec=TRUE,"",latNamesEndo,group=paste("Group",g),exprsup="")  else ALRAM <- dumRAM
-    if (length(KA)>0) KARAM <- lisrelMat2RAM(KA[[g]],"int","kappa",symmetric=FALSE,vec=TRUE,"",latNamesExo,group=paste("Group",g),exprsup="")  else KARAM <- dumRAM
+    if (length(LY)>0) LYPars <- modMat2Pars(LY[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(y)}") else LYPars <- dumPars
+    if (length(TE)>0) TEPars <- modMat2Pars(TE[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesEndo,manNamesEndo,group=paste("Group",g),exprsup="^{(epsilon)}")  else TEPars <- dumPars
+    if (length(PS)>0) PSPars <- modMat2Pars(PS[[g]],"<->","psi",symmetric=TRUE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")  else PSPars <- dumPars
+    if (length(BE)>0) BEPars <- modMat2Pars(BE[[g]],"->","beta",symmetric=FALSE,vec=FALSE,latNamesEndo,latNamesEndo,group=paste("Group",g),exprsup="")  else BEPars <- dumPars
+    if (length(LX)>0) LXPars <- modMat2Pars(LX[[g]],"->","lambda",symmetric=FALSE,vec=FALSE,latNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(x)}")  else LXPars <- dumPars
+    if (length(TD)>0) TDPars <- modMat2Pars(TD[[g]],"<->","theta",symmetric=TRUE,vec=FALSE,manNamesExo,manNamesExo,group=paste("Group",g),exprsup="^{(delta)}")  else TDPars <- dumPars
+    if (length(PH)>0) PHPars <- modMat2Pars(PH[[g]],"<->","phi",symmetric=TRUE,vec=FALSE,latNamesExo,latNamesExo,group=paste("Group",g),exprsup="")  else PHPars <- dumPars
+    if (length(GA)>0) GAPars <- modMat2Pars(GA[[g]],"->","gamma",symmetric=FALSE,vec=FALSE,latNamesExo,latNamesEndo,group=paste("Group",g),exprsup="")  else GAPars <- dumPars
+    if (length(TY)>0) TYPars <- modMat2Pars(TY[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesEndo,group=paste("Group",g),exprsup="^{(y)}")  else TYPars <- dumPars
+    if (length(TX)>0) TXPars <- modMat2Pars(TX[[g]],"int","tau",symmetric=FALSE,vec=TRUE,"",manNamesExo,group=paste("Group",g),exprsup="^{(x)}")  else TXPars <- dumPars
+    if (length(AL)>0) ALPars <- modMat2Pars(AL[[g]],"int","alpha",symmetric=FALSE,vec=TRUE,"",latNamesEndo,group=paste("Group",g),exprsup="")  else ALPars <- dumPars
+    if (length(KA)>0) KAPars <- modMat2Pars(KA[[g]],"int","kappa",symmetric=FALSE,vec=TRUE,"",latNamesExo,group=paste("Group",g),exprsup="")  else KAPars <- dumPars
     
-    # Combine RAMS:
-    RAMs[[g]] <- rbind(LYRAM,TERAM,PSRAM,BERAM,LXRAM,TDRAM,PHRAM,GARAM,TYRAM,TXRAM,ALRAM,KARAM)
+    # Combine ParsS:
+    Parss[[g]] <- rbind(LYPars,TEPars,PSPars,BEPars,LXPars,TDPars,PHPars,GAPars,TYPars,TXPars,ALPars,KAPars)
     
     # Remove zeroes:
-    RAMs[[g]] <- RAMs[[g]][RAMs[[g]]$est!=0,]
+    Parss[[g]] <- Parss[[g]][Parss[[g]]$est!=0,]
     
   }
   
-  RAM <- do.call(rbind,RAMs)
+  Pars <- do.call(rbind,Parss)
   
   # Variable dataframe: 
   Vars <- data.frame(
@@ -372,7 +372,7 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
 
   # Remove duplicates plus factor loadings betwen mans and lats of same name:
   Vars <- Vars[!duplicated(Vars$name),]
-  RAM <- RAM[!(RAM$lhs==RAM$rhs&RAM$edge!="<->"),]
+  Pars <- Pars[!(Pars$lhs==Pars$rhs&Pars$edge!="<->"),]
   
   # Set exogenous:
   if (missing(setExo))
@@ -386,7 +386,7 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   }
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Original <- list()
   

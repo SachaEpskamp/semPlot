@@ -1,4 +1,4 @@
-export(semPaths,semPlotModel,semCors,lisrelModel,semSyntax)
+export(semPaths,semPlotModel,semCors,lisrelModel,ramModel,semSyntax)
 
 # export Classes
 exportClasses(

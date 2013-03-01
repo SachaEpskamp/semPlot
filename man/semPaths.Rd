@@ -153,7 +153,7 @@ Logical. If TRUE all variables are plotted in the path diagrams for each group. 
 A value indicating the color of all edges or a vector indicating the color of each edge. Useful for manually overwriting edge colors. 
 }
   \item{reorder}{
-Logical. Should manifest variables be reordered to be near latent factors they are most connected to in the "tree" layout? If FALSE manifest variables are placed in the order they appear in the RAM.
+Logical. Should manifest variables be reordered to be near latent factors they are most connected to in the "tree" layout? If FALSE manifest variables are placed in the order they appear in the Pars.
 }
   \item{structural}{
 Logical. Set this to FALSE to only show the structural model (omit all manifest variables.)
@@ -254,10 +254,10 @@ DF <- data.frame(X,Y,Z)
 res <- lm(Z ~ X*Y, data = DF)
 
 # Path diagram:
-semPaths(res)
+semPaths(res, intAtSide=TRUE)
 
 # Standardized estimates:
-semPaths(res,"std","hide")
+semPaths(res,"std","hide", intAtSide=TRUE)
 
 
 
@@ -340,7 +340,7 @@ library("OpenMx")
 data(demoOneFactor)  # load the demoOneFactor dataframe
 manifests <- names(demoOneFactor) # set the manifest to the 5 demo variables
 latents   <- c("G")  # define 1 latent variable
-model <- mxModel("One Factor", type="RAM",
+model <- mxModel("One Factor", type="Pars",
   manifestVars = manifests,
 	latentVars   = latents,
 	mxPath(from=latents  , to=manifests),

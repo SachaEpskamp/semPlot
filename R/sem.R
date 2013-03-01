@@ -22,8 +22,8 @@ semPlotModel.sem <- function(object)
   # Check if object is of class "sem":
   if (!any(class(object)%in%c("sem","semmod"))) stop("Input must be a 'sem' object")
   
-  # Define RAM:
-  RAM <- data.frame(
+  # Define Pars:
+  Pars <- data.frame(
     label = rownames(object$ram), 
     lhs = object$ram[,3],
     edge = "--",
@@ -36,20 +36,20 @@ semPlotModel.sem <- function(object)
     stringsAsFactors=FALSE)
   
   # Extract parameter estimates:
-  RAM$est[object$ram[,4]!=0] <- object$coef[object$ram[,4]]
+  Pars$est[object$ram[,4]!=0] <- object$coef[object$ram[,4]]
   
   # Fix labels:
   for (i in unique(object$ram[,4][object$ram[,4]!=0]))
   {
-    if (any(RAM$label[object$ram[,4]==i]=="") & any(RAM$label[object$ram[,4]==i]!="")) 
+    if (any(Pars$label[object$ram[,4]==i]=="") & any(Pars$label[object$ram[,4]==i]!="")) 
     {
-      RAM$label[object$ram[,4]==i & RAM$label==""] <- RAM$label[object$ram[,4]==i & RAM$label!=""] 
+      Pars$label[object$ram[,4]==i & Pars$label==""] <- Pars$label[object$ram[,4]==i & Pars$label!=""] 
     }
   }
   
   # Name variables:
-  RAM$lhs <- object$var.names[RAM$lhs]
-  RAM$rhs <- object$var.names[RAM$rhs]
+  Pars$lhs <- object$var.names[Pars$lhs]
+  Pars$rhs <- object$var.names[Pars$rhs]
   
   # Variable dataframe: 
   Vars <- data.frame(
@@ -59,12 +59,12 @@ semPlotModel.sem <- function(object)
     stringsAsFactors=FALSE)
   
   # Define operators:
-  RAM$edge[object$ram[,1]==2] <- "<->"
-  RAM$edge[object$ram[,1]==1] <- "~>"
-#   RAM$op[object$ram[,1]==1 & !Vars$manifest[match(RAM$lhs,Vars$name)] & Vars$manifest[match(RAM$rhs,Vars$name)]] <- "->"
+  Pars$edge[object$ram[,1]==2] <- "<->"
+  Pars$edge[object$ram[,1]==1] <- "~>"
+#   Pars$op[object$ram[,1]==1 & !Vars$manifest[match(Pars$lhs,Vars$name)] & Vars$manifest[match(Pars$rhs,Vars$name)]] <- "->"
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- TRUE
   semModel@Original <- list(object)
@@ -84,13 +84,13 @@ semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object)
   nGroup <- length(object$ram)
   GroupNames <- object$groups
   
-  RAMS <- list()
+  ParsS <- list()
   stdobject <- standcoefmsem(object)
   
   for (g in 1:nGroup)
   {
-    # Define RAM:
-    RAM <- data.frame(
+    # Define Pars:
+    Pars <- data.frame(
       label = rownames(object$ram[[g]]), 
       lhs = object$ram[[g]][,3],
       edge = "",
@@ -103,30 +103,30 @@ semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object)
       stringsAsFactors=FALSE)
     
     # Extract parameter estimates:
-    RAM$est[object$ram[[g]][,4]!=0] <- object$coef[object$ram[[g]][,4]]
+    Pars$est[object$ram[[g]][,4]!=0] <- object$coef[object$ram[[g]][,4]]
     
     # Fix labels:
     for (i in unique(object$ram[[g]][,4][object$ram[[g]][,4]!=0]))
     {
-      if (any(RAM$label[object$ram[[g]][,4]==i]=="") & any(RAM$label[object$ram[[g]][,4]==i]!="")) 
+      if (any(Pars$label[object$ram[[g]][,4]==i]=="") & any(Pars$label[object$ram[[g]][,4]==i]!="")) 
       {
-        RAM$label[object$ram[[g]][,4]==i & RAM$label==""] <- RAM$label[object$ram[[g]][,4]==i & RAM$label!=""] 
+        Pars$label[object$ram[[g]][,4]==i & Pars$label==""] <- Pars$label[object$ram[[g]][,4]==i & Pars$label!=""] 
       }
     }
     
     # Name variables:
-    RAM$lhs <- object$var.names[[g]][RAM$lhs]
-    RAM$rhs <- object$var.names[[g]][RAM$rhs]
+    Pars$lhs <- object$var.names[[g]][Pars$lhs]
+    Pars$rhs <- object$var.names[[g]][Pars$rhs]
     
     
     # Define operators:
-    RAM$edge[object$ram[[g]][,1]==2] <- "<->"
-    RAM$edge[object$ram[[g]][,1]==1] <- "->"
+    Pars$edge[object$ram[[g]][,1]==2] <- "<->"
+    Pars$edge[object$ram[[g]][,1]==1] <- "->"
     
-    RAMS[[g]] <- RAM
+    ParsS[[g]] <- Pars
   }
   
-  RAM <- do.call("rbind",RAMS)
+  Pars <- do.call("rbind",ParsS)
   
   # Variable dataframe: 
   Vars <- data.frame(
@@ -136,10 +136,10 @@ semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object)
     stringsAsFactors=FALSE)
   
   
-  #   RAM$op[object$ram[,1]==1 & !Vars$manifest[match(RAM$lhs,Vars$name)] & Vars$manifest[match(RAM$rhs,Vars$name)]] <- "->"
+  #   Pars$op[object$ram[,1]==1 & !Vars$manifest[match(Pars$lhs,Vars$name)] & Vars$manifest[match(Pars$rhs,Vars$name)]] <- "->"
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- TRUE
   semModel@Original <- list(object)

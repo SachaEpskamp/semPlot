@@ -18,12 +18,12 @@ semPlotModel.factanal <- function(object)
   manNames <- mod@Vars$name[mod@Vars$manifest]
   
   # Fix:
-  mod@RAM$edge <- "->"
+  mod@Pars$edge <- "->"
   
   # Add residuals:
   Uniqueness <- object$uniquenesses
   
-  residRAM  <- data.frame(
+  residPars  <- data.frame(
     label = "", 
     lhs = manNames,
     edge = "<->",
@@ -35,8 +35,8 @@ semPlotModel.factanal <- function(object)
     par = 0,
     stringsAsFactors=FALSE)
   
-  mod@RAM <- rbind(mod@RAM,residRAM)
-  mod@RAM$par <- 1:nrow(mod@RAM)
+  mod@Pars <- rbind(mod@Pars,residPars)
+  mod@Pars$par <- 1:nrow(mod@Pars)
   
   
   return(mod)

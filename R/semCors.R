@@ -1,10 +1,14 @@
-semCors <- function(object,include=c("observed","expected"),vertical=FALSE,...){
+semCors <- function(object,include,vertical=FALSE,...){
   if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object) 
   
   if (!object@Computed) stop("SEM model has not been evaluated; there are no implied covariances")
   
-  Ng <- length(object@ObsCovs)
-  Groups <- unique(object@RAM$group)
+  Ng <- max(sapply(list(object@ObsCovs,object@ImpCovs),length))
+  if (missing(include))
+  {
+    include <- c("observed","expected")[c(length(object@ObsCovs)==Ng,length(object@ImpCovs)==Ng)]
+  }
+  Groups <- unique(object@Pars$group)
   
   l <- matrix(1:(Ng*length(include)),length(include),)
   if (vertical) layout(t(l)) else layout(l)

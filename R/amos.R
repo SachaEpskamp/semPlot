@@ -10,7 +10,7 @@ semPlotModel_Amos <- function(object)
   # Extract Estimates section:
   estLocs <- gregexpr('<div ntype="estimates" nodecaption="Estimates" caption="Estimates">',str)[[1]]
   nModel <- length(estLocs)
-  RAMs <- list()
+  Parss <- list()
   
   # Open and close div:
   open <- gregexpr("<div",str)[[1]]
@@ -58,9 +58,9 @@ semPlotModel_Amos <- function(object)
     if (is.null(Reg$Estimate)) Reg$Estimate <- 1
     if (is.null(Reg$Label)) Reg$Label <- ""
     
-    # Make RAM:
-    # Define RAM:
-    RAM <- data.frame(
+    # Make Pars:
+    # Define Pars:
+    Pars <- data.frame(
       label = Reg$Label, 
       lhs = Reg[,3],
       edge = "->",
@@ -72,15 +72,15 @@ semPlotModel_Amos <- function(object)
       par = 0,
       stringsAsFactors=FALSE)
     
-#     RAM$par <- 1:nrow(RAM)
-    RAM$label[is.na(RAM$label)] <- ""
+#     Pars$par <- 1:nrow(Pars)
+    Pars$label[is.na(Pars$label)] <- ""
     
 #     # Fix edges:
-#     RAM$edge[Reg[,2]=="<---"] <- "->"
-#     RAM$edge[Reg[,2]=="<-->"] <- "<->"
+#     Pars$edge[Reg[,2]=="<---"] <- "->"
+#     Pars$edge[Reg[,2]=="<-->"] <- "<->"
     
     # Test for fixed:
-    if (!is.null(Reg$P)) RAM$fixed <- is.na(Reg$P)
+    if (!is.null(Reg$P)) Pars$fixed <- is.na(Reg$P)
     
     # Standardized values:
     if (any(grepl("standardized",names(Tabs),ignore.case=TRUE)))
@@ -88,7 +88,7 @@ semPlotModel_Amos <- function(object)
       Std <- Tabs[[which(grepl("standardized",names(Tabs),ignore.case=TRUE))[1]]]
       Std <- as.data.frame(lapply(Std,as.character),stringsAsFactors=FALSE)
       if (is.null(Std$Estimate)) Std$Estimate <- 1
-      RAM$std <- as.numeric(gsub(",",".",Std$Estimate))
+      Pars$std <- as.numeric(gsub(",",".",Std$Estimate))
     }
     
     # Add covariances:
@@ -99,7 +99,7 @@ semPlotModel_Amos <- function(object)
       if (is.null(Cov$Estimate)) Cov$Estimate <- 1
       if (is.null(Cov$Label)) Cov$Label <- ""
       
-      covRAM <- data.frame(
+      covPars <- data.frame(
         label = Cov$Label, 
         lhs = Cov[,3],
         edge = "<->",
@@ -111,7 +111,7 @@ semPlotModel_Amos <- function(object)
         par = 0,
         stringsAsFactors=FALSE)
       
-        if (!is.null(Cov$P)) covRAM$fixed <- is.na(Cov$P)
+        if (!is.null(Cov$P)) covPars$fixed <- is.na(Cov$P)
       
         # Check cors:
       if (any(grepl("correlation",names(Tabs),ignore.case=TRUE)))
@@ -119,16 +119,16 @@ semPlotModel_Amos <- function(object)
         Cor <- Tabs[[which(grepl("correlation",names(Tabs),ignore.case=TRUE))[1]]]
         Cor <- as.data.frame(lapply(Cor,as.character),stringsAsFactors=FALSE)
         if (is.null(Cor$Estimate)) Cor$Estimate <- 1
-        covRAM$std <- Cor$Estimate
+        covPars$std <- Cor$Estimate
       }
-      RAM <- rbind(RAM,covRAM)
+      Pars <- rbind(Pars,covPars)
     }    
     
-    RAMs[[mod]] <- RAM
+    Parss[[mod]] <- Pars
   }
   
-  RAM <- do.call(rbind,RAMs)
-  RAM$par <- 1:nrow(RAM)
+  Pars <- do.call(rbind,Parss)
+  Pars$par <- 1:nrow(Pars)
   
   ## Extract variable info:
   startSect <- which(open==gregexpr('<div nodecaption="Variable list"',str)[[1]])
@@ -156,7 +156,7 @@ semPlotModel_Amos <- function(object)
   VarList <- gsub("^\\s*","",VarList)
   VarList <- gsub("\\s*$","",VarList)
   
-  AllVars <- unique(c(RAM$lhs,RAM$rhs))
+  AllVars <- unique(c(Pars$lhs,Pars$rhs))
   AllVars <- AllVars[AllVars!=""]
 
   # Location of indicators:
@@ -203,7 +203,7 @@ semPlotModel_Amos <- function(object)
   
   # Return:
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- FALSE
   semModel@Original <- list(str)

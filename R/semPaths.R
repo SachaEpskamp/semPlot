@@ -24,14 +24,14 @@ Mode <- function(x) {
 }
 
 ## Function to compute reingold-tilford layout using igraph:
-rtLayout <- function(roots,GroupRAM,Edgelist,layout,exoMan)
+rtLayout <- function(roots,GroupPars,Edgelist,layout,exoMan)
 {
   # Reverse intercepts in graph:
-#   revNodes <- which((GroupRAM$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
-  revNodes <- which((GroupRAM$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
+#   revNodes <- which((GroupPars$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
+  revNodes <- which((GroupPars$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
   Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
   # Remove double headed arrows:
-  Edgelist <- Edgelist[GroupRAM$edge != "<->",]
+  Edgelist <- Edgelist[GroupPars$edge != "<->",]
   
   # Make igraph object:
   Graph <- graph.edgelist(Edgelist, TRUE)
@@ -179,11 +179,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   {
     stop("Rotation must be 1, 2 3 or 4.")
   }
-  if (any(object@RAM$edge=="int")) 
+  if (any(object@Pars$edge=="int")) 
   {
     object@Vars$name[object@Vars$name=="1"] <- "_1"
-    object@RAM$lhs[object@RAM$lhs=="1"] <- "_1"
-    object@RAM$rhs[object@RAM$rhs=="1"] <- "_1"
+    object@Pars$lhs[object@Pars$lhs=="1"] <- "_1"
+    object@Pars$rhs[object@Pars$rhs=="1"] <- "_1"
   }
   
   # Check if layout is function. If so, set layout <- "spring" as dummy:
@@ -230,42 +230,42 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   # Remove means if means==FALSE
   if (intercepts==FALSE)
   {
-    object@RAM <- object@RAM[object@RAM$edge!="int",]
+    object@Pars <- object@Pars[object@Pars$edge!="int",]
   }
   # Remove residuals if residuals=FALSE
   if (residuals==FALSE)
   {
-    object@RAM <- object@RAM[!(object@RAM$edge=="<->"&object@RAM$lhs==object@RAM$rhs),]
+    object@Pars <- object@Pars[!(object@Pars$edge=="<->"&object@Pars$lhs==object@Pars$rhs),]
   }  
   # Combine groups if combineGroups=TRUE:
   if (combineGroups)
   {
-    object@RAM$group <- ""
+    object@Pars$group <- ""
   }
   # Set title:
   if (missing(title))
   {
     # Check titles:
-    title <- length(unique(object@RAM$group))>1
+    title <- length(unique(object@Pars$group))>1
   }
-  # If structural, remove all manifest from RAM:
+  # If structural, remove all manifest from Pars:
   if (structural)
   {
     #     browser()
-    object@RAM <- object@RAM[!(object@RAM$lhs %in% object@Vars$name[object@Vars$manifest] | object@RAM$rhs %in% object@Vars$name[object@Vars$manifest]),]
+    object@Pars <- object@Pars[!(object@Pars$lhs %in% object@Vars$name[object@Vars$manifest] | object@Pars$rhs %in% object@Vars$name[object@Vars$manifest]),]
     object@Vars <- object@Vars[!object@Vars$manifest,]
     object@Thresholds <- data.frame()
   }  
   
   # Add rows for bidirectional edges:
-  if (any(object@RAM$edge=="<->" & object@RAM$lhs != object@RAM$rhs))
+  if (any(object@Pars$edge=="<->" & object@Pars$lhs != object@Pars$rhs))
   {
-    bidirs <- object@RAM[object@RAM$edge=="<->" & object@RAM$lhs != object@RAM$rhs,]
+    bidirs <- object@Pars[object@Pars$edge=="<->" & object@Pars$lhs != object@Pars$rhs,]
     bidirs[c("lhs","rhs")] <- bidirs[c("rhs","lhs")]
     bidirs$par <- -1
-    object@RAM <- rbind(object@RAM,bidirs)
+    object@Pars <- rbind(object@Pars,bidirs)
   }
-  object@RAM <- object@RAM[!duplicated(object@RAM),]
+  object@Pars <- object@Pars[!duplicated(object@Pars),]
   
   # Extract names:
   manNames <- object@Vars$name[object@Vars$manifest]
@@ -340,16 +340,16 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     object@Vars$exogenous <- FALSE
     for (i in which(!object@Vars$manifest))
     {
-      if (!any(object@RAM$edge[object@RAM$rhs==object@Vars$name[i]] %in% c("~>","->") & object@RAM$lhs[object@RAM$rhs==object@Vars$name[i]]%in%latNames))
+      if (!any(object@Pars$edge[object@Pars$rhs==object@Vars$name[i]] %in% c("~>","->") & object@Pars$lhs[object@Pars$rhs==object@Vars$name[i]]%in%latNames))
       {
         object@Vars$exogenous[i] <- TRUE
       }
     }
     for (i in which(object@Vars$manifest))
     {
-      if (all(object@RAM$lhs[object@RAM$rhs==object@Vars$name[i] & object@RAM$lhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-            all(object@RAM$rhs[object@RAM$lhs==object@Vars$name[i] & object@RAM$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
-            !any(object@RAM$rhs==object@Vars$name[i] & object@RAM$edge=="~>"))
+      if (all(object@Pars$lhs[object@Pars$rhs==object@Vars$name[i] & object@Pars$lhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
+            all(object@Pars$rhs[object@Pars$lhs==object@Vars$name[i] & object@Pars$rhs%in%latNames]%in%object@Vars$name[object@Vars$exogenous]) &
+            !any(object@Pars$rhs==object@Vars$name[i] & object@Pars$edge=="~>"))
       {
         object@Vars$exogenous[i] <- TRUE
       }
@@ -363,8 +363,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # If al endo, treat formative manifest as exo (MIMIC mode), unless all manifest are formative.
     if (!any(object@Vars$exogenous))
     {
-      if (any(object@Vars$manifest & (object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])))
-        object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@RAM$rhs[object@RAM$edge %in% c("~>","--","->")])] <- TRUE
+      if (any(object@Vars$manifest & (object@Vars$name%in%object@Pars$rhs[object@Pars$edge %in% c("~>","--","->")])))
+        object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@Pars$rhs[object@Pars$edge %in% c("~>","--","->")])] <- TRUE
     }
     if (repExo)
     {
@@ -372,7 +372,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     }
   }
   
-  Groups <- unique(object@RAM$group)
+  Groups <- unique(object@Pars$group)
   qgraphRes <- list()
   if (missing(ask))
   {
@@ -390,7 +390,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   par(ask=ask)
   for (gr in Groups[(1:length(Groups))%in%include])
   {
-    GroupRAM <- object@RAM[object@RAM$group==gr,]
+    GroupPars <- object@Pars[object@Pars$group==gr,]
     GroupVars <- object@Vars
     GroupThresh <- object@Thresholds[object@Thresholds$group==gr,]
     
@@ -406,7 +406,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     {
       ConOrd <- function(nodes)
       {
-        E <- GroupRAM[c("lhs","rhs")]
+        E <- GroupPars[c("lhs","rhs")]
         subE <- rbind(as.matrix(E[E[,1]%in%nodes,1:2]),as.matrix(E[E[,2]%in%nodes,2:1]))
         subE <- subE[subE[,2]%in%GroupVars$name[!GroupVars$manifest],,drop=FALSE]
         ranks <- rank(match(subE[,2],GroupVars$name))
@@ -435,9 +435,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       Labels <- c(manNames,latNames)
     }
     
-    Ni <- sum(GroupRAM$edge=="int")
+    Ni <- sum(GroupPars$edge=="int")
     # Add intercept:
-    if (any(object@RAM$edge=="int")) 
+    if (any(object@Pars$edge=="int")) 
     {
       Labels[Labels=="1"] <- "_1"
       if (intStyle == "single") 
@@ -452,9 +452,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     nN <- length(Labels)
     
     # Extract edgelist:
-    Edgelist <- GroupRAM[c("lhs","rhs")]
+    Edgelist <- GroupPars[c("lhs","rhs")]
     Edgelist$lhs <- match(Edgelist$lhs,Labels)
-    Edgelist$lhs[GroupRAM$edge=="int"] <- (nM+nL+1):nN
+    Edgelist$lhs[GroupPars$edge=="int"] <- (nM+nL+1):nN
     Edgelist$rhs <- match(Edgelist$rhs,Labels)
     
     # Coerce to numeric matrix:
@@ -479,8 +479,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     
     GroupVars <- GroupVars[GroupVars$name%in%Labels,]
     
-    manInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%manNames,,drop=FALSE]
-    latInts <- Edgelist[GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,,drop=FALSE]
+    manInts <- Edgelist[GroupPars$edge=="int" & GroupPars$rhs%in%manNames,,drop=FALSE]
+    latInts <- Edgelist[GroupPars$edge=="int" & GroupPars$rhs%in%latNames,,drop=FALSE]
     
     manIntsEndo <- manInts[!GroupVars$exogenous[manInts[,2]],,drop=FALSE]
     manIntsExo <- manInts[GroupVars$exogenous[manInts[,2]],,drop=FALSE]
@@ -493,15 +493,15 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     exoLat <- which(Labels%in%latNames&Labels%in%GroupVars$name[GroupVars$exogenous])
     
     # Bidirectional:
-    Bidir <- GroupRAM$edge == "<->"
+    Bidir <- GroupPars$edge == "<->"
     if (!grepl("mx",style,ignore.case=TRUE))
     {
-      Bidir[GroupRAM$lhs==GroupRAM$rhs] <- FALSE
+      Bidir[GroupPars$lhs==GroupPars$rhs] <- FALSE
     }
     
     # Shape:
     Shape <- c(rep("square",nM),rep("circle",nL))
-    if (any(GroupRAM$edge=="int")) Shape <- c(Shape,rep("triangle",Ni))
+    if (any(GroupPars$edge=="int")) Shape <- c(Shape,rep("triangle",Ni))
     
     Curve <- curve
     
@@ -513,9 +513,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       if (intStyle=="single")
       {
         # Curves:
-        Curve <- ifelse(GroupRAM$lhs != GroupRAM$rhs & ((GroupRAM$lhs%in%manNames & GroupRAM$rhs%in%manNames) | (GroupRAM$lhs%in%latNames & GroupRAM$rhs%in%latNames)),curve,NA)
-        Curve <- ifelse(GroupRAM$lhs%in%manNames,Curve,-1*Curve)
-        Curve <- ifelse(GroupRAM$edge=="int" & GroupRAM$rhs%in%latNames,curve,-1*Curve)
+        Curve <- ifelse(GroupPars$lhs != GroupPars$rhs & ((GroupPars$lhs%in%manNames & GroupPars$rhs%in%manNames) | (GroupPars$lhs%in%latNames & GroupPars$rhs%in%latNames)),curve,NA)
+        Curve <- ifelse(GroupPars$lhs%in%manNames,Curve,-1*Curve)
+        Curve <- ifelse(GroupPars$edge=="int" & GroupPars$rhs%in%latNames,curve,-1*Curve)
         
         # Empty layout:
         Layout <- matrix(,length(Labels),2)
@@ -525,7 +525,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         
         # Add vertical levels:
         Layout[Labels%in%manNames,1] <- seq(-1,1,length=nM)
-        if (any(GroupRAM$edge=="int"))
+        if (any(GroupPars$edge=="int"))
         {
           sq <- seq(-1,1,length=nL+1)
           cent <- floor(median(1:(nL+1)))
@@ -612,9 +612,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         # Double headed arrows removed
         # Arrow on other intercepts reversed
 #       
-#       if (any(GroupRAM$lhs %in% GroupVars$name[exoMan] & GroupRAM$edge %in% c("->","~>")))
+#       if (any(GroupPars$lhs %in% GroupVars$name[exoMan] & GroupPars$edge %in% c("->","~>")))
 #       {
-#         roots <- sort(unique(Edgelist[,1][which(GroupRAM$lhs %in% GroupVars$name[exoMan] & GroupRAM$edge %in% c("->","~>"))]))
+#         roots <- sort(unique(Edgelist[,1][which(GroupPars$lhs %in% GroupVars$name[exoMan] & GroupPars$edge %in% c("->","~>"))]))
 #         if (any(roots %in% manIntsExo[,2]))
 #         {
 #           roots <- manIntsExo[match(roots,manIntsExo[,2]),1]
@@ -642,14 +642,14 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       } else if (nrow(rbind(manIntsExo,manIntsEndo)) > 0)
       {
         roots <- rbind(manIntsExo,manIntsEndo)[,1]
-      } else if (any(GroupRAM$edge %in% c("->","~>")))
+      } else if (any(GroupPars$edge %in% c("->","~>")))
       {
-        roots <- Mode(Edgelist[,1][GroupRAM$edge %in% c("->","~>")])
+        roots <- Mode(Edgelist[,1][GroupPars$edge %in% c("->","~>")])
       } else {
         roots <- Mode(c(Edgelist[,1],Edgelist[,2]))
       }
       
-      Layout <- rtLayout(roots,GroupRAM,Edgelist,layout,exoMan)
+      Layout <- rtLayout(roots,GroupPars,Edgelist,layout,exoMan)
       # Fix top level to use entire range:
       # Layout[Layout[,2]==max(Layout[,2]),1] <- seq(min(Layout[,1]),max(Layout[,1]),length.out=sum(Layout[,2]==max(Layout[,2])))
       # Center all horizontal levels:
@@ -709,7 +709,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       if (any(GroupVars$exogenous) & optimizeLatRes)
       {
         ### For latents that have loops, find opposite of mean angle
-        for (i in which(Labels%in%latNames & Labels%in%GroupRAM$lhs[GroupRAM$lhs==GroupRAM$rhs]))
+        for (i in which(Labels%in%latNames & Labels%in%GroupPars$lhs[GroupPars$lhs==GroupPars$rhs]))
         {
           # Layout subset of all connected:
           subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2]),,drop=FALSE]              
@@ -720,12 +720,12 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           
           subLayout <- Layout[conNodes,,drop=FALSE]
           Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
-          if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->"))
+          if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupPars$edge=="<->"))
           {
             loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
           } else {
             # Layout subset of all connected:
-            subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupRAM$edge=="<->",]
+            subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupPars$edge=="<->",]
             conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
             
             # Test for empty:
@@ -767,9 +767,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       inBet[inBet>0] <- as.numeric(as.factor(inBet[inBet>0]))
       if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
       {
-        Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int",ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
+        Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int",ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
       } else {
-        Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupRAM$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
+        Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
       }
       ### If origin node is "right" of  destination node, flip curve:
       Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
@@ -804,7 +804,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # Edge labels:
     if (edge.labels)
     {
-      eLabels <- GroupRAM$label
+      eLabels <- GroupPars$label
     } else eLabels <- rep("",nrow(Edgelist))
     
     # vsize:
@@ -828,25 +828,25 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       
     } else if (grepl("stand|std",what,ignore.case=TRUE))
     {
-      Edgelist <- cbind(Edgelist,GroupRAM$std)
-      if (edge.labels) eLabels <- as.character(round(GroupRAM$std,2))
+      Edgelist <- cbind(Edgelist,GroupPars$std)
+      if (edge.labels) eLabels <- as.character(round(GroupPars$std,2))
     } else if (grepl("est|par",what,ignore.case=TRUE))
     {
-      Edgelist <- cbind(Edgelist,GroupRAM$est)
-      if (edge.labels) eLabels <- as.character(round(GroupRAM$est,2))
+      Edgelist <- cbind(Edgelist,GroupPars$est)
+      if (edge.labels) eLabels <- as.character(round(GroupPars$est,2))
     } else if (grepl("eq|cons",what,ignore.case=TRUE))
     {
       #       eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
-      unPar <- unique(object@RAM$par[object@RAM$par>0 & duplicated(object@RAM$par)])
+      unPar <- unique(object@Pars$par[object@Pars$par>0 & duplicated(object@Pars$par)])
       if (pastel)
       {
-        cols <- rainbow_hcl(max(c(object@RAM$par,GroupThresh$par)), c = 35, l = 85)
+        cols <- rainbow_hcl(max(c(object@Pars$par,GroupThresh$par)), c = 35, l = 85)
       } else {
-        cols <- rainbow(max(c(object@RAM$par,GroupThresh$par)))
+        cols <- rainbow(max(c(object@Pars$par,GroupThresh$par)))
       }
       for (i in unPar)
       {
-        eColor[GroupRAM$par==i] <- cols[i]
+        eColor[GroupPars$par==i] <- cols[i]
       }
       if (nrow(GroupThresh) > 0)
       {
@@ -974,16 +974,16 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     {
       if (grepl("path|diagram|model|name|label",whatLabels,ignore.case=TRUE))
       {
-        eLabels <- GroupRAM$label
+        eLabels <- GroupPars$label
       } else if (grepl("stand|std",whatLabels,ignore.case=TRUE))
       {
-        eLabels <- as.character(round(GroupRAM$std,2))
+        eLabels <- as.character(round(GroupPars$std,2))
       } else if (grepl("est|par",whatLabels,ignore.case=TRUE))
       {
-        eLabels <- as.character(round(GroupRAM$est,2))
+        eLabels <- as.character(round(GroupPars$est,2))
       } else if (grepl("eq|cons",whatLabels,ignore.case=TRUE))
       {
-        eLabels <- GroupRAM$par
+        eLabels <- GroupPars$par
       } else if (grepl("no|omit|hide|invisible",whatLabels,ignore.case=TRUE))
       {
         eLabels <- rep("",nrow(Edgelist))
@@ -1003,7 +1003,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     #     ### CONVERT TO LISREL STYLE ###
     if (grepl("lisrel",style,ignore.case=TRUE) & residuals)
     {
-      isResid <- GroupRAM$edge == "<->" & GroupRAM$lhs != GroupRAM$rhs
+      isResid <- GroupPars$edge == "<->" & GroupPars$lhs != GroupPars$rhs
     } else isResid <- rep(FALSE,nrow(Edgelist))
     
     
@@ -1119,22 +1119,22 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # Fixed and free edges:
     if (length(freeStyle) > 2 | length(fixedStyle) > 2) warning("'freeStyle' and 'fixedStyle' are assumed to be vectors of at most length 2. Unexpected results will probably occur.")
     # lty:
-    lty <- rep(1,nrow(GroupRAM))
+    lty <- rep(1,nrow(GroupPars))
     
     # fixedStyle
-    if (any(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle))) lty <- ifelse(GroupRAM$fixed,as.numeric(fixedStyle[is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle)]),lty) 
+    if (any(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle))) lty <- ifelse(GroupPars$fixed,as.numeric(fixedStyle[is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle)]),lty) 
     
-    if (any(qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle)))) eColor[GroupRAM$fixed] <- fixedStyle[qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle))]
+    if (any(qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle)))) eColor[GroupPars$fixed] <- fixedStyle[qgraph:::isColor(fixedStyle) & !(is.numeric(fixedStyle) | grepl("^\\d+$",fixedStyle))]
     
     
     # freeStyle:
-    if (any(is.numeric(freeStyle) | grepl("\\d+",freeStyle))) lty <- ifelse(GroupRAM$fixed,lty,as.numeric(freeStyle[is.numeric(freeStyle) | grepl("\\d+",freeStyle)]))
+    if (any(is.numeric(freeStyle) | grepl("\\d+",freeStyle))) lty <- ifelse(GroupPars$fixed,lty,as.numeric(freeStyle[is.numeric(freeStyle) | grepl("\\d+",freeStyle)]))
     
-    if (any(qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle)))) eColor[!GroupRAM$fixed] <- freeStyle[qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle))]
+    if (any(qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle)))) eColor[!GroupPars$fixed] <- freeStyle[qgraph:::isColor(freeStyle) & !(is.numeric(freeStyle) | grepl("\\d+",freeStyle))]
     
     # Directed settings:
     
-    Directed <- GroupRAM$edge!="--"
+    Directed <- GroupPars$edge!="--"
     
     # Convert labels to expressions:
     if ("edges"%in%as.expression)
@@ -1156,7 +1156,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # Overwrite node and edge labels:
     if (!missing(edgeLabels))
     {
-      eLab <- edgeLabels[object@RAM$group==gr]
+      eLab <- edgeLabels[object@Pars$group==gr]
     } else eLab <- eLabels
     
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
@@ -1179,7 +1179,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              residEdge = isResid,
                                              edgelist = TRUE,
                                              curveDefault = curveDefault,
-                                             knots = GroupRAM$knot,
+                                             knots = GroupPars$knot,
                                              curvePivot = curvePivot,
                                              ...)
     

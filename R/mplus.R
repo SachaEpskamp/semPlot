@@ -68,8 +68,8 @@ semPlotModel.mplus.model <- function(object)
     }
   }
   
-  # Define RAM:
-  RAM <- data.frame(
+  # Define Pars:
+  Pars <- data.frame(
     label = "", 
     lhs = "",
     edge = "--",
@@ -84,18 +84,18 @@ semPlotModel.mplus.model <- function(object)
   if (!noPars)
   {
     parNums <- dlply(cbind(sapply(parsUS[c("est","se")],function(x)round(as.numeric(x),10)),data.frame(num=1:nrow(parsUS))),c("est","se"),'[[',"num")
-    for (i in 1:length(parNums)) RAM$par[parNums[[i]]] <- i
-    RAM$par[RAM$fixed] <- 0  
-  } else RAM$par <- 1:nrow(RAM)
+    for (i in 1:length(parNums)) Pars$par[parNums[[i]]] <- i
+    Pars$par[Pars$fixed] <- 0  
+  } else Pars$par <- 1:nrow(Pars)
   
 #   
 #   c <- 1
-#   for (i in 1:nrow(RAM))
+#   for (i in 1:nrow(Pars))
 #   {
-#     if (!isTRUE(RAM$fixed[i]) & RAM$par[i]==0)
+#     if (!isTRUE(Pars$fixed[i]) & Pars$par[i]==0)
 #     {
 #       par <- sapply(1:nrow(parsUS),function(j)isTRUE(all.equal(unlist(parsUS[j,c("est","se","est_se","pval")]),unlist(parsUS[i,c("est","se","est_se","pval")]))))
-#       RAM$par[par] <- c
+#       Pars$par[par] <- c
 #       c <- c+1
 #     }
 #   }
@@ -103,35 +103,35 @@ semPlotModel.mplus.model <- function(object)
   
   if (!is.null(object$parameters$std.standardized))
   {
-    RAM$std <- object$parameters$std.standardized$est
+    Pars$std <- object$parameters$std.standardized$est
   }
   
-  RAM$lhs[grepl("BY",parsUS$paramHeader)] <- gsub("\\.BY","",parsUS$paramHeader[grepl("BY",parsUS$paramHeader)])
-  RAM$edge[grepl("BY",parsUS$paramHeader)] <- "->"
+  Pars$lhs[grepl("BY",parsUS$paramHeader)] <- gsub("\\.BY","",parsUS$paramHeader[grepl("BY",parsUS$paramHeader)])
+  Pars$edge[grepl("BY",parsUS$paramHeader)] <- "->"
   
-  RAM$lhs[grepl("ON",parsUS$paramHeader)] <- gsub("\\.ON","",parsUS$paramHeader[grepl("ON",parsUS$paramHeader)])
-  RAM$edge[grepl("ON",parsUS$paramHeader)] <- "~>"
-  RAM[grepl("ON",parsUS$paramHeader),c("lhs","rhs")] <- RAM[grepl("ON",parsUS$paramHeader),c("rhs","lhs")]
+  Pars$lhs[grepl("ON",parsUS$paramHeader)] <- gsub("\\.ON","",parsUS$paramHeader[grepl("ON",parsUS$paramHeader)])
+  Pars$edge[grepl("ON",parsUS$paramHeader)] <- "~>"
+  Pars[grepl("ON",parsUS$paramHeader),c("lhs","rhs")] <- Pars[grepl("ON",parsUS$paramHeader),c("rhs","lhs")]
   
-  RAM$lhs[grepl("WITH",parsUS$paramHeader)] <- gsub("\\.WITH","",parsUS$paramHeader[grepl("WITH",parsUS$paramHeader)])
-  RAM$edge[grepl("WITH",parsUS$paramHeader)] <- "<->"
+  Pars$lhs[grepl("WITH",parsUS$paramHeader)] <- gsub("\\.WITH","",parsUS$paramHeader[grepl("WITH",parsUS$paramHeader)])
+  Pars$edge[grepl("WITH",parsUS$paramHeader)] <- "<->"
   
-  RAM$lhs[grepl("Variances",parsUS$paramHeader)] <- RAM$rhs[grepl("Variances",parsUS$paramHeader)]
-  RAM$edge[grepl("Variances",parsUS$paramHeader)] <- "<->"
+  Pars$lhs[grepl("Variances",parsUS$paramHeader)] <- Pars$rhs[grepl("Variances",parsUS$paramHeader)]
+  Pars$edge[grepl("Variances",parsUS$paramHeader)] <- "<->"
   
-  RAM$edge[grepl("Means|Intercepts",parsUS$paramHeader)] <- "int"
+  Pars$edge[grepl("Means|Intercepts",parsUS$paramHeader)] <- "int"
   
-  if (!is.null(object$parameters$standardized)) RAM$std <- object$parameters$standardized$est
+  if (!is.null(object$parameters$standardized)) Pars$std <- object$parameters$standardized$est
   
   
   # Extract threshold model:
-  Thresh <- RAM[grepl("Thresholds",parsUS$paramHeader),-(3:4)]
-  Thresh$lhs <- gsub("\\$.*","",RAM$rhs[grepl("Thresholds",parsUS$paramHeader)])
-  RAM <- RAM[!grepl("Thresholds",parsUS$paramHeader),]
+  Thresh <- Pars[grepl("Thresholds",parsUS$paramHeader),-(3:4)]
+  Thresh$lhs <- gsub("\\$.*","",Pars$rhs[grepl("Thresholds",parsUS$paramHeader)])
+  Pars <- Pars[!grepl("Thresholds",parsUS$paramHeader),]
   
   # Detect latent/manifest:
   Latents <- unique(gsub("\\.BY","",parsUS$paramHeader[grepl("BY",parsUS$paramHeader)]))
-  var <- unique(unlist(RAM[c("lhs","rhs")]))
+  var <- unique(unlist(Pars[c("lhs","rhs")]))
   var <- var[var!=""]
   
   # Variable dataframe: 
@@ -147,34 +147,34 @@ semPlotModel.mplus.model <- function(object)
   {
     Vars <- Vars[!tolower(Vars$name)%in%tolower(newvars),]
     
-    RAM$knot <- 0
+    Pars$knot <- 0
     k <- 1
     for (i in rev(seq_along(newvars)))
     {
-      varlocs <- which(tolower(RAM$lhs)==tolower(newvars[i])|tolower(RAM$rhs)==tolower(newvars[i]))
+      varlocs <- which(tolower(Pars$lhs)==tolower(newvars[i])|tolower(Pars$rhs)==tolower(newvars[i]))
       for (v in seq_along(varlocs))
       {
         for (j in 1:length(vars[[i]]))
         {
-          RAMnew <- RAM[varlocs[v],]
-          RAMnew$lhs[tolower(RAMnew$lhs)==tolower(newvars[i])] <- Vars$name[match(tolower(vars[[i]][j]),tolower(Vars$name))]
-          RAMnew$rhs[tolower(RAMnew$rhs)==tolower(newvars[i])] <- Vars$name[match(tolower(vars[[i]][j]),tolower(Vars$name))]
-          if (RAMnew$knot==0)
+          Parsnew <- Pars[varlocs[v],]
+          Parsnew$lhs[tolower(Parsnew$lhs)==tolower(newvars[i])] <- Vars$name[match(tolower(vars[[i]][j]),tolower(Vars$name))]
+          Parsnew$rhs[tolower(Parsnew$rhs)==tolower(newvars[i])] <- Vars$name[match(tolower(vars[[i]][j]),tolower(Vars$name))]
+          if (Parsnew$knot==0)
           {
-            RAMnew$knot <- k
+            Parsnew$knot <- k
           }
-          RAM <- rbind(RAM,RAMnew)
+          Pars <- rbind(Pars,Parsnew)
         } 
-        if (any(RAM$knot==k)) k <- k + 1
+        if (any(Pars$knot==k)) k <- k + 1
       }
-      RAM <- RAM[-varlocs,]
+      Pars <- Pars[-varlocs,]
     }
     
   }
 
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- TRUE
   semModel@Original <- list(object)

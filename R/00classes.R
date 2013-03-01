@@ -6,7 +6,7 @@
 # 'int' is an intercept
 
 setClass( "semPlotModel", representation(
-  RAM = "data.frame",
+  Pars = "data.frame",
   Vars = "data.frame",
   Thresholds = "data.frame",
   Computed = "logical",

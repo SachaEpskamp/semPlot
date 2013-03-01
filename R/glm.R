@@ -30,7 +30,7 @@ semPlotModel.lm <- function(object)
   NamesR <- rownames(coef)
   NamesC <- colnames(coef)
   
-  RAM  <- data.frame(
+  Pars  <- data.frame(
     label = "", 
     lhs = rep(NamesR,times=Nc),
     edge = "->",
@@ -44,35 +44,35 @@ semPlotModel.lm <- function(object)
     stringsAsFactors=FALSE)
   
   ## Split interactions:
-  if (any(grepl(":",RAM$lhs)))
+  if (any(grepl(":",Pars$lhs)))
   {
-    colons <- grep(":",RAM$lhs)
+    colons <- grep(":",Pars$lhs)
     for (i in seq_along(colons))
     {
-      labs <- strsplit(RAM$lhs[colons[i]],split=":")[[1]]
-      RAM$lhs[colons[i]] <- labs[1]
-      RAM$knot[colons[i]] <- i
+      labs <- strsplit(Pars$lhs[colons[i]],split=":")[[1]]
+      Pars$lhs[colons[i]] <- labs[1]
+      Pars$knot[colons[i]] <- i
       for (j in 2:length(labs))
       {
-        RAM <- rbind(RAM,RAM[colons[i],])
-        RAM$lhs[nrow(RAM)] <- labs[j]
+        Pars <- rbind(Pars,Pars[colons[i],])
+        Pars$lhs[nrow(Pars)] <- labs[j]
       }
     }
   }
   
-  RAM$edge[grepl("intercept",RAM$lhs,ignore.case=TRUE)] <- "int"
-  RAM$lhs[grepl("intercept",RAM$lhs,ignore.case=TRUE)] <- ""
+  Pars$edge[grepl("intercept",Pars$lhs,ignore.case=TRUE)] <- "int"
+  Pars$lhs[grepl("intercept",Pars$lhs,ignore.case=TRUE)] <- ""
   
   # Variable dataframe: 
   Vars <- data.frame(
-    name = unique(c(RAM$lhs,RAM$rhs)),
+    name = unique(c(Pars$lhs,Pars$rhs)),
     manifest = TRUE,
     exogenous = NA,
     stringsAsFactors=FALSE)
   Vars <- Vars[Vars$name!="",]
   
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- TRUE
   semModel@Original <- list(object)

@@ -18,8 +18,8 @@ semPlotModel.princomp <- function(object)
   manNames <- mod@Vars$name[mod@Vars$manifest]
   
   # Fix:
-  mod@RAM[c("lhs","rhs")] <- mod@RAM[c("rhs","lhs")]
-  mod@RAM$edge <- "->"
+  mod@Pars[c("lhs","rhs")] <- mod@Pars[c("rhs","lhs")]
+  mod@Pars$edge <- "->"
     
   return(mod)
 }

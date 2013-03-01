@@ -19,8 +19,8 @@ semPlotModel_Onyx <- function(object)
     To = as.numeric(as.character(sapply(Edges, function(n) xmlGetAttr(n, "targetNodeId")))),  
     stringsAsFactors=FALSE) + 1
   
-  # Define RAM:
-  RAM <- data.frame(
+  # Define Pars:
+  Pars <- data.frame(
     label = sapply(Edges, function(n) xmlGetAttr(n, "parameterName")), 
     lhs = NodeNames[Edgelist$From],
     edge = ifelse(as.logical(sapply(Edges, function(n) xmlGetAttr(n, "doubleHeaded"))),"<->","->"),
@@ -32,8 +32,8 @@ semPlotModel_Onyx <- function(object)
     par = 0,
     stringsAsFactors=FALSE)
   
-  RAM$edge[RAM$lhs==""] <- "int"
-  RAM$par <- 1:nrow(RAM)
+  Pars$edge[Pars$lhs==""] <- "int"
+  Pars$par <- 1:nrow(Pars)
   
   # Vars:
   Vars <- data.frame(
@@ -46,7 +46,7 @@ semPlotModel_Onyx <- function(object)
   
   # Return:
   semModel <- new("semPlotModel")
-  semModel@RAM <- RAM
+  semModel@Pars <- Pars
   semModel@Vars <- Vars
   semModel@Computed <- FALSE
   semModel@Original <- list(doc)

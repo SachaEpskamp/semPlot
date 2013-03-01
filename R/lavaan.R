@@ -43,7 +43,7 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   if (is.null(pars$group)) pars$group <- ""
   
   # Create edges dataframe
-  semModel@RAM <- data.frame(
+  semModel@Pars <- data.frame(
     label = pars$label,
     lhs = ifelse(pars$op=="~"|pars$op=="~1",pars$rhs,pars$lhs),
     edge = "--",
@@ -55,17 +55,17 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
     par = list$free,
     stringsAsFactors=FALSE)
 
-  semModel@RAM$edge[pars$op=="~~"] <- "<->"  
-  semModel@RAM$edge[pars$op=="~*~"] <- "<->"  
-  semModel@RAM$edge[pars$op=="~"] <- "~>"
-  semModel@RAM$edge[pars$op=="=~"] <- "->"
-  semModel@RAM$edge[pars$op=="~1"] <- "int"
-  semModel@RAM$edge[grepl("\\|",pars$op)] <- "|"
+  semModel@Pars$edge[pars$op=="~~"] <- "<->"  
+  semModel@Pars$edge[pars$op=="~*~"] <- "<->"  
+  semModel@Pars$edge[pars$op=="~"] <- "~>"
+  semModel@Pars$edge[pars$op=="=~"] <- "->"
+  semModel@Pars$edge[pars$op=="~1"] <- "int"
+  semModel@Pars$edge[grepl("\\|",pars$op)] <- "|"
   
   # Move thresholds to Thresholds slot:
-  semModel@Thresholds <- semModel@RAM[grepl("\\|",semModel@RAM$edge),-(3:4)]
-  # Remove thresholds from RAM:
-  semModel@RAM <- semModel@RAM[!grepl("\\|",semModel@RAM$edge),]
+  semModel@Thresholds <- semModel@Pars[grepl("\\|",semModel@Pars$edge),-(3:4)]
+  # Remove thresholds from Pars:
+  semModel@Pars <- semModel@Pars[!grepl("\\|",semModel@Pars$edge),]
   
   semModel@Vars <- data.frame(
     name = c(varNames,factNames),
