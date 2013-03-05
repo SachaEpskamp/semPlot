@@ -3,8 +3,12 @@
 # rows: Rownames
 # cols: Colnames
 # lhsisrow: lhs variable is interpreted as row (default to FALSE)
-Pars2Matrix <- function(Pars, edges, rows, cols, lhsisrow = FALSE)
+Pars2Matrix <- function(Pars, edges, rows, cols, symmetrical, lhsisrow = FALSE)
 {
+  if (missing(symmetrical))
+  {
+    symmetrical <- any(grepl("<->",edges))
+  }
   if (lhsisrow) Pars[c('lhs','rhs')] <- Pars[c('rhs','lhs')]
   Groups <- unique(Pars$group)
   Pars$lhs[Pars$edge=="int"] <- "1"
@@ -29,6 +33,13 @@ Pars2Matrix <- function(Pars, edges, rows, cols, lhsisrow = FALSE)
       ResMatrix[[i]]$std[match(Pars$rhs[j],rows),match(Pars$lhs[j],cols)] <- Pars$std[j]
       ResMatrix[[i]]$fixed[match(Pars$rhs[j],rows),match(Pars$lhs[j],cols)] <- Pars$fixed[j]
       ResMatrix[[i]]$par[match(Pars$rhs[j],rows),match(Pars$lhs[j],cols)] <- Pars$par[j]
+      if (symmetrical)
+      {
+        ResMatrix[[i]]$est[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$est[j]
+        ResMatrix[[i]]$std[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$std[j]
+        ResMatrix[[i]]$fixed[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$fixed[j]
+        ResMatrix[[i]]$par[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$par[j]        
+      }
     }
   }
   names(ResMatrix) <- Groups
