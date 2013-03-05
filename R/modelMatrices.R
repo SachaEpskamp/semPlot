@@ -89,6 +89,47 @@ modelMatrices <- function(object,model="ram", endoOnly = FALSE)
   ### LISREL MODEL ###:
   if (grepl("lis",model,ignore.case=TRUE))
   {
+    # If any manifest var is used in regression, create dummy latents:
+    if (any(object@Pars$lhs[object@Pars$edge%in%c("->","~>")] %in% c(manExo,manEndo)))
+    {
+      message("Latent dummy variables added to include manifest regressions")
+      # Identify variables:
+      manRegs <- c(manExo,manEndo)[c(manExo,manEndo)%in%object@Pars$lhs[object@Pars$edge%in%c("->","~>")]]
+      newVars <- object@Vars[object@Vars$name %in% manRegs,]
+      newVars$manifest <- FALSE
+      newVars$name <- paste0(newVars$name,"@L@")
+      object@Vars <- rbind(object@Vars,newVars)
+      
+      # Change regressions to latents:
+      object@Pars$lhs[object@Pars$lhs %in% manRegs & object@Pars$edge%in%c("->","~>")] <- paste0(object@Pars$lhs[object@Pars$lhs %in% manRegs & object@Pars$edge%in%c("->","~>")],"@L@")
+      
+      manVarResids <- which(object@Pars$lhs %in% manRegs & object@Pars$rhs %in% manRegs & object@Pars$edge=="<->")
+      
+      object@Pars$lhs[manVarResids] <- paste0(object@Pars$lhs[manVarResids],"@L@")
+      object@Pars$rhs[manVarResids] <- paste0(object@Pars$rhs[manVarResids],"@L@")
+      
+      
+      # Add factor loadings:
+      for (g in unique(object@Pars$group))
+      {
+        parLocs <- nrow(object@Pars)+seq_along(manRegs)
+        object@Pars[parLocs,"lhs"] <- paste0(manRegs,"@L@")
+        object@Pars[parLocs,"rhs"] <- manRegs
+        object@Pars[parLocs,"label"] <- ""
+        object@Pars[parLocs,"est"] <- 1
+        object@Pars[parLocs,"std"] <- NA
+        object@Pars[parLocs,"group"] <- g
+        object@Pars[parLocs,"fixed"] <- TRUE
+        object@Pars[parLocs,"par"] <- 0
+      }
+      
+      # Extract names:
+      manExo <- object@Vars$name[object@Vars$manifest & object@Vars$exogenous]
+      manEndo <- object@Vars$name[object@Vars$manifest & !object@Vars$exogenous]
+      latExo <- object@Vars$name[!object@Vars$manifest & object@Vars$exogenous]
+      latEndo <- object@Vars$name[!object@Vars$manifest & !object@Vars$exogenous]
+    }
+    
     # Extract matrices:
     Model[['LY']] <- Pars2Matrix(object@Pars, c("->","~>"), manEndo, latEndo)
     Model[['TE']] <- Pars2Matrix(object@Pars, "<->", manEndo, manEndo)

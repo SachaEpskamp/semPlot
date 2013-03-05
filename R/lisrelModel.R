@@ -6,15 +6,23 @@ InvEmp <- function(x)
   {
     return(array(0,dim=dim(x))) 
   } else {
-    res <- tryCatch(solve(x), error = function(e) FALSE)
+    res <- tryCatch(solve(x), error = function(e) FALSE, silent = TRUE)
     if (is.matrix(res)) return(res) else 
     {
-      warning("Uninvertable matrix found. Standardized solutions are not proper.")
-      return(array(0, dim=dim(x)))
+      res <- tryCatch(pseudoinverse(x), error = function(e) FALSE, silent = TRUE)
+      if (is.matrix(res))
+      {
+        warning("Psuedoinverse used for singular matrix. Standardized solution might not be proper.")
+        return(res) 
+      } else 
+      {
+        warning("Uninvertable matrix found and psuedoinverse could not be computed. Standardized solutions probably not proper.")
+        return(array(0, dim=dim(x)))
+      }
     }
   }
 }
-
+  
 fixMatrix <- function(m)
 {
   # If not a list (matrix itself added) put matrix in list (group 1) in list:
@@ -36,34 +44,35 @@ fixMatrix <- function(m)
     if (!all(sapply(m,is.list))) stop("Not all elements are a list")
     
     # Clean each group:
-    for (g in 1:length(m))
+    for (g in seq_along(m))
     {
       # Copy parSpec to par (lisrelToR compatibility)
-      if (is.null(m[[g]][['par']]) & !is.null(m[[g]][['parSpec']]))
+      if (is.empty(m[[g]][['par']]) & !is.empty(m[[g]][['parSpec']]))
       {
         m[[g]][['par']] <- m[[g]][['parSpec']]
       }
-      if (is.null(m[[g]][['fixed']]))
+      if (is.empty(m[[g]][['fixed']]))
       {
-        if (!is.null(m[[g]][['par']]))
+        if (!is.empty(m[[g]][['par']]))
         {
           m[[g]][['fixed']] <- m[[g]][['par']]==0
-        } else if (!is.null(m[[g]][['parSpec']]))
+        } else if (!is.empty(m[[g]][['parSpec']]))
         {
           m[[g]][['fixed']] <- m[[g]][['parSpec']]==0
         }
       }
-      if (!is.null(m[[g]][['stdComp']]))
+      if (!is.empty(m[[g]][['stdComp']]))
       {
         m[[g]][['std']] <- m[[g]][['stdComp']]
       } 
-      if (is.null(m[[g]][['est']])) m[[g]] <- list()
+      if (is.empty(m[[g]][['est']])) m[[g]] <- list()
     }
   }    
   
   return(m)
 }
 
+is.empty <- function(x) is.null(x) || any(dim(x)==0)
 
 ### SINGLE GROUP MODEL ###
 lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,TX,KA,manNamesExo,latNamesExo,ObsCovs,ImpCovs,setExo,modelLabels = FALSE, reduce = TRUE)
@@ -87,47 +96,47 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   # If names missing, set default::
   if (missing(manNamesEndo))
   {
-    if (length(LY)>0 && !is.null(LY[[1]]$est)) 
+    if (length(LY)>0 && !is.empty(LY[[1]]$est)) 
     {
       if (!is.null(rownames(LY[[1]]$est)) && !modelLabels)
       {
         manNamesEndo <- rownames(LY[[1]]$est)
-      } else manNamesEndo <- paste0("y[",1:nrow(LY[[1]]$est),"]")
-    } else if (length(TE)>0 && !is.null(TE[[1]]$est))
+      } else manNamesEndo <- paste0("y[",seq_len(nrow(LY[[1]]$est)),"]")
+    } else if (length(TE)>0 && !is.empty(TE[[1]]$est))
     {
       if (!is.null(rownames(TE[[1]]$est)) && !modelLabels)
       {
         manNamesEndo <- rownames(TE[[1]]$est)
-      } else manNamesEndo <- paste0("y[",1:nrow(TE[[1]]$est),"]")
-    } else if (length(TY)>0 && !is.null(TY[[1]]$est))
+      } else manNamesEndo <- paste0("y[",seq_len(nrow(TE[[1]]$est)),"]")
+    } else if (length(TY)>0 && !is.empty(TY[[1]]$est))
     {
-      manNamesEndo <- paste0("y[",1:length(TY[[1]]$est),"]")
+      manNamesEndo <- paste0("y[",seq_along(TY[[1]]$est),"]")
     } else manNamesEndo <- character(0)
   }
   
   if (missing(latNamesEndo))
   {
-    if (length(LY)>0 && !is.null(LY[[1]]$est)) 
+    if (length(LY)>0 && !is.empty(LY[[1]]$est)) 
     {
       if (!is.null(colnames(LY[[1]]$est)) && !modelLabels)
       {
         latNamesEndo <- colnames(LY[[1]]$est)
       } else latNamesEndo <- paste0("eta[",1:ncol(LY[[1]]$est),"]")
-    } else if (length(PS)>0 && !is.null(PS[[1]]$est))
+    } else if (length(PS)>0 && !is.empty(PS[[1]]$est))
     {
       if (!is.null(colnames(PS[[1]]$est)) && !modelLabels)
       {
         latNamesEndo <- colnames(PS[[1]]$est)
       } else latNamesEndo <- paste0("eta[",1:ncol(PS[[1]]$est),"]")
-    } else if (length(BE)>0 && !is.null(BE[[1]]$est))
+    } else if (length(BE)>0 && !is.empty(BE[[1]]$est))
     {
       if (!is.null(colnames(BE[[1]]$est)) && !modelLabels)
       {
         latNamesEndo <- colnames(BE[[1]]$est)
       } else latNamesEndo <- paste0("eta[",1:ncol(BE[[1]]$est),"]")
-    } else if (length(AL)>0 && !is.null(AL[[1]]$est))
+    } else if (length(AL)>0 && !is.empty(AL[[1]]$est))
     {
-      latNamesEndo <- paste0("eta[",1:length(AL[[1]]$est),"]")
+      latNamesEndo <- paste0("eta[",seq_along(AL[[1]]$est),"]")
     } else latNamesEndo <- character(0)
   }
   
@@ -135,47 +144,47 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   # If names missing, set default::
   if (missing(manNamesExo))
   {
-    if (length(LX)>0 && !is.null(LX[[1]]$est)) 
+    if (length(LX)>0 && !is.empty(LX[[1]]$est)) 
     {
       if (!is.null(rownames(LX[[1]]$est)) && !modelLabels)
       {
         manNamesExo <- rownames(LX[[1]]$est)
-      } else manNamesExo <- paste0("x[",1:nrow(LX[[1]]$est),"]")
-    } else if (length(TD)>0 && !is.null(TD[[1]]$est))
+      } else manNamesExo <- paste0("x[",seq_len(nrow(LX[[1]]$est)),"]")
+    } else if (length(TD)>0 && !is.empty(TD[[1]]$est))
     {
       if (!is.null(rownames(TD[[1]]$est)) && !modelLabels)
       {
         manNamesExo <- rownames(TD[[1]]$est)
-      } else manNamesExo <- paste0("x[",1:nrow(TD[[1]]$est),"]")
-    } else if (length(TX)>0 && !is.null(TX[[1]]$est))
+      } else manNamesExo <- paste0("x[",seq_len(nrow(TD[[1]]$est)),"]")
+    } else if (length(TX)>0 && !is.empty(TX[[1]]$est))
     {
-      manNamesExo <- paste0("x[",1:length(TX[[1]]$est),"]")
+      manNamesExo <- paste0("x[",seq_along(TX[[1]]$est),"]")
     } else manNamesExo <- character(0)
   }
   
   if (missing(latNamesExo))
   {
-    if (length(LX)>0 && !is.null(LX[[1]]$est)) 
+    if (length(LX)>0 && !is.empty(LX[[1]]$est)) 
     {
       if (!is.null(colnames(LX[[1]]$est)) && !modelLabels)
       {
         latNamesExo <- colnames(LX[[1]]$est)
       } else latNamesExo <- paste0("xi[",1:ncol(LX[[1]]$est),"]")
-    } else if (length(PH)>0 && !is.null(PH[[1]]$est))
+    } else if (length(PH)>0 && !is.empty(PH[[1]]$est))
     {
       if (!is.null(colnames(PH[[1]]$est)) && !modelLabels)
       {
         latNamesExo <- colnames(PH[[1]]$est)
       } else latNamesExo <- paste0("xi[",1:ncol(PH[[1]]$est),"]")
-    } else if (length(GA)>0 && !is.null(GA[[1]]$est))
+    } else if (length(GA)>0 && !is.empty(GA[[1]]$est))
     {
       if (!is.null(colnames(GA[[1]]$est)) && !modelLabels)
       {
         latNamesExo <- colnames(GA[[1]]$est)
       } else latNamesExo <- paste0("xi[",1:ncol(GA[[1]]$est),"]")
-    } else  if (length(KA)>0 && !is.null(KA[[1]]$est))
+    } else  if (length(KA)>0 && !is.empty(KA[[1]]$est))
     {
-      latNamesExo <- paste0("xi[",1:length(KA[[1]]$est),"]")
+      latNamesExo <- paste0("xi[",seq_along(KA[[1]]$est),"]")
     } else latNamesExo <- character(0)
   }  
   
@@ -226,21 +235,21 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     M <- list()
     
     # Exogenous:
-    if (length(LX)>0 && !is.null(LX[[g]]$est))
+    if (length(LX)>0 && !is.empty(LX[[g]]$est))
     {
       M$LX <- LX[[g]]$est
     } else {
       M$LX <- matrix(,0,0)
     }
     
-    if (length(PH)>0 && !is.null(PH[[g]]$est))
+    if (length(PH)>0 && !is.empty(PH[[g]]$est))
     {
       M$PH <- PH[[g]]$est
     } else {
       M$PH <- diag(1,ncol(M$LX),ncol(M$LX))
     }
     
-    if (length(TD)>0 && !is.null(TD[[g]]$est))
+    if (length(TD)>0 && !is.empty(TD[[g]]$est))
     {
       M$TD <- TD[[g]]$est
     } else {
@@ -248,35 +257,35 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     }
     
     # Endogenous:
-    if (length(LY)>0 && !is.null(LY[[g]]$est))
+    if (length(LY)>0 && !is.empty(LY[[g]]$est))
     {
       M$LY <- LY[[g]]$est
     } else {
       M$LY <- matrix(,0,0)
     }
     
-    if (length(PS)>0 && !is.null(PS[[g]]$est))
+    if (length(PS)>0 && !is.empty(PS[[g]]$est))
     {
       M$PS <- PS[[g]]$est
     } else {
       M$PS <- diag(1,ncol(M$LY),ncol(M$LY))
     }
     
-    if (length(TE)>0 && !is.null(TE[[g]]$est))
+    if (length(TE)>0 && !is.empty(TE[[g]]$est))
     {
       M$TE <- TE[[g]]$est
     } else {
       M$TE <- matrix(0,nrow(M$LY),nrow(M$LY))
     }
     
-    if (length(BE)>0 && !is.null(BE[[g]]$est))
+    if (length(BE)>0 && !is.empty(BE[[g]]$est))
     {
       M$BE <- BE[[g]]$est
     } else {
       M$BE <- matrix(0,ncol(M$LY),ncol(M$LY))
     }
     
-    if (length(GA)>0 && !is.null(GA[[g]]$est))
+    if (length(GA)>0 && !is.empty(GA[[g]]$est))
     {
       M$GA <- GA[[g]]$est
     } else {
@@ -294,12 +303,13 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     { 
       modCovs[[g]] <- rbind(cbind(YY,t(XY)),
                             cbind(XY,XX)) 
-      rownames(modCovs[[g]]) <- colnames(modCovs[[g]]) <- c(manNamesExo,manNamesEndo)
+      rownames(modCovs[[g]]) <- colnames(modCovs[[g]]) <- c(manNamesEndo,manNamesExo)
     }
     
     ## Standardize matrices
     # Diagonal matrices:
     EE <- with(M,  ( ImBinv %*% (GA %*% PH %*% t(GA) + PS) %*% t(ImBinv)) )
+    
     M$De <- diag(sqrt(diag(EE)),nrow(EE),ncol(EE))
     KK <- with(M,  ( PH ) )
     M$Dk <- diag(sqrt(diag(KK)),nrow(KK),ncol(KK))
@@ -329,14 +339,14 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
     Mstd$TD <- M$Dxi %*% Mstd$TD %*% M$Dxi
     
     # Store matrices:
-    if (length(LY) > 0 && !is.null(LY[[g]]$est) && is.null(LY[[g]]$std)) LY[[g]]$std <- Mstd$LY
-    if (length(LX) > 0 && !is.null(LX[[g]]$est) && is.null(LX[[g]]$std)) LX[[g]]$std <- Mstd$LX
-    if (length(TE) > 0 && !is.null(TE[[g]]$est) && is.null(TE[[g]]$std)) TE[[g]]$std <- Mstd$TE
-    if (length(TD) > 0 && !is.null(TD[[g]]$est) && is.null(TD[[g]]$std)) TD[[g]]$std <- Mstd$TD
-    if (length(PH) > 0 && !is.null(PH[[g]]$est) && is.null(PH[[g]]$std)) PH[[g]]$std <- Mstd$PH
-    if (length(PS) > 0 && !is.null(PS[[g]]$est) && is.null(PS[[g]]$std)) PS[[g]]$std <- Mstd$PS
-    if (length(GA) > 0 && !is.null(GA[[g]]$est) && is.null(GA[[g]]$std)) GA[[g]]$std <- Mstd$GA
-    if (length(BE) > 0 && !is.null(BE[[g]]$est) && is.null(BE[[g]]$std)) BE[[g]]$std <- Mstd$BE
+    if (length(LY) > 0 && !is.empty(LY[[g]]$est) && is.empty(LY[[g]]$std)) LY[[g]]$std <- Mstd$LY
+    if (length(LX) > 0 && !is.empty(LX[[g]]$est) && is.empty(LX[[g]]$std)) LX[[g]]$std <- Mstd$LX
+    if (length(TE) > 0 && !is.empty(TE[[g]]$est) && is.empty(TE[[g]]$std)) TE[[g]]$std <- Mstd$TE
+    if (length(TD) > 0 && !is.empty(TD[[g]]$est) && is.empty(TD[[g]]$std)) TD[[g]]$std <- Mstd$TD
+    if (length(PH) > 0 && !is.empty(PH[[g]]$est) && is.empty(PH[[g]]$std)) PH[[g]]$std <- Mstd$PH
+    if (length(PS) > 0 && !is.empty(PS[[g]]$est) && is.empty(PS[[g]]$std)) PS[[g]]$std <- Mstd$PS
+    if (length(GA) > 0 && !is.empty(GA[[g]]$est) && is.empty(GA[[g]]$std)) GA[[g]]$std <- Mstd$GA
+    if (length(BE) > 0 && !is.empty(BE[[g]]$est) && is.empty(BE[[g]]$std)) BE[[g]]$std <- Mstd$BE
     
     
     # Extract matrices:

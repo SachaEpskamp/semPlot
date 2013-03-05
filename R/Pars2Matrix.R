@@ -17,8 +17,8 @@ Pars2Matrix <- function(Pars, edges, rows, cols, symmetrical, lhsisrow = FALSE)
   
   ResMatrix <- list()
   empMatrix <- matrix(0, length(rows), length(cols))
-  rownames(empMatrix) <- rows
-  colnames(empMatrix) <- cols
+  rownames(empMatrix) <- gsub("@L@","",rows)
+  colnames(empMatrix) <- gsub("@L@","",cols)
   for (i in seq_along(Groups))
   {
     ResMatrix[[i]] <- list()
