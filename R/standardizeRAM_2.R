@@ -1,10 +1,10 @@
-# function: standardizePars
+# function: standardizeRAM
 # author:   Ryne Estabrook
 # date:     20 Oct 2010
 # revised:  01 Nov 2010 (corrected algebra)
 #           13 Dec 2010 (corrected 'parameters' output)
 
-standardizePars <- function(model, return="parameters", Amat=NA, Smat=NA, Mmat=NA){
+standardizeRAM <- function(model, return="parameters", Amat=NA, Smat=NA, Mmat=NA){
 	# make sure 'return' is valid
 	if (!(return=="parameters"|return=="matrices"|return=="model"))stop("Invalid 'return' parameter. What do you want from me?")
 	# get the name of the objective
@@ -13,8 +13,8 @@ standardizePars <- function(model, return="parameters", Amat=NA, Smat=NA, Mmat=N
 	cA <- is.character(Amat)
 	cS <- is.character(Smat)
 	cM <- is.character(Mmat)
-	# if the objective function isn't ParsObjective, you need to supply Amat and Smat
-	if (obj!="MxParsObjective"&(!cA))stop("I need either mxParsObjective or the names of the A and S matrices.")
+	# if the objective function isn't RAMObjective, you need to supply Amat and Smat
+	if (obj!="MxRAMObjective"&(!cA))stop("I need either mxRAMObjective or the names of the A and S matrices.")
 	output <- model@output
 	# stop if there is no objective function
 	if (is.null(output))stop("Provided model has no objective function, and thus no output. I can only standardize models that have been run!")

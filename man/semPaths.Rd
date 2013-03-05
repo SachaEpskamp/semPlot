@@ -340,7 +340,7 @@ library("OpenMx")
 data(demoOneFactor)  # load the demoOneFactor dataframe
 manifests <- names(demoOneFactor) # set the manifest to the 5 demo variables
 latents   <- c("G")  # define 1 latent variable
-model <- mxModel("One Factor", type="Pars",
+model <- mxModel("One Factor", type="RAM",
   manifestVars = manifests,
 	latentVars   = latents,
 	mxPath(from=latents  , to=manifests),

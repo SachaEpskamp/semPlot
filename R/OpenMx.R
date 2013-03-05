@@ -48,7 +48,7 @@ semPlotModel_MxRAMModel <- function(object){
   if (!length(object@output)==0)
   {
     # Function by Ryne Estabrook (http://openmx.psyc.virginia.edu/thread/718)
-    standObj <- standardizePars(object,"model")
+    standObj <- standardizeRAM(object,"model")
     
     # Extract directed paths:
     DirpathsValuesStd <- t(standObj@matrices$A@values)[Dirpaths]

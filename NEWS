@@ -1,4 +1,6 @@
 Changes in Version 0.3.2
+  o Matrix model functionality:
+    o Added 'semMatrixAlgebra' to easilly perform matrix algebra on a semMatrixModel object.
   o Added 'levels' argument. This argument can be used to control the spacing between levels (e.g., exogenous latents) of tree and circle layouts.
   o Added edgeLabels and nodeLabels arguments to manually overwrite edge and node labels, in the order they appear in the RAM and Vars elements of the 'semPlotModel' that is created internally. In addition to the qgraph change that these can now be assigned lists including expressions it should now be easier to add greek letters.
   o Added 'reduce' argumen to lisrelModel that controls if variables that are named the same should be treated as the same variable.
