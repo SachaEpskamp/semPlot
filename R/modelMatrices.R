@@ -66,20 +66,18 @@ modelMatrices <- function(object,model="ram", endoOnly = FALSE)
     }
   }
   
-  # Extract names:
-  manExo <- object@Vars$name[object@Vars$manifest & object@Vars$exogenous]
-  manEndo <- object@Vars$name[object@Vars$manifest & !object@Vars$exogenous]
-  latExo <- object@Vars$name[!object@Vars$manifest & object@Vars$exogenous]
-  latEndo <- object@Vars$name[!object@Vars$manifest & !object@Vars$exogenous]
-  
-  
   
   ### RAM MODEL ###
   if (grepl("ram",model,ignore.case=TRUE))
   {
+    # Extract names:
+    man <- object@Vars$name[object@Vars$manifest]
+    lat <- object@Vars$name[!object@Vars$manifest]
+    all <- object@Vars$name
+    
     # Extract matrices:
-    Model[['A']] <- Pars2Matrix(object@Pars, c("->","~>"), c(manEndo,manExo,latEndo,latExo), c(manEndo,manExo,latEndo,latExo))
-    Model[['S']] <- Pars2Matrix(object@Pars, "<->", c(manEndo,manExo,latEndo,latExo), c(manEndo,manExo,latEndo,latExo))
+    Model[['A']] <- Pars2Matrix(object@Pars, c("->","~>"), all, all)
+    Model[['S']] <- Pars2Matrix(object@Pars, "<->", all, all)
     Model[['F']] <- FilterMatrix(object@Pars, object@Vars)
 
     return(Model)
@@ -89,6 +87,12 @@ modelMatrices <- function(object,model="ram", endoOnly = FALSE)
   ### LISREL MODEL ###:
   if (grepl("lis",model,ignore.case=TRUE))
   {
+    # Extract names:
+    manExo <- object@Vars$name[object@Vars$manifest & object@Vars$exogenous]
+    manEndo <- object@Vars$name[object@Vars$manifest & !object@Vars$exogenous]
+    latExo <- object@Vars$name[!object@Vars$manifest & object@Vars$exogenous]
+    latEndo <- object@Vars$name[!object@Vars$manifest & !object@Vars$exogenous]
+    
     # If any manifest var is used in regression, create dummy latents:
     if (any(object@Pars$lhs[object@Pars$edge%in%c("->","~>")] %in% c(manExo,manEndo)))
     {
@@ -148,4 +152,46 @@ modelMatrices <- function(object,model="ram", endoOnly = FALSE)
     
     return(Model)
   }
+  
+  
+  
+  ### Mplus MODEL ###:
+  if (grepl("mplus",model,ignore.case=TRUE))
+  {
+    # Extract names (exo only if manifest has outgoing cons. error if in and outgoing):
+    man <- object@Vars$name[object@Vars$manifest]
+    lat <- object@Vars$name[!object@Vars$manifest]
+    
+    # Control input:
+    if (any(sapply(man, function(m)  any((object@Pars$lhs==m & object@Pars$edge %in% c("->","~>")) & (object@Pars$rhs==m & object@Pars$edge %in% c("->","~>")))))) stop("Manifest variable found with both incoming and outgoing edge. This is not yet supported in modelMatrices.")
+    if (any(object@Pars$rhs %in% man & object@Pars$lhs %in% lat & object@Pars$edge == "~>"))
+    {
+      warning("Can not place regression (ON) from latent to manifest in a model matrix. Interpreted as factor loading (BY).")
+      object@Pars$edge[object@Pars$rhs %in% man & object@Pars$lhs %in% lat & object@Pars$edge == "~>"] <- "->"
+    }
+    
+    trueExo <- sapply(man, function(m)  any((object@Pars$lhs==m & object@Pars$edge %in% c("->","~>")) & !(object@Pars$rhs==m & object@Pars$edge %in% c("->","~>"))))
+    manEndo <- man[!trueExo]
+    manExo <- man[trueExo]
+    
+    
+    ## Extract matrices:
+    # BY matrices:
+    Model[['Nu']] <- Pars2Matrix(object@Pars, "int", manEndo, "1")
+    Model[['Lambda']] <- Pars2Matrix(object@Pars, c("->","~>"), manEndo, lat)
+    Model[['Theta']] <- Pars2Matrix(object@Pars, "<->", manEndo, manEndo)
+    
+    # ON matrices:
+    Model[['Kappa']] <- Pars2Matrix(object@Pars, c("->","~>"), manEndo, manExo)
+    Model[['Alpha']] <- Pars2Matrix(object@Pars, "int", lat, "1")
+    Model[['Beta']] <- Pars2Matrix(object@Pars, c("->","~>"), lat, lat)    
+    Model[['Gamma']] <- Pars2Matrix(object@Pars, c("->","~>"), lat, manExo)
+    Model[['Psi']] <- Pars2Matrix(object@Pars, "<->", lat, lat)
+
+    return(Model)
+  }
+  
+  
+  else stop(paste("Model",model,"is not supported."))
+  
 }

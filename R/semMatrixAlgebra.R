@@ -1,4 +1,4 @@
-semMatrixAlgebra <- function(object, algebra, group, simplify = TRUE, model)
+semMatrixAlgebra <- function(object, algebra, group, simplify = TRUE, model, endoOnly = FALSE)
 {
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -13,8 +13,22 @@ semMatrixAlgebra <- function(object, algebra, group, simplify = TRUE, model)
   if ("lisrel"%in%class(object)) object <- object$matrices
   if (!"semMatrixModel"%in%class(object)) 
   {
-    if (missing(model)) stop("'model' must be assigned if input is not semMatrixModel")
-    object <- modelMatrices(object,model)
+    if (missing(model))
+    {
+      if (any(grepl("(LY)|(TE)|(PS)|(BE)|(LX)|(TD)|(PH)|(GA)|(TY)|(TX)|(AL)|(KA)",deparse(substitute(algebra)))))      {
+        model <- "lisrel"
+        message("model set to 'lisrel'")
+      } else if (any(grepl("(Lambda)|(Nu)|(Theta)|(Kappa)|(Alpha)|(Beta)|(Gamma)|(Psi)",deparse(substitute(algebra)))))
+      {
+        model <- "mplus"
+        message("model set to 'mplus'")
+      } else if (any(grepl("A|S|F",deparse(substitute(algebra)))))
+      {
+        model <- "ram"
+        message("model set to 'ram'")
+      } else stop("'model' could not be detected")
+    } 
+    object <- modelMatrices(object,model,endoOnly = endoOnly)
   }
   stopifnot("semMatrixModel"%in%class(object))
   
