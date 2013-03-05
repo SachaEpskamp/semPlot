@@ -1,67 +1,3 @@
-# 
-# InvEmp <- function(x)
-# {
-#   if (any(dim(x)==0)) 
-#   {
-#     return(array(0,dim=dim(x))) 
-#   } else {
-#     res <- tryCatch(solve(x), error = function(e) FALSE)
-#     if (is.matrix(res)) return(res) else 
-#     {
-#       warning("Uninvertable matrix found. Standardized solutions are not proper.")
-#       return(array(0, dim=dim(x)))
-#     }
-#   }
-# }
-# 
-# fixMatrix <- function(m)
-# {
-#   # If not a list (matrix itself added) put matrix in list (group 1) in list:
-#   if (!is.list(m))
-#   {
-#     if (is.matrix(m)|is.vector(m))
-#     {
-#       m <- list(list(est=m))
-#     } else stop("Wrong input for matrix")
-#   } else if ("est"%in%names(m)) {
-#     # Else if list, check if it is not a list of lists
-#     m <- list(m)
-#   }
-#   
-#   # Else check if empty list:
-#   if (length(m)>0)
-#   {
-#     # Assume multigroup. Check if all elements are list:
-#     if (!all(sapply(m,is.list))) stop("Not all elements are a list")
-#     
-#     # Clean each group:
-#     for (g in 1:length(m))
-#     {
-#       # Copy parSpec to par (lisrelToR compatibility)
-#       if (is.null(m[[g]][['par']]) & !is.null(m[[g]][['parSpec']]))
-#       {
-#         m[[g]][['par']] <- m[[g]][['parSpec']]
-#       }
-#       if (is.null(m[[g]][['fixed']]))
-#       {
-#         if (!is.null(m[[g]][['par']]))
-#         {
-#           m[[g]][['fixed']] <- m[[g]][['par']]==0
-#         } else if (!is.null(m[[g]][['parSpec']]))
-#         {
-#           m[[g]][['fixed']] <- m[[g]][['parSpec']]==0
-#         }
-#       }
-#       if (!is.null(m[[g]][['stdComp']]))
-#       {
-#         m[[g]][['std']] <- m[[g]][['stdComp']]
-#       } 
-#       if (is.null(m[[g]][['est']])) m[[g]] <- list()
-#     }
-#   }    
-#   
-#   return(m)
-# }
 
 
 ### SINGLE GROUP MODEL ###
@@ -130,7 +66,7 @@ ramModel <- function(A,S,F,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels =
     {
       if (!is.null(colnames(F[[1]]$est)) && !modelLabels)
       {
-        manNames <- colnames(F[[1]]$est)[colSums(F)>0]
+        manNames <- colnames(F[[1]]$est)[colSums(F[[1]]$est)>0]
       } else manNames <- paste0(rep("m",Nman),seq_len(Nman))
     } else manNames <- paste0(rep("m",Nman),seq_len(Nman))
   }
@@ -141,7 +77,7 @@ ramModel <- function(A,S,F,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels =
     {
       if (!is.null(colnames(F[[1]]$est)) && !modelLabels)
       {
-        latNames <- colnames(F[[1]]$est)[colSums(F)==0]
+        latNames <- colnames(F[[1]]$est)[colSums(F[[1]]$est)==0]
       } else latNames <- paste0(rep("l",Nvar-Nman),seq_len(Nvar-Nman))
     } else latNames <- paste0(rep("l",Nvar-Nman),seq_len(Nvar-Nman))
   }

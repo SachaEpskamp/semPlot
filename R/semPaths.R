@@ -11,6 +11,7 @@
 # "spring"
 # igraph function
 # "tree2" and  "circle2" for layout.reingold.tilford
+# Boker
 
 # manifests: vector of manifest labels ordered
 # latents: vector of latents ordered
@@ -155,7 +156,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -356,7 +357,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     }
     
     # If all exo, treat all as endo:
-    if (all(object@Vars$exogenous) | layout%in%c("circle","circle2"))
+    if (all(object@Vars$exogenous) | layout%in%c("circle","circle2","circle3"))
     {
       object@Vars$exogenous <- FALSE
     }
@@ -655,6 +656,52 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       # Center all horizontal levels:
       if (length(roots)>1) Layout[,1] <- ave(Layout[,1],Layout[,2],FUN = function(x) scale(x,TRUE,FALSE))
       
+    } else if (layout%in%c("tree3","circle3"))
+    {
+      
+      # Igraph:
+      Edgelist2 <- Edgelist[GroupPars$edge%in%c("->","~>"),]
+      Edgelist2[Edgelist2[,2]%in%which(GroupVars$manifest&GroupVars$exogenous),] <- Edgelist2[Edgelist2[,2]%in%which(GroupVars$manifest&GroupVars$exogenous),2:1]
+      iG <- graph.edgelist(Edgelist2)
+      sp <- shortest.paths(iG,mode="out")
+      sp[!is.finite(sp)] <- 0
+      maxPaths <- apply(sp,1,max)
+      # Mix in intercepts:
+      if (any(GroupPars$edge=="int"))
+      {
+        maxPathsInts <- maxPaths[Edgelist[GroupPars$edge=="int",2]]
+        if (!intAtSide)
+        {
+          maxPathsInts[maxPathsInts==min(maxPaths)] <- min(maxPaths) - 1
+          maxPathsInts[maxPathsInts==max(maxPaths)] <- max(maxPaths) + 1
+        }
+        maxPaths <- c(maxPaths,maxPathsInts)
+      }
+      if (springLevels)
+      {
+        Cons <- cbind(NA,maxPaths)
+        Layout <- qgraph.layout.fruchtermanreingold(Edgelist,vcount=length(maxPaths),constraints=Cons*sqrt(length(maxPaths)))
+      } else {
+        Layout <- cbind(NA,maxPaths)
+        Layout[,1] <- ave(Layout[,2],Layout[,2],FUN=function(x)seq(-1,1,length=length(x)+2)[-c(1,length(x)+2)])
+        
+        # Mix intercepts:
+        if (any(GroupPars$edge=="int"))
+        {
+          intMap <- rbind(manInts,latInts)
+          for (i in sort(unique(Layout[,2])))
+          {
+            if (any(which(Layout[,2]==i)%in%intMap[,1]))
+            {
+              conInts <- which(Layout[,2]==i)
+              conInts <- conInts[conInts%in%intMap[,1]]
+              Layout <- mixInts(intMap[intMap[,1]%in%conInts,2],intMap,Layout,trim=TRUE,intAtSide=intAtSide)  
+            }
+            
+          }
+        }
+      }
+      
     } else Layout <- layout
     
     
@@ -737,6 +784,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           }
         }
       }
+    } else if (layout=="tree3"|layout=="circle3")
+    {
+      loopRotation <- rep(NA,nN)
+      loopRotation[endoMan] <- pi
+      loopRotation[exoMan] <- 0
     } else loopRotation <- NULL
 
     ### ORDINALIZE LAYOUT ###
@@ -746,16 +798,16 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       Layout[Layout[,2]==0,2] <- (1*!residuals) * 0.25
       Layout[Layout[,2]==5,2] <- max(Layout[Layout[,2]<5,2]) + (1 - (1*!residuals)*0.25)
     }
-    
+
     # Level layout:
-    if (!missing(levels)&layout%in%c("tree","tree2","circle","circle2"))
+    if (!missing(levels)&layout%in%c("tree","tree2","tree3","circle","circle2","circle3"))
     {
       if (length(levels)<length(unique(Layout[,2]))) stop(paste("'levels' argument must have at least",length(unique(Layout[,2])),"elements"))
       Layout[,2] <- levels[as.numeric(as.factor(Layout[,2]))]
     }
     
     # Set curves and rotate:    
-    if (layout %in% c("tree","tree2"))
+    if (layout %in% c("tree","tree2","tree3"))
     {
       
       inBetween <- function(x)
@@ -1031,7 +1083,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     if (grepl("mx",style,ignore.case=TRUE)) LoopAsResid <- FALSE else LoopAsResid <- TRUE
     
     ### ROTATE IF CIRCLE:
-    if (layout%in%c("circle","circle2"))
+    if (layout%in%c("circle","circle2","circle3"))
     {
       if (rotation%in%c(2,4)) stop("Circle layout only supported if rotation is 1 or 3")
       underMean <- Layout[,2] < mean(Layout[,2])
