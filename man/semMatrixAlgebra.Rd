@@ -84,8 +84,11 @@ library("qgraph")
 pdf("Models.pdf",width=15,height=5)
 layout(t(1:3))
 qgraph(round(cov2cor(mat1),5), maximum=1, edge.labels=TRUE, layout = "spring", cut = 0.4, minimum = 0.1)
+title("Mplus model")
 qgraph(round(cov2cor(mat2),5), maximum=1, edge.labels=TRUE, layout = "spring", cut = 0.4, minimum = 0.1)
+title("LISREL model")
 qgraph(round(cov2cor(mat3),5), maximum=1, edge.labels=TRUE, layout = "spring", cut = 0.4, minimum = 0.1)
+title("RAM model")
 dev.off()
 }
 # They are the same.

@@ -705,7 +705,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       
     } else Layout <- layout
     
-    
     # loopRotation:
     if (layout%in%c("tree","tree2"))
     {
@@ -734,7 +733,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       }
       
       loopRotation[exoLat] <- pi
-      noCons <- sapply(exoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%exoMan|Edgelist[,2]%in%exoMan),])==0)
+      noCons <- sapply(exoLat,function(x)nrow(Edgelist[(Edgelist[,1]==x|Edgelist[,2]==x) & (Edgelist[,1]%in%exoMan|Edgelist[,2]%in%exoMan),,drop=FALSE])==0)
       if (length(noCons)==0) noCons <- logical(0)
       loopRotation[exoLat][noCons] <- 0
       if (length(exoLat) > 1 & length(exoMan)>0)
