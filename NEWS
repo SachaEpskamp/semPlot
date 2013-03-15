@@ -6,6 +6,8 @@ Changes in Version 0.3.2
   o Added 'reduce' argumen to lisrelModel that controls if variables that are named the same should be treated as the same variable.
   o 'semPlotModel' for lisrel modes can now use dots to send arguments to 'lisrelModel'
   o 'qgraph' is no longer on the depends list but imported instead. This makes sure that the Tcl/Tk interface (which is only suggested in qgraph) is not loaded on loading semPlot and as a result makes sure that semPlot does not result in crashes on Mac computers where Tcl/Tk is not installed.
+  o Fixed a bug where numeric labels where abbreviated, causing erradic behavior on the labels.
+  o Added nDigits argument to control the number of digits used in rounding for labels.
 
 Changes in Version 0.3
   o First submit to CRAN.

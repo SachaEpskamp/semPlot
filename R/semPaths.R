@@ -156,7 +156,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -1029,10 +1029,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         eLabels <- GroupPars$label
       } else if (grepl("stand|std",whatLabels,ignore.case=TRUE))
       {
-        eLabels <- as.character(round(GroupPars$std,2))
+        eLabels <- GroupPars$std
       } else if (grepl("est|par",whatLabels,ignore.case=TRUE))
       {
-        eLabels <- as.character(round(GroupPars$est,2))
+        eLabels <- GroupPars$est
       } else if (grepl("eq|cons",whatLabels,ignore.case=TRUE))
       {
         eLabels <- GroupPars$par
@@ -1043,13 +1043,25 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     }
     
     # Abbreviate:
-    if (nCharEdges>0 & !"edges"%in%as.expression)
+    if (!"edges"%in%as.expression)
     {
-      eLabels <- abbreviate(eLabels,nCharEdges)
+      if (is.numeric(eLabels))
+      {
+        eLabels <- ifelse(is.na(eLabels),"",formatC(eLabels, format=ifelse(all(eLabels%%1==0),'d','f'), digits=nDigits))
+      } else 
+      {
+        if (nCharEdges>0)  eLabels <- abbreviate(eLabels,nCharEdges)
+      }
     }
-    if (nCharNodes>0 & !"nodes"%in%as.expression)
+    if (!"nodes"%in%as.expression)
     {
-      Labels <- abbreviate(Labels,nCharNodes)
+      if (is.numeric(Labels))
+      {
+        Labels <- ifelse(is.na(Labels),"",formatC(Labels, format=ifelse(all(Labels%%1==0),'d','f'), digits=nDigits))
+      } else 
+      {
+        if (nCharNodes>0 )  Labels <- abbreviate(Labels,nCharNodes)
+      }
     }
     
     #     ### CONVERT TO LISREL STYLE ###
