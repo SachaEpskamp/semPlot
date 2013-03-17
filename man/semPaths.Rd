@@ -283,8 +283,11 @@ fit <- lavaan:::cfa(model.Lavaan, data=Data, std.lv=TRUE)
 # Plot path diagram:
 semPaths(fit,title=FALSE, curvePivot = TRUE)
 
+# Omit exogenous covariances:
+semPaths(fit,title=FALSE, curvePivot = TRUE, exoVar = FALSE, exoCov = FALSE)
+
 # Standardized parameters:
-semPaths(fit,"std",edge.label.cex=0.5, curvePivot = TRUE)
+semPaths(fit,"std",edge.label.cex=0.5, curvePivot = TRUE, exoVar = FALSE, exoCov = FALSE)
 
 
 ## Mplus
@@ -369,7 +372,7 @@ semPaths(twoFactorFit, layout = "tree2")
 # Download measurment invariance example:
 download.file("http://sachaepskamp.com/files/mi1.OUT",modFile <- tempfile(fileext=".OUT"))
 layout(t(1:2))
-semPaths(modFile,"eq",ask=FALSE,as.expression = "edges",mar=c(3,1,5,1))
+semPaths(modFile,"eq",ask=FALSE,as.expression = "edges",mar=c(3,1,5,1), exoVar = FALSE)
 # Color indicates equality constraints.
 }
 }
