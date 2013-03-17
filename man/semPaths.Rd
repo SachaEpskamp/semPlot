@@ -53,7 +53,7 @@ What should the edge labels indicate in the path diagram? This function uses \co
   
 
   \item{style}{
-The style to use. Currently only indicates what the (residual) variances look like. Use \code{"mx"} or \code{"OpenMx"} for double headed selfloops and \code{"lisrel"} for single headed edges with no node as origin.
+The style to use. Currently only indicates what the (residual) variances look like. Use \code{"ram"}, \code{"mx"} or \code{"OpenMx"} for double headed selfloops and \code{"lisrel"} for single headed edges with no node as origin. Defaults to \code{"ram"} unless the input is a lisrel model.
 }
 
   \item{layout}{
@@ -173,7 +173,7 @@ For example, \code{ fixedStyle = c("red",3)} specifies that all fixed parameters
 Same as 'fixedStyle' but for free parameters instead.
 }
   \item{as.expression}{
-A character vector indicating which labels should be treated as an \code{\link[base]{expression}}, so that mathematical notation and Greek letters can be used in the path diagram. If this vector contains \code{"nodes"} all node labels are converted to expressions, and if this vector contains \code{"edges"} all node labels are converted to expressions.
+A character vector indicating which labels should be treated as an \code{\link[base]{expression}}, so that mathematical notation and Greek letters can be used in the path diagram. If this vector contains \code{"nodes"} all node labels are converted to expressions, and if this vector contains \code{"edges"} all node labels are converted to expressions. Defaults to \code{"edges"} only if the input is a Lisrel model.
 }
   \item{optimizeLatRes}{
 Logical. If this is TRUE, the angle of the incoming residuals on latent variables is attempted to be optimally chosen so its position conflicts with the least amount of connected edges.
@@ -189,6 +189,12 @@ Logical, should uncolored nodes obtain a mix of connected colored nodes? Default
 \item{edgeLabels}{A vector or list to manually overwrite the edge labels. Can include expressions.}
 \item{pastel}{Logical, should default colors (for groups or edge equality constraints) be chosen from pastel colors? If TRUE then \code{\link[colorspace]{rainbow_hcl}} is used.}
 \item{rainbowStart}{A number between 0 and 1 indicating the offset used in rainbow functions for default node coloring.}
+  \item{exoVar}{
+Should variances of truely exogenous variables (no incomming directed edge) be plotted? Defaults to \code{TRUE} unless \code{style = "lisrel"}.
+}
+  \item{exoCov}{
+Should covariances between truely exogenous variables (no incomming directed edge) be plotted? Defaults to \code{TRUE}.
+}
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
 }
@@ -372,7 +378,7 @@ semPaths(twoFactorFit, layout = "tree2")
 # Download measurment invariance example:
 download.file("http://sachaepskamp.com/files/mi1.OUT",modFile <- tempfile(fileext=".OUT"))
 layout(t(1:2))
-semPaths(modFile,"eq",ask=FALSE,as.expression = "edges",mar=c(3,1,5,1), exoVar = FALSE)
+semPaths(modFile,"eq",ask=FALSE, intAtSide = TRUE, mar = c(8, 1, 5, 1))
 # Color indicates equality constraints.
 }
 }

@@ -1,4 +1,9 @@
-semPlotModel.lisrel <- function(object,...) do.call(lisrelModel, c(object$matrices,list(...)))
+semPlotModel.lisrel <- function(object,...) 
+{
+  Res <- do.call(lisrelModel, c(object$matrices,list(...)))
+  Res@Original <- list(object)
+  return(Res)
+}
 
 InvEmp <- function(x)
 {

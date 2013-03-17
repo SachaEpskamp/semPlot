@@ -9,6 +9,9 @@ Changes in Version 0.3.2
   o Fixed a bug where numeric labels where abbreviated, causing erradic behavior on the labels.
   o Added nDigits argument to control the number of digits used in rounding for labels.
   o Added 'exoVar' and 'exoCov' arguments that can be used to not display variances or covariances of truely exogenous variables (no incomming directed edges)
+  o 'style' now defaults to "lisrel" if the input is a Lisrel model.
+  o 'as.expression' now defaults to "edges" if the input is a lisrel model.
+  o 'style="lisrel"' will now default exoVar to FALSE.
 
 Changes in Version 0.3
   o First submit to CRAN.

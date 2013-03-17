@@ -156,7 +156,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar=TRUE,exoCov=TRUE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -219,14 +219,29 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     edge.labels <- FALSE    
   }
   
-  if (missing(as.expression)) as.expression <- ""
+  if (missing(as.expression)) 
+  {
+    if ("lisrel" %in% unlist(sapply(object@Original,class)))
+    {
+      as.expression <- "edges"
+    } else as.expression <- ""
+  }
   
   # Set and check style: 
-  if (missing(style)) style <- "OpenMx"
+  if (missing(style))
+  {
+    if ("lisrel" %in% unlist(sapply(object@Original,class)))
+    {
+      style <- "lisrel"
+    } else style <- "OpenMx"
+  }
   if (grepl("ram",style,ignore.case=TRUE)) style <- "OpenMx"
   if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only OpenMx (ram) or LISREL style is currently supported.")
   #   if (grepl("mx",style,ignore.case=TRUE) & !missing(residScale)) warning("'residScale' ingored in OpenMx style")
   if (missing(residScale)) residScale <- 2*sizeMan
+  
+  # Set exoVar default:
+  if (missing(exoVar)) exoVar <- !grepl("lis",style,ignore.case=TRUE)
   
   #   residScale <- residScale * 1.75
   # Remove means if means==FALSE
@@ -265,7 +280,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   # If structural, remove all manifest from Pars:
   if (structural)
   {
-    #     browser()
     object@Pars <- object@Pars[!(object@Pars$lhs %in% object@Vars$name[object@Vars$manifest] | object@Pars$rhs %in% object@Vars$name[object@Vars$manifest]),]
     object@Vars <- object@Vars[!object@Vars$manifest,]
     object@Thresholds <- data.frame()
