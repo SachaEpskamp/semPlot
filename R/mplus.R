@@ -7,6 +7,9 @@
 
 semPlotModel.mplus.model <- function(object)
 {
+  # Check for mplusAutomation:
+  if (!require("MplusAutomation")) stop("'MplusAutomation' package must be installed to read Mplus output.")
+  
   addInteractions <- FALSE
   if (is.character(object))
   {
