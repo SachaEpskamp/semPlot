@@ -156,7 +156,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -682,7 +682,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       # Fix top level to use entire range:
       # Layout[Layout[,2]==max(Layout[,2]),1] <- seq(min(Layout[,1]),max(Layout[,1]),length.out=sum(Layout[,2]==max(Layout[,2])))
       # Center all horizontal levels:
-      if (length(roots)>1) Layout[,1] <- ave(Layout[,1],Layout[,2],FUN = function(x) scale(x,TRUE,FALSE))
+      if (centerLevels) if (length(roots)>1) Layout[,1] <- ave(Layout[,1],Layout[,2],FUN = function(x) scale(x,TRUE,FALSE))
       
     } else if (layout%in%c("tree3","circle3"))
     {

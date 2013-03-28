@@ -19,7 +19,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
         threshold.color, fixedStyle = 2, freeStyle = 1, 
         as.expression, optimizeLatRes = FALSE, mixCols = TRUE, 
         curvePivot, levels, nodeLabels, edgeLabels, pastel = FALSE,
-        rainbowStart=0, ...)
+        rainbowStart=0, centerLevels = TRUE,...)
 
 }
 %- maybe also 'usage' for other objects documented here.
@@ -194,6 +194,9 @@ Should variances of truely exogenous variables (no incomming directed edge) be p
 }
   \item{exoCov}{
 Should covariances between truely exogenous variables (no incomming directed edge) be plotted? Defaults to \code{TRUE}.
+}
+ \item{centerLevels}{
+Only used if \code{layout} is set to \code{"tree2"}, should each level be centered? Defaults to \code{TRUE}
 }
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
