@@ -156,7 +156,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2, sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -172,6 +172,21 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   stopifnot("semPlotModel"%in%class(object))
   
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
+  
+  # Set defaults size and shape:
+  if (missing(sizeMan2)) sizeMan2 <- sizeMan
+  if (missing(sizeLat2)) sizeLat2 <- sizeLat
+  if (missing(sizeInt2)) sizeInt2 <- sizeInt
+  
+  if (missing(shapeMan))
+  {
+    if (sizeMan == sizeMan2) shapeMan <- "square" else shapeMan <- "rectangle"
+  }
+  
+  if (missing(shapeLat))
+  {
+    if (sizeLat == sizeLat2) shapeLat <- "circle" else shapeLat <- "ellipse"
+  }
   
   # Check:
   if (missing(intAtSide)) intAtSide <- !residuals
@@ -529,8 +544,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     }
     
     # Shape:
-    Shape <- c(rep("square",nM),rep("circle",nL))
-    if (any(GroupPars$edge=="int")) Shape <- c(Shape,rep("triangle",Ni))
+    Shape <- c(rep(shapeMan,nM),rep(shapeLat,nL))
+    if (any(GroupPars$edge=="int")) Shape <- c(Shape,rep(shapeInt,Ni))
     
     Curve <- curve
     
@@ -891,6 +906,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     vSize[Labels%in%manNames] <- sizeMan
     vSize[Labels%in%latNames] <- sizeLat
     vSize[Labels=="1"] <- sizeInt
+    
+    vSize2 <- numeric(nN)
+    vSize2[Labels%in%manNames] <- sizeMan2
+    vSize2[Labels%in%latNames] <- sizeLat2
+    vSize2[Labels=="1"] <- sizeInt2
     
     eColor <- rep(NA,nrow(Edgelist))
     #     tColor <- rep(rgb(0.5,0.5,0.5),nrow(GroupThresh))
@@ -1262,6 +1282,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              edge.labels=eLab,
                                              mar=Mar,
                                              vsize = vSize,
+                                             vsize2 = vSize2,
                                              edge.color=eColor,
                                              groups=NodeGroups2,
                                              color=Vcolors,
