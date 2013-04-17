@@ -62,10 +62,14 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   semModel@Pars$edge[pars$op=="~1"] <- "int"
   semModel@Pars$edge[grepl("\\|",pars$op)] <- "|"
   
+  # Remove constraints:
+  semModel@Pars  <- semModel@Pars[!pars$op %in% c('<', '>'),]
+  
   # Move thresholds to Thresholds slot:
   semModel@Thresholds <- semModel@Pars[grepl("\\|",semModel@Pars$edge),-(3:4)]
   # Remove thresholds from Pars:
   semModel@Pars <- semModel@Pars[!grepl("\\|",semModel@Pars$edge),]
+  
   
   semModel@Vars <- data.frame(
     name = c(varNames,factNames),

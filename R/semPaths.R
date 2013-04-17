@@ -29,13 +29,13 @@ rtLayout <- function(roots,GroupPars,Edgelist,layout,exoMan)
 {
   # Reverse intercepts in graph:
 #   revNodes <- which((GroupPars$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
-  revNodes <- which((GroupPars$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
-  Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
+#   revNodes <- which((GroupPars$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
+#   Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
   # Remove double headed arrows:
   Edgelist <- Edgelist[GroupPars$edge != "<->",]
   
   # Make igraph object:
-  Graph <- graph.edgelist(Edgelist, TRUE)
+  Graph <- graph.edgelist(Edgelist, FALSE)
   # Compute layout:
   Layout <- layout.reingold.tilford(Graph,root=roots,circular = FALSE) 
   
@@ -212,7 +212,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   
   if (missing(curve))
   {
-    if (layout == "tree")
+    if (layout %in% c("tree","tree2","tree3"))
     {
       curve <- 1
     } else {
@@ -748,7 +748,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     } else Layout <- layout
     
     # loopRotation:
-    if (layout%in%c("tree","tree2"))
+    if (layout%in%c("tree","tree2","tree3"))
     {
       loopRotation <- rep(0,nN)
       loopRotation[endoMan] <- pi
@@ -826,11 +826,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           }
         }
       }
-    } else if (layout=="tree3"|layout=="circle3")
-    {
-      loopRotation <- rep(NA,nN)
-      loopRotation[endoMan] <- pi
-      loopRotation[exoMan] <- 0
+#     } else if (layout=="tree3"|layout=="circle3")
+#     {
+#       loopRotation <- rep(NA,nN)
+#       loopRotation[endoMan] <- pi
+#       loopRotation[exoMan] <- 0
     } else loopRotation <- NULL
 
     ### ORDINALIZE LAYOUT ###
@@ -851,7 +851,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # Set curves and rotate:    
     if (layout %in% c("tree","tree2","tree3"))
     {
-      
       inBetween <- function(x)
       {
         if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
