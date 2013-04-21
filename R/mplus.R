@@ -44,9 +44,8 @@ semPlotModel.mplus.model <- function(object)
   
   if (any(grepl("\\|",parsUS$paramHeader)))
   {
-    browser()
-    parsUS <- parsUS[!grepl("\\|",parsUS$paramHeader),]
-    warning("'|' operator is not yet supported by semPlot. Parameters using this operator will not be shown and unexpected results might occur.")
+    parsUS$paramHeader <- gsub("\\|", "BY", parsUS$paramHeader)
+    warning("'|' operator replaced by BY operator.")
   }
   
   if (any(grepl("New.Additional.Parameters",parsUS$paramHeader)))
