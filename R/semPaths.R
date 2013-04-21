@@ -29,13 +29,13 @@ rtLayout <- function(roots,GroupPars,Edgelist,layout,exoMan)
 {
   # Reverse intercepts in graph:
 #   revNodes <- which((GroupPars$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
-  revNodes <- which((GroupPars$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
-  Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
+#   revNodes <- which((GroupPars$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
+#   Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
   # Remove double headed arrows:
   Edgelist <- Edgelist[GroupPars$edge != "<->",]
   
   # Make igraph object:
-  Graph <- graph.edgelist(Edgelist, TRUE)
+  Graph <- graph.edgelist(Edgelist, FALSE)
   # Compute layout:
   Layout <- layout.reingold.tilford(Graph,root=roots,circular = FALSE) 
   
@@ -156,7 +156,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2,ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2, sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -172,6 +172,21 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   stopifnot("semPlotModel"%in%class(object))
   
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
+  
+  # Set defaults size and shape:
+  if (missing(sizeMan2)) sizeMan2 <- sizeMan
+  if (missing(sizeLat2)) sizeLat2 <- sizeLat
+  if (missing(sizeInt2)) sizeInt2 <- sizeInt
+  
+  if (missing(shapeMan))
+  {
+    if (sizeMan == sizeMan2) shapeMan <- "square" else shapeMan <- "rectangle"
+  }
+  
+  if (missing(shapeLat))
+  {
+    if (sizeLat == sizeLat2) shapeLat <- "circle" else shapeLat <- "ellipse"
+  }
   
   # Check:
   if (missing(intAtSide)) intAtSide <- !residuals
@@ -197,7 +212,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   
   if (missing(curve))
   {
-    if (layout == "tree")
+    if (layout %in% c("tree","tree2","tree3"))
     {
       curve <- 1
     } else {
@@ -529,8 +544,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     }
     
     # Shape:
-    Shape <- c(rep("square",nM),rep("circle",nL))
-    if (any(GroupPars$edge=="int")) Shape <- c(Shape,rep("triangle",Ni))
+    Shape <- c(rep(shapeMan,nM),rep(shapeLat,nL))
+    if (any(GroupPars$edge=="int")) Shape <- c(Shape,rep(shapeInt,Ni))
     
     Curve <- curve
     
@@ -733,7 +748,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     } else Layout <- layout
     
     # loopRotation:
-    if (layout%in%c("tree","tree2"))
+    if (layout%in%c("tree","tree2","tree3"))
     {
       loopRotation <- rep(0,nN)
       loopRotation[endoMan] <- pi
@@ -811,11 +826,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           }
         }
       }
-    } else if (layout=="tree3"|layout=="circle3")
-    {
-      loopRotation <- rep(NA,nN)
-      loopRotation[endoMan] <- pi
-      loopRotation[exoMan] <- 0
+#     } else if (layout=="tree3"|layout=="circle3")
+#     {
+#       loopRotation <- rep(NA,nN)
+#       loopRotation[endoMan] <- pi
+#       loopRotation[exoMan] <- 0
     } else loopRotation <- NULL
 
     ### ORDINALIZE LAYOUT ###
@@ -836,7 +851,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # Set curves and rotate:    
     if (layout %in% c("tree","tree2","tree3"))
     {
-      
       inBetween <- function(x)
       {
         if (Layout[x[1],2]!=Layout[x[2],2]) return(0) else return(sum(Layout[Layout[,2]==Layout[x[1],2],1] > min(Layout[x,1]) & Layout[Layout[,2]==Layout[x[1],2],1] < max(Layout[x,1])))
@@ -891,6 +905,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     vSize[Labels%in%manNames] <- sizeMan
     vSize[Labels%in%latNames] <- sizeLat
     vSize[Labels=="1"] <- sizeInt
+    
+    vSize2 <- numeric(nN)
+    vSize2[Labels%in%manNames] <- sizeMan2
+    vSize2[Labels%in%latNames] <- sizeLat2
+    vSize2[Labels=="1"] <- sizeInt2
     
     eColor <- rep(NA,nrow(Edgelist))
     #     tColor <- rep(rgb(0.5,0.5,0.5),nrow(GroupThresh))
@@ -1262,6 +1281,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              edge.labels=eLab,
                                              mar=Mar,
                                              vsize = vSize,
+                                             vsize2 = vSize2,
                                              edge.color=eColor,
                                              groups=NodeGroups2,
                                              color=Vcolors,
