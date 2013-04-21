@@ -67,6 +67,9 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   # Remove thresholds from Pars:
   semModel@Pars <- semModel@Pars[!grepl("\\|",semModel@Pars$edge),]
   
+  # Remove weird edges:
+  semModel@Pars <- semModel@Pars[!pars$op%in%c(':=','<','>','=='),]
+  
   semModel@Vars <- data.frame(
     name = c(varNames,factNames),
     manifest = c(varNames,factNames)%in%varNames,
