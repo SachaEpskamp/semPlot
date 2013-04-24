@@ -43,7 +43,7 @@ What should the edges indicate in the path diagram? This function uses \code{\li
     \item{whatLabels}{
 What should the edge labels indicate in the path diagram? This function uses \code{\link{grepl}} to allow fuzzy matching and is not case sensitive. E.g., \code{par} will also match \code{Parameters}. Default depends on the \code{what} argument, defaulting to the respective elements in the list below for values of \code{what} in the list above.
   \describe{
-    \item{\code{path}, \code{diagram}, \code{model}, \code{name} or \code{label}}{This will display the edge names as labels.} 
+    \item{\code{name}, \code{label}, \code{path} or \code{diagram}}{This will display the edge names as labels.} 
     \item{\code{est} or \code{par}}{This will display the parameter estimate in edge labels.}
     \item{\code{stand} or \code{std}}{This will display the standardized parameter estimate in edge labels.}
         \item{\code{eq} or \code{cons}}{This will display the parameter number in edge labels. 0 indicates the parameter is fixed, parameters with the same parameter number are constrained to be equal.}
