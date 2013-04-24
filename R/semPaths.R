@@ -1304,7 +1304,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       # Overwrite color to white if bg is dark (temporary solution)
       if (missing(threshold.color) & missing(edge.color)) 
       {
-        if (mean(col2rgb(qgraphRes[[which(Groups==gr)]]$background)/255) <= 0.5) tColor <- rep("white",length(tColor))
+        if (mean(col2rgb(qgraphRes[[which(Groups==gr)]]$plotOptions$background)/255) <= 0.5) tColor <- rep("white",length(tColor))
       }
       if (nrow(GroupThresh) > 0)
       {
