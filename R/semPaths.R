@@ -25,15 +25,13 @@ Mode <- function(x) {
 }
 
 # Function to scale and rotate layouts:
-LayoutScaler <- function(x,scale=1, scale2)
+LayoutScaler <- function(x, xrange=1, yrange=1)
 {
-  if (missing(scale2)) scale2 <- scale
+  if ((max(x[,1]) - min(x[,1])) == 0) x[,1] <- mean(xrange) else x[,1] <- (x[,1] - min(x[,1])) / (max(x[,1]) - min(x[,1])) * 2 - 1
+  if ((max(x[,2]) - min(x[,2])) == 0) x[,2] <- mean(yrange) else x[,2] <- (x[,2] - min(x[,2])) / (max(x[,2]) - min(x[,2])) * 2 - 1
   
-  if ((max(x[,1]) - min(x[,1])) == 0) x[,1] <- 0 else x[,1] <- (x[,1] - min(x[,1])) / (max(x[,1]) - min(x[,1])) * 2 - 1
-  if ((max(x[,2]) - min(x[,2])) == 0) x[,2] <- 0 else x[,2] <- (x[,2] - min(x[,2])) / (max(x[,2]) - min(x[,2])) * 2 - 1
-  
-  x[,1] <- scale * x[,1]
-  x[,2] <- scale2 * x[,2]
+  x[,1] <- x[,1] * xrange
+  x[,2] <- x[,2] * yrange
   
   return(x)
 }
@@ -487,7 +485,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   }
   if (missing(subScale))
   {
-    subScale <- 0.3 + 0.7 * (1 / max(1,max(object@Pars$sub)))
+    subScale <- 0.1 + 0.3 * (1 / max(1,max(object@Pars$sub)))
   }
   if (missing(subScale2))
   {
@@ -1039,16 +1037,24 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     ### COMBINE SUB MODELS ###
     if (layoutSplit & length(unique(grSub)) > 1 & length(subModList) > 1)
     {
+      ### Rescale subScale to height in width relative to diameter of device in inches ###
+      din <- par("din")
+      diamet <- sqrt(sum(din^2))
+      subDim <- diamet * c(subScale, subScale2)
+          
       if (is.character(Layout))
       {
         Layout <- qgraph(Edgelist, layout = Layout, DoNotPlot = TRUE)$layout
       }
 #       browser()
       # Rescale main layout:
-      Layout <- LayoutScaler(Layout,scale=1)
-      subModList[[1]]$Layout <- LayoutScaler(subModList[[1]]$Layout,1)
+      Layout <- LayoutScaler(Layout,  din[1]/2, din[2]/2)
+      subModList[[1]]$Layout <- LayoutScaler(subModList[[1]]$Layout)
       # Angle from center:
       centAngles <- atan2(subModList[[1]]$Layout[,1],subModList[[1]]$Layout[,2]) + pi
+      
+      subModList[[1]]$Layout <- LayoutScaler(subModList[[1]]$Layout,  din[1]/2, din[2]/2)
+      
       centAngles[subModList[[1]]$Layout[,1]==0&subModList[[1]]$Layout[,2]==0] <- mean(centAngles[!(subModList[[1]]$Layout[,1]==0&subModList[[1]]$Layout[,2]==0)]) + pi
       if (layout %in% c('tree','tree2','tree3'))
       {
@@ -1058,6 +1064,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         err <- 1.1
       }
       srot <- ifelse(rotation%in%c(1,3),1/err,err)
+
       centAngles <- atan2(srot*sin(centAngles),cos(centAngles))
       if (subRes != 0)
       {
@@ -1070,15 +1077,25 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         {
           link <- c(which(subModList[[1]]$Labels == subLinks[g-1]), which(subModList[[g]]$Labels == subLinks[g-1])  )
           
-          # SCale:
-          subModList[[g]]$Layout <- LayoutScaler(subModList[[g]]$Layout, scale= subScale, scale2 = subScale2)
+          # Scale:
+#           subDim2 <-  abs(c(RotMat(centAngles[link[1]]) %*% subDim))
+#           subDim2 <- subDim2 / abs(c(RotMat(centAngles[link[1]]) %*% rev(din)))
+                    
+#           subModList[[g]]$Layout <- LayoutScaler(subModList[[g]]$Layout, c(-1,1) * subDim[1]/2, c(-1,1) * subDim[2]/2)
+          
+          # Map to inch coordinates:
+          subModList[[g]]$Layout <- LayoutScaler(subModList[[g]]$Layout, subDim[1]/2, subDim[2]/2)
           
           # Center to link:
           subModList[[g]]$Layout[,1] <- subModList[[g]]$Layout[,1] - subModList[[g]]$Layout[link[2],1]
           subModList[[g]]$Layout[,2] <- subModList[[g]]$Layout[,2] - subModList[[g]]$Layout[link[2],2]
-          
+                    
           # Rotate:              
           subModList[[g]]$Layout <-  t(RotMat(centAngles[link[1]]) %*% t(subModList[[g]]$Layout))
+        
+          # Map back to usr coordinates:
+          #           subModList[[g]]$Layout[,1] <- subModList[[g]]$Layout[,1] / (din[1]/2)
+          #           subModList[[g]]$Layout[,2] <- subModList[[g]]$Layout[,2] / (din[2]/2)
           
           # Center to Layout:
           subModList[[g]]$Layout[,1] <- subModList[[g]]$Layout[,1] + subModList[[1]]$Layout[link[1],1]
@@ -1088,7 +1105,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           subLabnums <- match(subModList[[g]]$Labels[subModList[[g]]$Labels!='1'],Labels)
           subLabnums <- c(subLabnums,manInts[match(match(GroupPars$rhs[GroupPars$sub==g & GroupPars$edge == "int" & GroupPars$rhs %in% manNames],Labels),manInts[,2]),1])
           subLabnums <- c(subLabnums,latInts[match(match(GroupPars$rhs[GroupPars$sub==g & GroupPars$edge == "int" & GroupPars$rhs %in% latNames],Labels),latInts[,2]),1])
-          
+                  
           Layout[subLabnums,] <- subModList[[g]]$Layout
           Curve[GroupPars$sub == g] <- subModList[[g]]$Curve
         if (g == 1)
@@ -1106,10 +1123,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         {
           loopRotation[subLabnums] <- (subModList[[g]]$loopRotation + centAngles[link[1]]) %% ( 2*pi)
         }
+        
       }
       
     }
-    
+
     # Edge labels:
     if (edge.labels)
     {
@@ -1375,34 +1393,40 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     ### Compute margins ###
     if (missing(mar))
     {
-      Mar <- c(5,5,5,5)
-      
-      # Add 3 to top and bottom for residuals if lisrel style is used:
-      if (grepl("lisrel",style,ignore.case=TRUE)) Mar[c(1,3)] <- Mar[c(1,3)] + 3
-      
-      #       # Add 4 to bottom if there are endo man residual correlations:
-      #       if (any(Edgelist[,1]%in%endoMan & Edgelist[,2]%in%endoMan & Edgelist[,1]!=Edgelist[,2]))
-      #       {
-      #         Mar[1] <- Mar[1] + 4
-      #       }
-      #       
-      #       # Add 4 to top if there are endo man residual correlations:
-      #       if (any(Edgelist[,1]%in%exoMan & Edgelist[,2]%in%exoMan & Edgelist[,1]!=Edgelist[,2]))
-      #       {
-      #         Mar[3] <- Mar[3] + 4
-      #       }
-      #       
-      # Add 3 to top if top consist of latent residuals:
-      if (length(exoMan)==0)
+
+      if (!layoutSplit)
       {
-        Mar[3] <- Mar[3] + 3
+        Mar <- c(5,5,5,5)
+        # Add 3 to top and bottom for residuals if lisrel style is used:
+        if (grepl("lisrel",style,ignore.case=TRUE)) Mar[c(1,3)] <- Mar[c(1,3)] + 3
+        
+        #       # Add 4 to bottom if there are endo man residual correlations:
+        #       if (any(Edgelist[,1]%in%endoMan & Edgelist[,2]%in%endoMan & Edgelist[,1]!=Edgelist[,2]))
+        #       {
+        #         Mar[1] <- Mar[1] + 4
+        #       }
+        #       
+        #       # Add 4 to top if there are endo man residual correlations:
+        #       if (any(Edgelist[,1]%in%exoMan & Edgelist[,2]%in%exoMan & Edgelist[,1]!=Edgelist[,2]))
+        #       {
+        #         Mar[3] <- Mar[3] + 4
+        #       }
+        #       
+        # Add 3 to top if top consist of latent residuals:
+        if (length(exoMan)==0)
+        {
+          Mar[3] <- Mar[3] + 3
+        }
+        
+        # Rotate:
+        Mar <- Mar[(0:3 + (rotation-1)) %% 4 + 1]
+        
+        # Add 2 to top for title:
+        if (title) Mar[3] <- Mar[3] + 2
+      } else 
+      {
+        Mar <- c(3,3,3,3)
       }
-      
-      # Rotate:
-      Mar <- Mar[(0:3 + (rotation-1)) %% 4 + 1]
-      
-      # Add 2 to top for title:
-      if (title) Mar[3] <- Mar[3] + 2
     } else Mar <- mar
     
     # Overwrite edge colors if appropriate:
@@ -1482,6 +1506,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              curveDefault = curveDefault,
                                              knots = GroupPars$knot,
                                              curvePivot = curvePivot,
+                                             aspect = layoutSplit,
                                              ...)
     
     if (thresholds)
