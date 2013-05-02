@@ -1506,9 +1506,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       {
         # WITHIN CLUSTER SETUP
         BetweenPars <- object@Pars[object@Pars$group == gsub("Within$","Between",gr),]
-        BetweenInts <- BetweenPars$rhs[BetweenPars$edge == 'int']
-        CircleEdgeEnd[GroupPars$rhs %in% BetweenInts & GroupPars$edge %in% c('->','~>')] <- TRUE
-        
+#         BetweenInts <- BetweenPars$rhs[BetweenPars$edge == 'int']
+        BetweenVars <- unique(c(BetweenPars$lhs,BetweenPars$rhs))
+        CircleEdgeEnd[GroupPars$rhs %in% BetweenVars & GroupPars$edge %in% c('->','~>')] <- TRUE
+
       } else if (all(GroupPars$BetweenWithin == 'Between'))
       {
         # BETWEEN CLUSTER SETUP
