@@ -138,8 +138,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
       if (n==1)
       {
         sq <- 0
-      }
-      if (n == 2)
+      } else if (n == 2)
       {
         sq <- c(-1,1) 
       } else {
@@ -149,8 +148,7 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
       if (n == 1)
       {
         sq <- 0
-      }
-      if (n == 2)
+      } else if (n == 2)
       {
         sq <- c(-0.5,0.5) 
       } else {
@@ -304,6 +302,20 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   if (combineGroups)
   {
     object@Pars$group <- ""
+  }
+  # Within - Between framework:
+  if (is.null(object@Pars$BetweenWithin))
+  {
+    object@Pars$BetweenWithin <- ''
+  }
+  
+  if ((length(unique(object@Pars$BetweenWithin)) > 1 && !all(unique(object@Pars$BetweenWithin) %in% c('Within','Between'))) | length(unique(object@Pars$BetweenWithin)) > 2) stop("BetweenWithin must be labeled 'Between' and 'Within' only")
+  
+  if (length(unique(object@Pars$BetweenWithin)) == 2)
+  {
+    object@Pars$group <- paste(object@Pars$group,'-',object@Pars$BetweenWithin)
+    object@Pars$group <- gsub('\\s+\\-\\s+(?=Within$)','',object@Pars$group,perl=TRUE)
+    object@Pars$group <- gsub('\\s+\\-\\s+(?=Between$)','',object@Pars$group,perl=TRUE)
   }
   # Set title:
   if (missing(title))
@@ -494,9 +506,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   
   layoutMain <- layout
   rotationMain <- rotation
+
+
   
   for (gr in Groups[(1:length(Groups))%in%include])
-  {
+  {  
     grSub <- object@Pars$sub[object@Pars$group==gr]
     if (length(unique(grSub)) == 1) grSub[] <- 0
     
@@ -694,7 +708,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
             Layout[manIntsExo[,1],2] <- 5
             Layout[manIntsEndo[,1],2] <- 0            
           }
-          
+
           # Add horizontal levels:
           if (nrow(manIntsEndo)>0)
           {
@@ -1483,6 +1497,28 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     } else eLab <- eLabels
     
     
+    ### WITHIN - BETWEEN FRAMEWORK ###
+    CircleEdgeEnd <- rep(FALSE, nrow(Edgelist))
+    
+    if (any(c('Between','Within')%in%GroupPars$BetweenWithin))
+    {
+      if (all(GroupPars$BetweenWithin == 'Within'))
+      {
+        # WITHIN CLUSTER SETUP
+        BetweenPars <- object@Pars[object@Pars$group == gsub("Within$","Between",gr),]
+        BetweenInts <- BetweenPars$rhs[BetweenPars$edge == 'int']
+        CircleEdgeEnd[GroupPars$rhs %in% BetweenInts & GroupPars$edge %in% c('->','~>')] <- TRUE
+        
+      } else if (all(GroupPars$BetweenWithin == 'Between'))
+      {
+        # BETWEEN CLUSTER SETUP
+        WithinPars <- object@Pars[object@Pars$group == gsub("Between$","Within",gr),]
+        WithinVars <- unique(c(WithinPars$lhs,WithinPars$rhs))
+        Shape[Labels %in% WithinVars ] <- shapeLat
+        
+      } else stop("BetweenWithin not only 'Between' or 'Within'.")
+    }
+    
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
                                              labels=nLab,
                                              bidirectional=Bidir,
@@ -1507,6 +1543,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              knots = GroupPars$knot,
                                              curvePivot = curvePivot,
                                              aspect = layoutSplit,
+                                             CircleEdgeEnd = CircleEdgeEnd,
                                              ...)
     
     if (thresholds)

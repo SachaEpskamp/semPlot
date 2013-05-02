@@ -78,9 +78,10 @@ semPlotModel.mplus.model <- function(object)
     rhs = parsUS$param,
     est = parsUS$est,
     std = NA,
-    group = paste(parsUS$Group, parsUS$BetweenWithin, sep=""),
+    group = parsUS$Group,
     fixed = parsUS$se==0,
     par = 0,
+    BetweenWithin = parsUS$BetweenWithin,
     stringsAsFactors=FALSE)
   
   if (!noPars)
