@@ -108,15 +108,15 @@ semPlotModel.mplus.model <- function(object)
     Pars$std <- object$parameters$std.standardized$est
   }
   
-  Pars$lhs[grepl("BY",parsUS$paramHeader)] <- gsub("\\.BY","",parsUS$paramHeader[grepl("BY",parsUS$paramHeader)])
-  Pars$edge[grepl("BY",parsUS$paramHeader)] <- "->"
+  Pars$lhs[grepl(".BY$",parsUS$paramHeader)] <- gsub("\\.BY$","",parsUS$paramHeader[grepl(".BY$",parsUS$paramHeader)])
+  Pars$edge[grepl(".BY$",parsUS$paramHeader)] <- "->"
   
-  Pars$lhs[grepl("ON",parsUS$paramHeader)] <- gsub("\\.ON","",parsUS$paramHeader[grepl("ON",parsUS$paramHeader)])
-  Pars$edge[grepl("ON",parsUS$paramHeader)] <- "~>"
-  Pars[grepl("ON",parsUS$paramHeader),c("lhs","rhs")] <- Pars[grepl("ON",parsUS$paramHeader),c("rhs","lhs")]
+  Pars$lhs[grepl(".ON$",parsUS$paramHeader)] <- gsub("\\.ON$","",parsUS$paramHeader[grepl(".ON$",parsUS$paramHeader)])
+  Pars$edge[grepl(".ON$",parsUS$paramHeader)] <- "~>"
+  Pars[grepl(".ON$",parsUS$paramHeader),c("lhs","rhs")] <- Pars[grepl(".ON$",parsUS$paramHeader),c("rhs","lhs")]
   
-  Pars$lhs[grepl("WITH",parsUS$paramHeader)] <- gsub("\\.WITH","",parsUS$paramHeader[grepl("WITH",parsUS$paramHeader)])
-  Pars$edge[grepl("WITH",parsUS$paramHeader)] <- "<->"
+  Pars$lhs[grepl(".WITH$",parsUS$paramHeader)] <- gsub("\\.WITH$","",parsUS$paramHeader[grepl(".WITH$",parsUS$paramHeader)])
+  Pars$edge[grepl(".WITH$",parsUS$paramHeader)] <- "<->"
   
   Pars$lhs[grepl("Variances",parsUS$paramHeader)] <- Pars$rhs[grepl("Variances",parsUS$paramHeader)]
   Pars$edge[grepl("Variances",parsUS$paramHeader)] <- "<->"
@@ -132,7 +132,7 @@ semPlotModel.mplus.model <- function(object)
   Pars <- Pars[!grepl("Thresholds",parsUS$paramHeader),]
   
   # Detect latent/manifest:
-  Latents <- unique(gsub("\\.BY","",parsUS$paramHeader[grepl("BY",parsUS$paramHeader)]))
+  Latents <- unique(gsub("\\.BY$","",parsUS$paramHeader[grepl(".BY$",parsUS$paramHeader)]))
   var <- unique(unlist(Pars[c("lhs","rhs")]))
   var <- var[var!=""]
   
@@ -174,6 +174,12 @@ semPlotModel.mplus.model <- function(object)
     
   }
 
+  
+  # Abbreviate names with more than 8 characters:
+  Pars$lhs <- substring(Pars$lhs,1,8)
+  Pars$rhs <- substring(Pars$rhs,1,8)
+  Vars$name <- substring(Vars$name,1,8)
+  Vars <- Vars[!duplicated(Vars),]
   
   semModel <- new("semPlotModel")
   semModel@Pars <- Pars

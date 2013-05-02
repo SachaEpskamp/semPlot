@@ -221,8 +221,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     object@Pars$rhs[object@Pars$rhs=="1"] <- "_1"
   }
   
-  # Check if layout is function. If so, set layout <- "spring" as dummy:
-  if (is.function(layout))
+  # Check if layout is not character of length 1. If so, set layout <- "spring" as dummy:
+  if (!is.character(layout) || length(layout) > 1)
   {
     layoutFun <- layout
     layout <- "spring"
