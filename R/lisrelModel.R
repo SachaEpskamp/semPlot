@@ -389,6 +389,8 @@ lisrelModel <- function(LY,PS,BE,TE,TY,AL,manNamesEndo,latNamesEndo,LX,PH,GA,TD,
   Vars <- Vars[!duplicated(Vars$name),]
   Pars <- Pars[!(Pars$lhs==Pars$rhs&Pars$edge!="<->"),]
   
+  if (length(unique(Pars$group)) == 1) Pars$group <- ''
+  
   # Set exogenous:
   if (missing(setExo))
   { 

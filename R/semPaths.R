@@ -489,6 +489,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         
         object@Pars$sub[object@Pars$rhs%in%object@Pars$rhs[object@Pars$rhs%in%manNames & object@Pars$sub==(i+1)] & object@Pars$lhs%in%object@Pars$rhs[object@Pars$rhs%in%manNames & object@Pars$sub==(i+1)] & object@Pars$edge == "<->"] <- i+1
       }
+      
+      # Remove manifests already in a submodel from model 1:
+      ManInSub <- manNames[ manNames %in% object@Pars$lhs[object@Pars$sub > 1] | manNames %in% object@Pars$rhs[object@Pars$sub > 1]]
+      object@Pars$sub[ (object@Pars$lhs %in% ManInSub | object@Pars$rhs %in% ManInSub) & object@Pars$sub == 1] <- 0
     }
   }
   if (missing( subLinks))
@@ -508,7 +512,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   rotationMain <- rotation
 
 
-  
   for (gr in Groups[(1:length(Groups))%in%include])
   {  
     grSub <- object@Pars$sub[object@Pars$group==gr]
