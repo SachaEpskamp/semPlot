@@ -130,6 +130,7 @@ semPlotModel.mplus.model <- function(object)
   # Extract threshold model:
   Thresh <- Pars[grepl("Thresholds",parsUS$paramHeader),-(3:4)]
   Thresh$lhs <- gsub("\\$.*","",Pars$rhs[grepl("Thresholds",parsUS$paramHeader)])
+  Thresh$BetweenWithin[Thresh$BetweenWithin == "Between"] <- "Within"
   Pars <- Pars[!grepl("Thresholds",parsUS$paramHeader),]
   
   # Detect latent/manifest:

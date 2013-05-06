@@ -173,7 +173,16 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   return(Layout)
 }
 
-semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2, sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, subLinks, ...){
+semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,
+                     intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2, 
+                     sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",
+                     title.adj = 0.1, title.line = -1, title.cex = 0.8,
+                     include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,
+                     reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,
+                     as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,
+                     pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
+                     panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
+                     subLinks, ...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -307,6 +316,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   if (is.null(object@Pars$BetweenWithin))
   {
     object@Pars$BetweenWithin <- ''
+    if (nrow(object@Thresholds) > 0)
+    {
+      object@Thresholds$BetweenWithin <- ''
+    }
   }
   
   if ((length(unique(object@Pars$BetweenWithin)) > 1 && !all(unique(object@Pars$BetweenWithin) %in% c('Within','Between'))) | length(unique(object@Pars$BetweenWithin)) > 2) stop("BetweenWithin must be labeled 'Between' and 'Within' only")
@@ -316,6 +329,14 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     object@Pars$group <- paste(object@Pars$group,'-',object@Pars$BetweenWithin)
     object@Pars$group <- gsub('\\s+\\-\\s+(?=Within$)','',object@Pars$group,perl=TRUE)
     object@Pars$group <- gsub('\\s+\\-\\s+(?=Between$)','',object@Pars$group,perl=TRUE)
+    
+    if (nrow(object@Thresholds) > 0)
+    {
+      object@Thresholds$group <- paste(object@Thresholds$group,'-',object@Thresholds$BetweenWithin)
+      object@Thresholds$group <- gsub('\\s+\\-\\s+(?=Within$)','',object@Thresholds$BetweenWithin,perl=TRUE)
+      object@Thresholds$group <- gsub('\\s+\\-\\s+(?=Between$)','',object@Thresholds$BetweenWithin,perl=TRUE)
+    }
+    
   }
   # Set title:
   if (missing(title))
@@ -1549,7 +1570,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              aspect = layoutSplit,
                                              CircleEdgeEnd = CircleEdgeEnd,
                                              ...)
-    
+
     if (thresholds)
     {
       # Overwrite color to white if bg is dark (temporary solution)
@@ -1583,7 +1604,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     if (title)
     {
       #       if (length(Groups)==1) title("Path Diagram",line=3) else title(paste0("Path Diagram for group '",gr,"'"),line=3)
-      title(gr,line=3,col.main=title.color)
+      title(gr, col.main=title.color, adj = title.adj, outer = TRUE, cex.main = title.cex, line = title.line)
     }
   }
   par(ask=askOrig)
