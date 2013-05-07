@@ -16,7 +16,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
         combineGroups = FALSE, manifests, latents, groups, color, 
         residScale, gui = FALSE, allVars = FALSE, edge.color, 
         reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, 
-        threshold.color, fixedStyle = 2, freeStyle = 1, 
+        thresholdColor, fixedStyle = 2, freeStyle = 1, 
         as.expression, optimizeLatRes = FALSE, mixCols = TRUE, 
         curvePivot, levels, nodeLabels, edgeLabels, pastel = FALSE,
         rainbowStart=0, centerLevels = TRUE,...)
@@ -161,7 +161,7 @@ Logical. Set this to FALSE to only show the structural model (omit all manifest 
   \item{ThreshAtSide}{
  Logical. If TRUE, thresholds are plotted as small lines at the side of manifest nodes, otherwise they are plotted as lines inside the nodes.
 }
-  \item{threshold.color}{
+  \item{thresholdColor}{
 Color of the threshold lines. Defaults to "black"
 }
   \item{fixedStyle}{

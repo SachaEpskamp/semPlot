@@ -1,4 +1,7 @@
 Changes in Version 0.3.2
+  o Thresholds are now plotted via qgraph
+  o Changed argument threshold.color to thresholdColor
+  o Added argument thresholdSize to control the size of threshold bars
   o Matrix model functionality:
     o Added 'semMatrixAlgebra' to easilly perform matrix algebra on a semMatrixModel object.
   o Added 'levels' argument. This argument can be used to control the spacing between levels (e.g., exogenous latents) of tree and circle layouts.

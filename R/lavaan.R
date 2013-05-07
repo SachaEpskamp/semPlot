@@ -8,8 +8,7 @@
 
 ## EXTRACT MODEL ###
 setMethod("semPlotModel.S4",signature("lavaan"),function(object){
-  
-  
+
   if (class(object)!="lavaan") stop("Input must me a 'lavaan' object")
   
   
@@ -68,11 +67,11 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   # Move thresholds to Thresholds slot:
   semModel@Thresholds <- semModel@Pars[grepl("\\|",semModel@Pars$edge),-(3:4)]
   # Remove thresholds from Pars:
-  semModel@Pars <- semModel@Pars[!grepl("\\|",semModel@Pars$edge),]
+#   semModel@Pars <- semModel@Pars[!grepl("\\|",semModel@Pars$edge),]
   
 
   # Remove weird edges:
-  semModel@Pars <- semModel@Pars[!pars$op%in%c(':=','<','>','=='),]
+  semModel@Pars <- semModel@Pars[!pars$op%in%c(':=','<','>','==','|'),]
 
   
   semModel@Vars <- data.frame(

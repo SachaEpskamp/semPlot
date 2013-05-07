@@ -178,7 +178,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",
                      title.adj = 0.1, title.line = -1, title.cex = 0.8,
                      include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,
-                     reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,threshold.color,fixedStyle=2,freeStyle=1,
+                     reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,thresholdColor,thresholdSize = 0.5, fixedStyle=2,freeStyle=1,
                      as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
@@ -279,7 +279,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   if (grepl("ram",style,ignore.case=TRUE)) style <- "OpenMx"
   if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only OpenMx (ram) or LISREL style is currently supported.")
   #   if (grepl("mx",style,ignore.case=TRUE) & !missing(residScale)) warning("'residScale' ingored in OpenMx style")
-  if (missing(residScale)) residScale <- 2*sizeMan
+  if (missing(residScale)) residScale <- sizeMan
   
   # Set exoVar default:
   if (missing(exoVar)) exoVar <- !grepl("lis",style,ignore.case=TRUE)
@@ -1185,11 +1185,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     
     eColor <- rep(NA,nrow(Edgelist))
     #     tColor <- rep(rgb(0.5,0.5,0.5),nrow(GroupThresh))
-    if (missing(threshold.color)) 
+    if (missing(thresholdColor)) 
     {
-      tColor <- rep("black",nrow(GroupThresh)) 
+      tColor <- rep("border", nN) 
     } else {
-      tColor <- rep(threshold.color,nrow(GroupThresh))
+      tColor <- rep(thresholdColor, nN)
     }
     
     ### WHAT TO PLOT? ###
@@ -1220,13 +1220,14 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       }
       if (nrow(GroupThresh) > 0)
       {
-        for (i in 1:nrow(GroupThresh))
-        {
-          if (GroupThresh$par[i]>0 & sum(GroupThresh$par[i] == object@Thresholds$par) > 1 )
-          {
-            tColor[i] <- cols[GroupThresh$par[i]]
-          }
-        }
+        warning("Equality constraints of Thresholds currently not supported")
+#         for (i in 1:nrow(GroupThresh))
+#         {
+#           if (GroupThresh$par[i]>0 & sum(GroupThresh$par[i] == object@Thresholds$par) > 1 )
+#           {
+#             tColor[i] <- cols[GroupThresh$par[i]]
+#           }
+#         }
       }
     } else if (!grepl("col",what,ignore.case=TRUE)) stop("Could not detect use of 'what' argument")
     
@@ -1471,7 +1472,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     if (!missing(edge.color))
     {
       eColor <- edge.color
-      if (thresholds & missing(threshold.color))
+      if (thresholds & missing(thresholdColor))
       {
         tColor <- rep(edge.color,length(tColor))
       }
@@ -1544,6 +1545,43 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       } else stop("BetweenWithin not only 'Between' or 'Within'.")
     }
     
+    ### Threshold setup ###
+  
+    bars <- list()
+    length(bars) <- nN
+    barSide <- rep(1, nN)
+    
+    if (thresholds)
+    {
+      if (missing(thresholdColor) & missing(edge.color)) 
+      {
+        tColor <- rep("border", nN)
+      }
+      if (nrow(GroupThresh) > 0)
+      {
+        for (node in unique(match(GroupThresh$lhs,GroupVars$name)))
+        {
+#           node <- which(Labels==GroupThresh$lhs[i])
+          # Compute side:
+          IntSide <- 1
+          if (layout=="tree")
+          {
+            if (rotation%in%c(1,3))
+            {
+              barSide[node] <- ifelse(Layout[node,2]>mean(Layout[,2]),3,1)
+            } else {
+              barSide[node] <- ifelse(Layout[node,1]>mean(Layout[,1]),4,2)
+            }
+          } else {
+            barSide[node] <- sum((atan2(scale(Layout[,1])[node],scale(Layout[,2])[node])+pi)%%(2*pi) > c(0,pi/2,pi,1.5*pi))
+          }
+          bars[[node]] <- pnorm(GroupThresh$est[GroupThresh$lhs == GroupVars$name[node]])
+        }
+      }
+    }
+    
+    ### RUN QGRAPH ###
+    
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
                                              labels=nLab,
                                              bidirectional=Bidir,
@@ -1569,37 +1607,42 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              curvePivot = curvePivot,
                                              aspect = layoutSplit,
                                              CircleEdgeEnd = CircleEdgeEnd,
+                                             bars = bars,
+                                             barSide = barSide,
+                                             barColor = tColor,
+                                             barLength = thresholdSize,
+                                             barsAtSide = ThreshAtSide,
                                              ...)
 
-    if (thresholds)
-    {
-      # Overwrite color to white if bg is dark (temporary solution)
-      if (missing(threshold.color) & missing(edge.color)) 
-      {
-        if (mean(col2rgb(qgraphRes[[which(Groups==gr)]]$plotOptions$background)/255) <= 0.5) tColor <- rep("white",length(tColor))
-      }
-      if (nrow(GroupThresh) > 0)
-      {
-        for (i in 1:nrow(GroupThresh))
-        {
-          node <- which(Labels==GroupThresh$lhs[i])
-          # Compute side:
-          IntSide <- 1
-          if (layout=="tree")
-          {
-            if (rotation%in%c(1,3))
-            {
-              IntSide <- ifelse(Layout[node,2]>mean(Layout[,2]),3,1)
-            } else {
-              IntSide <- ifelse(Layout[node,1]>mean(Layout[,1]),4,2)
-            }
-          } else {
-            IntSide <- sum((atan2(qgraphRes[[which(Groups==gr)]]$layout[node,1],qgraphRes[[which(Groups==gr)]]$layout[node,2])+pi)%%(2*pi) > c(0,pi/2,pi,1.5*pi))
-          }
-          IntInNode(qgraphRes[[which(Groups==gr)]]$layout[node,,drop=FALSE],vSize[node],Shape[node],pnorm(GroupThresh$est[i]),width=0.5,triangles=FALSE,col=tColor[i],IntSide,!ThreshAtSide)
-        }
-      }
-    }
+#     if (thresholds)
+#     {
+#       # Overwrite color to white if bg is dark (temporary solution)
+#       if (missing(thresholdColor) & missing(edge.color)) 
+#       {
+#         if (mean(col2rgb(qgraphRes[[which(Groups==gr)]]$plotOptions$background)/255) <= 0.5) tColor <- rep("white",length(tColor))
+#       }
+#       if (nrow(GroupThresh) > 0)
+#       {
+#         for (i in 1:nrow(GroupThresh))
+#         {
+#           node <- which(Labels==GroupThresh$lhs[i])
+#           # Compute side:
+#           IntSide <- 1
+#           if (layout=="tree")
+#           {
+#             if (rotation%in%c(1,3))
+#             {
+#               IntSide <- ifelse(Layout[node,2]>mean(Layout[,2]),3,1)
+#             } else {
+#               IntSide <- ifelse(Layout[node,1]>mean(Layout[,1]),4,2)
+#             }
+#           } else {
+#             IntSide <- sum((atan2(qgraphRes[[which(Groups==gr)]]$layout[node,1],qgraphRes[[which(Groups==gr)]]$layout[node,2])+pi)%%(2*pi) > c(0,pi/2,pi,1.5*pi))
+#           }
+#           IntInNode(qgraphRes[[which(Groups==gr)]]$layout[node,,drop=FALSE],vSize[node],Shape[node],pnorm(GroupThresh$est[i]),width=0.5,triangles=FALSE,col=tColor[i],IntSide,!ThreshAtSide)
+#         }
+#       }
+#     }
     
     if (title)
     {
