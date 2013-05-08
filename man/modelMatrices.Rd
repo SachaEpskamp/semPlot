@@ -46,7 +46,8 @@ Sacha Epskamp <mail@sachaepskamp.com>
 
 \examples{
 ## Mplus user guide SEM example:
-download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.out",outfile <- tempfile(fileext=".out"))
+outfile <- tempfile(fileext=".out")
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.out",outfile)
 
 # Plot model:
 semPaths(outfile, intercepts = FALSE)

@@ -57,7 +57,8 @@ Sacha Epskamp <mail@sachaepskamp.com>
 
 \examples{
 ## Mplus user guide SEM example:
-download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.out",outfile <- tempfile(fileext=".out"))
+outfile <- tempfile(fileext=".out")
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.out",outfile)
 
 # Plot model:
 semPaths(outfile,intercepts=FALSE)
@@ -67,11 +68,11 @@ semMatrixAlgebra(outfile, Beta)
 
 # mplus model implied covariance:
 mat1 <- semMatrixAlgebra(outfile, 
-    Lambda \%*\% Imin(Beta, TRUE) \%*\% Psi \%*\% t(Imin(Beta, TRUE)) \%*\% t(Lambda) + Theta)
+  Lambda \%*\% Imin(Beta, TRUE) \%*\% Psi \%*\% t(Imin(Beta, TRUE)) \%*\% t(Lambda) + Theta)
 
 # Lisrel model implied covariance:
 mat2 <- semMatrixAlgebra(outfile, 
-                 LY \%*\% Imin(BE, TRUE) \%*\% PS \%*\% t(Imin(BE, TRUE)) \%*\% t(LY) + TE, endoOnly = TRUE)
+  LY \%*\% Imin(BE, TRUE) \%*\% PS \%*\% t(Imin(BE, TRUE)) \%*\% t(LY) + TE, endoOnly = TRUE)
 
 # RAM model implied covariance:
 mat3 <- semMatrixAlgebra(outfile, 
@@ -83,11 +84,14 @@ library("qgraph")
 
 pdf("Models.pdf",width=15,height=5)
 layout(t(1:3))
-qgraph(round(cov2cor(mat1),5), maximum=1, edge.labels=TRUE, layout = "spring", cut = 0.4, minimum = 0.1)
+qgraph(round(cov2cor(mat1),5), maximum=1, edge.labels=TRUE, layout = "spring", 
+  cut = 0.4, minimum = 0.1)
 title("Mplus model")
-qgraph(round(cov2cor(mat2),5), maximum=1, edge.labels=TRUE, layout = "spring", cut = 0.4, minimum = 0.1)
+qgraph(round(cov2cor(mat2),5), maximum=1, edge.labels=TRUE, layout = "spring", 
+  cut = 0.4, minimum = 0.1)
 title("LISREL model")
-qgraph(round(cov2cor(mat3),5), maximum=1, edge.labels=TRUE, layout = "spring", cut = 0.4, minimum = 0.1)
+qgraph(round(cov2cor(mat3),5), maximum=1, edge.labels=TRUE, layout = "spring", 
+  cut = 0.4, minimum = 0.1)
 title("RAM model")
 dev.off()
 }

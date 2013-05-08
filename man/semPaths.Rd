@@ -8,7 +8,20 @@ Plot path diagram for SEM models.
 This function creates a path diagram of a SEM model (or general linear model), which is then plotted using \code{\link[qgraph]{qgraph}}. Currently many different SEM programs and packages are supported. Please see my website (www.sachaepskamp.com) for more details on which packages are supported and what is supported for each package.
 }
 \usage{
-semPaths(object, what = "paths", whatLabels, style, layout = "tree", intercepts = TRUE, residuals = TRUE, thresholds = TRUE, intStyle = "multi", rotation = 1, curve, nCharNodes = 3, nCharEdges = 3, sizeMan = 5, sizeLat = 8, sizeInt = 2, sizeMan2, sizeLat2, sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask, mar, title, title.color = "black", title.adj = 0.1, title.line = -1, title.cex = 0.8, include, combineGroups = FALSE, manifests, latents, groups, color, residScale, gui = FALSE, allVars = FALSE, edge.color, reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, thresholdColor, thresholdSize = 0.5, fixedStyle = 2, freeStyle = 1, as.expression = character(0), optimizeLatRes = FALSE, mixCols = TRUE, curvePivot, levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, subLinks, ...)
+semPaths(object, what = "paths", whatLabels, style, layout = "tree", 
+  intercepts = TRUE, residuals = TRUE, thresholds = TRUE, intStyle = "multi", 
+  rotation = 1, curve, nCharNodes = 3, nCharEdges = 3, sizeMan = 5, sizeLat = 8, 
+  sizeInt = 2, sizeMan2, sizeLat2, sizeInt2, shapeMan, shapeLat, 
+  shapeInt = "triangle", ask, mar, title, title.color = "black", title.adj = 0.1, 
+  title.line = -1, title.cex = 0.8, include, combineGroups = FALSE, manifests, 
+  latents, groups, color, residScale, gui = FALSE, allVars = FALSE, edge.color, 
+  reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, thresholdColor, 
+  thresholdSize = 0.5, fixedStyle = 2, freeStyle = 1, 
+  as.expression = character(0), optimizeLatRes = FALSE, mixCols = TRUE, curvePivot, 
+  levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, 
+  springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, 
+  panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
+  subScale2, subRes = 4, subLinks, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -352,13 +365,15 @@ semPaths(fit,title=FALSE, curvePivot = TRUE)
 semPaths(fit,title=FALSE, curvePivot = TRUE, exoVar = FALSE, exoCov = FALSE)
 
 # Standardized parameters:
-semPaths(fit,"std",edge.label.cex=0.5, curvePivot = TRUE, exoVar = FALSE, exoCov = FALSE)
+semPaths(fit,"std",edge.label.cex=0.5, curvePivot = TRUE, exoVar = FALSE, 
+  exoCov = FALSE)
 
 
 ## Mplus
 
 # Same model, now using mplus output:
-download.file("http://www.statmodel.com/usersguide/chap5/ex5.8.out",outfile <- tempfile(fileext=".out"))
+outfile <- tempfile(fileext=".out")
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.8.out",outfile)
 
 # Plot model:
 semPaths(outfile,intercepts=FALSE)
@@ -388,7 +403,8 @@ semPaths(fit,intercepts=FALSE)
 ## Mplus
 
 # Same model, now using mplus output:
-download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile <- tempfile(fileext=".out"))
+outfile <- tempfile(fileext=".out")
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile)
 
 # Plot model:
 semPaths(outfile)
@@ -435,7 +451,8 @@ semPaths(twoFactorFit, layout = "tree2")
 # Multi-group analysis -------------------------------------------
 ## LISREL:
 # Download measurment invariance example:
-download.file("http://sachaepskamp.com/files/mi1.OUT",modFile <- tempfile(fileext=".OUT"))
+modFile <- tempfile(fileext=".OUT")
+download.file("http://sachaepskamp.com/files/mi1.OUT",modFile)
 layout(t(1:2))
 semPaths(modFile,"eq",ask=FALSE, intAtSide = TRUE, mar = c(8, 1, 5, 1))
 # Color indicates equality constraints.
