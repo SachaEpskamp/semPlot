@@ -1580,6 +1580,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       }
     }
     
+    # curveScale:
+    curveScale <- ! layout %in% c('tree','tree2','tree3')
+    
     ### RUN QGRAPH ###
     
     qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
@@ -1607,6 +1610,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              curvePivot = curvePivot,
                                              aspect = layoutSplit,
                                              CircleEdgeEnd = CircleEdgeEnd,
+                                             curveScale = curveScale,
                                              bars = bars,
                                              barSide = barSide,
                                              barColor = tColor,
