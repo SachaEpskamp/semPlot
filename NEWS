@@ -1,21 +1,49 @@
 Changes in Version 0.3.2
-  o Thresholds are now plotted via qgraph
-  o Changed argument threshold.color to thresholdColor
-  o Added argument thresholdSize to control the size of threshold bars
-  o Matrix model functionality:
-    o Added 'semMatrixAlgebra' to easilly perform matrix algebra on a semMatrixModel object.
-  o Added 'levels' argument. This argument can be used to control the spacing between levels (e.g., exogenous latents) of tree and circle layouts.
-  o Added edgeLabels and nodeLabels arguments to manually overwrite edge and node labels, in the order they appear in the RAM and Vars elements of the 'semPlotModel' that is created internally. In addition to the qgraph change that these can now be assigned lists including expressions it should now be easier to add greek letters.
-  o Added 'reduce' argumen to lisrelModel that controls if variables that are named the same should be treated as the same variable.
-  o 'semPlotModel' for lisrel modes can now use dots to send arguments to 'lisrelModel'
-  o 'qgraph' is no longer on the depends list but imported instead. 
-  o  MplusAutomation is no longer imported but moved to suggests list. This makes sure that the Tcl/Tk interface is not loaded on loading semPlot and as a result makes sure that semPlot does not result in crashes on Mac computers where Tcl/Tk is not installed.
-  o Fixed a bug where numeric labels where abbreviated, causing erradic behavior on the labels.
-  o Added nDigits argument to control the number of digits used in rounding for labels.
-  o Added 'exoVar' and 'exoCov' arguments that can be used to not display variances or covariances of truely exogenous variables (no incomming directed edges)
-  o 'style' now defaults to "lisrel" if the input is a Lisrel model.
-  o 'as.expression' now defaults to "edges" if the input is a lisrel model.
-  o 'style="lisrel"' will now default exoVar to FALSE.
+  o New features
+    o Matrix model functionality:
+      o Added 'semMatrixAlgebra' to easily perform matrix algebra on any semPlot input object.
+      o Added 'modelMatrices' to obtain model matrices of LISREL, Mplus and RAM modeling frameworks of any input to semPlot.
+      o Added 'exoVar' and 'exoCov' arguments that can be used to not display variances or covariances of truly exogenous variables (no incoming directed edges)
+  o Added 'tree3' and 'circle3' layouts, based on Boker, S. M., McArdle, J. J., & Neale, M. (2002). An algorithm for the hierarchical organization of path diagrams and calculation of components of expected covariance. Structural Equation Modeling, 9(2), 174-194.
+
+  o Major changes
+    o Added edgeLabels and nodeLabels arguments to manually overwrite edge and node labels, in the order they appear in the RAM and Vars elements of the 'semPlotModel' that is created internally. In addition to the qgraph change that these can now be assigned lists including expressions it should now be easier to add Greek letters.
+    o  MplusAutomation is no longer imported but moved to suggests list. This makes sure that the Tcl/Tk interface is not loaded on loading semPlot and as a result makes sure that semPlot does not result in crashes on Mac computers where Tcl/Tk is not installed.
+    o 'style' now defaults to "lisrel" if the input is a Lisrel model.
+    o 'style="lisrel"' will now default exoVar to FALSE.
+    o Changed the name of slot RAM to Pars in semPlotModel class.
+    o Two-level multilevel structures is now supported
+      o Currently this works for Mplus input only.
+      o Only random intercepts are supported, not random slopes.
+      o Thresholds are shown on the within level rather than the between level.
+
+  o New arguments to semPaths:
+    o Added argument thresholdSize to control the size of threshold bars
+    o Added 'levels' argument. This argument can be used to control the spacing between levels (e.g., exogenous latents) of tree and circle layouts.
+    o Added nDigits argument to control the number of digits used in rounding for labels.
+    o Added 'centerLevels' argument for tree2 layout, to center horizontal levels.
+    o Added 'panelGroups' argument to automatically create a panel plot of multiple group models.
+    o The 'layoutSplit' argument can be used to split computing of layout between structural and measurment models. This is very useful in more complicated models where the structural part is best shown by using a spring layout.
+    o Added the 'intAtSide' argument to control if intercepts should be plotted to the side of manifest nodes or at the bottom/top. Defaults only to FALSE if 'residuals=FALSE'.
+    o Added 'nDigits' argument to control rounding of numeric values.
+
+  o Minor changes
+    o Thresholds are now plotted via qgraph
+    o Changed argument threshold.color to thresholdColor
+    o 'qgraph' is no longer on the depends list but imported instead.
+    o 'as.expression' now defaults to "edges" if the input is a lisrel model. 
+    o 'semPlotModel' for lisrel modes can now use dots to send arguments to 'lisrelModel'
+    o Added 'reduce' argument to lisrelModel that controls if variables that are named the same should be treated as the same variable.
+    o Shape, width and height of manifest, latent and constant variables can now be set.
+    o Mplus input now supports the | operator.
+
+  o Bug fixes
+    o Fixed a bug where numeric labels where abbreviated, causing erratic behavior on the labels.
+    o Fixed a bug where models with single indicator latent variables caused an error.
+    o Numerous small bugfixes and improvements
+    o Fixed a bug where variable names in mplux models containing BY, WITH or ON caused unexpected behavior.
+    o Assigning a matrix to the layout argument of semPaths will no longer cause a bunch or warnings.
+
 
 Changes in Version 0.3
   o First submit to CRAN.

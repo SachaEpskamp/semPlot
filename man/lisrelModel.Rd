@@ -107,6 +107,7 @@ Sacha Epskamp <mail@sachaepskamp.com>
 \code{\link{semPlotModel}}
  \code{\link{semCors}}
  \code{\link{semPaths}}
+ \code{\link{ramModel}}
 }
 
 \examples{

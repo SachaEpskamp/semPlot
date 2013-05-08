@@ -10,7 +10,7 @@ This function produces a model object or model syntax for SEM software based on 
 Currently only the R packages 'lavaan'  (Rosseel, 2012) and 'sem' (Fox, Nie & Byrnes, 2012) are supported.
 }
 \usage{
-semSyntax(object, syntax = "lavaan", file)
+semSyntax(object, syntax = "lavaan", allFixed = FALSE, file)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,6 +19,9 @@ A "semPlotModel" object or any of the input possibilities for \code{\link{semPlo
 }
   \item{syntax}{
 A string indicating which syntax to be used for the output. Currently supported are \code{'lavaan'} and \code{'sem'}.
+}
+\item{allFixed}{
+Logical, should all parameters be fixed to their estimate. Useful for simulating data.
 }
   \item{file}{
 Path of a file the model should be written to. 

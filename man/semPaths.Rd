@@ -8,19 +8,7 @@ Plot path diagram for SEM models.
 This function creates a path diagram of a SEM model (or general linear model), which is then plotted using \code{\link[qgraph]{qgraph}}. Currently many different SEM programs and packages are supported. Please see my website (www.sachaepskamp.com) for more details on which packages are supported and what is supported for each package.
 }
 \usage{
-semPaths(object, what = "paths", whatLabels, style, layout = "tree", 
-        intercepts = TRUE, residuals = TRUE, thresholds = TRUE, 
-        intStyle = "multi", rotation = 1, curve, nCharNodes = 3, 
-        nCharEdges = 3, sizeMan = 5, sizeLat = 8, sizeInt = 2, ask, 
-        mar, title, title.color = "black", include, 
-        combineGroups = FALSE, manifests, latents, groups, color, 
-        residScale, gui = FALSE, allVars = FALSE, edge.color, 
-        reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, 
-        thresholdColor, fixedStyle = 2, freeStyle = 1, 
-        as.expression, optimizeLatRes = FALSE, mixCols = TRUE, 
-        curvePivot, levels, nodeLabels, edgeLabels, pastel = FALSE,
-        rainbowStart=0, centerLevels = TRUE,...)
-
+semPaths(object, what = "paths", whatLabels, style, layout = "tree", intercepts = TRUE, residuals = TRUE, thresholds = TRUE, intStyle = "multi", rotation = 1, curve, nCharNodes = 3, nCharEdges = 3, sizeMan = 5, sizeLat = 8, sizeInt = 2, sizeMan2, sizeLat2, sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask, mar, title, title.color = "black", title.adj = 0.1, title.line = -1, title.cex = 0.8, include, combineGroups = FALSE, manifests, latents, groups, color, residScale, gui = FALSE, allVars = FALSE, edge.color, reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, thresholdColor, thresholdSize = 0.5, fixedStyle = 2, freeStyle = 1, as.expression = character(0), optimizeLatRes = FALSE, mixCols = TRUE, curvePivot, levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, subLinks, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -95,13 +83,31 @@ A string indicating how the nodes should be placed. Similar to the 'layout' argu
  Number of characters to abbreviate edge labels to (using \code{\link[base]{abbreviate}}). Set to 0 to omit abbreviation.
 }
   \item{sizeMan}{
-  Size of the manifest nodes, sent to the 'vsize' argument in \code{\link[qgraph]{qgraph}}.
+  Width of the manifest nodes, sent to the 'vsize' argument in \code{\link[qgraph]{qgraph}}.
 }
   \item{sizeLat}{
-  Size of the latent nodes, sent to the 'vsize' argument in \code{\link[qgraph]{qgraph}}.
+  Width of the latent nodes, sent to the 'vsize' argument in \code{\link[qgraph]{qgraph}}.
 }
   \item{sizeInt}{
-  Size of the unit vector nodes, sent to the 'vsize' argument in \code{\link[qgraph]{qgraph}}.
+  Width of the unit vector nodes, sent to the 'vsize' argument in \code{\link[qgraph]{qgraph}}.
+}
+  \item{sizeMan2}{
+  Height of the manifest nodes, sent to the 'vsize2' argument in \code{\link[qgraph]{qgraph}}.
+}
+  \item{sizeLat2}{
+  Height of the latent nodes, sent to the 'vsize2' argument in \code{\link[qgraph]{qgraph}}.
+}
+  \item{sizeInt2}{
+  Height of the unit vector nodes, sent to the 'vsize2' argument in \code{\link[qgraph]{qgraph}}.
+}
+  \item{shapeMan}{
+  Shape of the manifest nodes, sent to the 'shape' argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{"square"} or \code{"rectangle"} if width and height differ.
+}
+  \item{shapeLat}{
+  Shape of the latent nodes, sent to the 'shape' argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{"circle"} or \code{"ellipse"} if width and height differ.
+}
+  \item{shapeInt}{
+  Shape of the constant nodes, sent to the 'shape' argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{"triangle"}.
 }
   \item{ask}{
 Specifies the 'ask' parameter in \code{\link[graphics]{par}}. Defaults to TRUE if multiple groups are in the model.
@@ -114,6 +120,15 @@ Logical, should titles be plotted of the group names above each plot?
 }
   \item{title.color}{
 Color of the titles.
+}
+  \item{title.adj}{
+Adjustment of title as used by \code{'adj'} in \code{par}.
+}
+  \item{title.line}{
+Line of title as used by \code{'line'} in \code{title}.
+}
+  \item{title.cex}{
+Size of title as used by \code{'cex.main'} in \code{par}.
 }
   \item{include}{
 Integer vector indicating which groups should be included in the output. e.g., to only plot a diagram for the first group use \code{include = 1}.
@@ -164,6 +179,11 @@ Logical. Set this to FALSE to only show the structural model (omit all manifest 
   \item{thresholdColor}{
 Color of the threshold lines. Defaults to "black"
 }
+
+  \item{thresholdSize}{
+Size of threshold bars relative to the size of the node. 
+}
+
   \item{fixedStyle}{
 A vector of length one or two specifying the color and line type (same as 'lty' in \code{\link[graphics]{par}}) of fixed parameters. Can be both character and numeric. If one of the elements encodes a color it is used to overwrite the color of fixed edges, and if an element can be coerced to a numeric it is used to encode the line type.
 
@@ -185,19 +205,55 @@ Logical, should uncolored nodes obtain a mix of connected colored nodes? Default
   Same as the \code{curvePivot} argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{TRUE} in tree layouts and FALSE otherwise.
 }
 \item{levels}{A numeric vector usually of length 4. Controls the relative vertical position of variable levels (exogenous and endogenous latents and manifests) under default rotation in tree and circle layouts. This can be used to control the spacing between these levels. e.g., \code{c(1,5,6,7)} will create more space between endogenous manifests and latents.}
+
 \item{nodeLabels}{A vector or list to manually overwrite the node labels. Can include expressions.}
+
 \item{edgeLabels}{A vector or list to manually overwrite the edge labels. Can include expressions.}
+
 \item{pastel}{Logical, should default colors (for groups or edge equality constraints) be chosen from pastel colors? If TRUE then \code{\link[colorspace]{rainbow_hcl}} is used.}
+
 \item{rainbowStart}{A number between 0 and 1 indicating the offset used in rainbow functions for default node coloring.}
   \item{exoVar}{
 Should variances of truely exogenous variables (no incomming directed edge) be plotted? Defaults to \code{TRUE} unless \code{style = "lisrel"}.
 }
+  \item{intAtSide}{
+Logical to control if intercepts should be plotted to the side of manifest nodes or at the bottom/top. Defaults only to FALSE if 'residuals=FALSE'.
+}
+  \item{springLevels}{
+Logical indicating if the placement on horizontal levels with \code{tree3} layout should be determined by a force embedded algorithm.
+}
+  \item{nDigits}{
+Number of digits to round numeric values to.
+}
+
   \item{exoCov}{
 Should covariances between truely exogenous variables (no incomming directed edge) be plotted? Defaults to \code{TRUE}.
 }
  \item{centerLevels}{
 Only used if \code{layout} is set to \code{"tree2"}, should each level be centered? Defaults to \code{TRUE}
 }
+  \item{panelGroups}{
+Logical to automatically create a panel plot of multiple group models. Defaults to FALSE.
+}
+  \item{layoutSplit}{
+Logical that can be used to split computing of layout between structural and measurment models. This is very useful in more complicated models where the structural part is best shown by using a spring layout.
+}
+  \item{measurementLayout}{
+Logical indicating the layout algorithm to use for measurement models if \code{layoutSplit = TRUE} (the structural model will obtain a layout given by the \code{layout} argument).
+}
+  \item{subScale}{
+Width of submodels (measurment models) if \code{layoutSplit = TRUE}.
+}
+  \item{subScale2}{
+Height of submodels (measurment models) if \code{layoutSplit = TRUE}.
+}
+  \item{subRes}{
+Integer indicating the resolution of which measurment models can be rotated around their corresponding latent variable. The default, 4, indicates that they can be placed only to polar coordinates. Set to 360 to allow every angle of rotation.
+}
+  \item{subLinks}{
+Vector of variables to link to. Currently not well supported so avoid using this argument.
+}
+
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
 }
