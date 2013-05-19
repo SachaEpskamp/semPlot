@@ -1,4 +1,4 @@
-export(semPaths,semPlotModel,semCors,lisrelModel,ramModel,semSyntax,semMatrixAlgebra,modelMatrices,Imin)
+export(semPaths,semPlotModel,semCors,lisrelModel,ramModel,semSyntax,semMatrixAlgebra,modelMatrices,Imin,semPlotModel.lavaanModel)
 
 # export Classes
 exportClasses(

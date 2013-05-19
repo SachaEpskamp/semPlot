@@ -14,7 +14,7 @@ setClass( "semPlotModel", representation(
   ImpCovs = "list",
   Original = "list"))
 
-setGeneric("semPlotModel.S4", function(object) {
+setGeneric("semPlotModel.S4", function(object,...) {
   standardGeneric("semPlotModel.S4")
 })
 # 
@@ -35,11 +35,11 @@ setGeneric("semPlotModel.S4", function(object) {
 #   }
 # }
 
-semPlotModel <- function (object) {
+semPlotModel <- function (object, ...) {
   # Check if call contains a + operator, if so combine models:
   
   call <- paste(deparse(substitute(object)), collapse = "")
-  if (grepl("\\+",call)) 
+  if (grepl("\\+",call) & !grepl("\"",call) & !grepl("\'",call)) 
   {
     args <- unlist(strsplit(call,split="\\+"))
     obs <- lapply(args,function(x)semPlotModel(eval(parse(text=x))))
@@ -59,7 +59,7 @@ semPlotModel <- function (object) {
   }
 }
 
-semPlotModel.semPlotModel <- function(object) object
+semPlotModel.semPlotModel <- function(object,...) object
 
 
 # semPaths.default <- function(object,...)
@@ -70,11 +70,21 @@ semPlotModel.semPlotModel <- function(object) object
 #   }
 # }
 
-semPlotModel.default <- function(object)
+semPlotModel.default <- function(object,...)
 {
+  if (is(object,'data.frame'))
+  {
+    mod <- try(semPlotModel.lavaanModel(object,...),silent=TRUE)
+    if (!"try-error"%in%class(mod)) return(mod)
+  }
+  
   if (is.character(object))
   {
-    if (!file.exists(object)) stop("file does not exist.")
+    if (!file.exists(object))
+    {
+      mod <- try(semPlotModel.lavaanModel(object,...),silent=TRUE)
+      if (!"try-error"%in%class(mod)) return(mod) else stop("Input string neither an existing file or Lavaan model.")
+    }
     # Find file:
     if (grepl("\\.xml",object,ignore.case=TRUE))
     {
@@ -99,6 +109,9 @@ semPlotModel.default <- function(object)
     
     # If all else fais, just try everything and assume you get errors 
     # if it is wrong:
+    mod <- try(semPlotModel.lavaanModel(object,...),silent=TRUE)
+    if (!"try-error"%in%class(mod)) return(mod)
+    
     mod <- try(semPlotModel.mplus.model(object),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
 

@@ -182,7 +182,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
-                     subLinks, ...){
+                     subLinks, modelOpts = list(), ...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -194,7 +194,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     for (i in 2:length(obs)) object <- object + obs[[i]]
   }
   
-  if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object)
+  if (!"semPlotModel"%in%class(object)) object <- do.call(semPlotModel,c(list(object),modelOpts))
   stopifnot("semPlotModel"%in%class(object))
   
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
