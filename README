@@ -1,3 +1,7 @@
 Path diagrams and visual analysis of various SEM packages' output.
 
 For more information, see: http://sachaepskamp.com/semPlot
+
+Devellopmental 'shiny' applications:
+# Lavaan model writer:
+shiny:::runGist("https://gist.github.com/SachaEpskamp/5607556")
