@@ -1199,11 +1199,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     } else if (grepl("stand|std",what,ignore.case=TRUE))
     {
       Edgelist <- cbind(Edgelist,GroupPars$std)
-      if (edge.labels) eLabels <- as.character(round(GroupPars$std,2))
+      if (edge.labels) eLabels <- GroupPars$std
     } else if (grepl("est|par",what,ignore.case=TRUE))
     {
       Edgelist <- cbind(Edgelist,GroupPars$est)
-      if (edge.labels) eLabels <- as.character(round(GroupPars$est,2))
+      if (edge.labels) eLabels <- GroupPars$est
     } else if (grepl("eq|cons",what,ignore.case=TRUE))
     {
       #       eColor <- rep(rgb(0.5,0.5,0.5),nrow(Edgelist))
