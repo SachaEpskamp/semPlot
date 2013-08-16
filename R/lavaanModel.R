@@ -38,7 +38,7 @@ semPlotModel.lavaanModel <- function(object, ...)
   
   # Create edges dataframe
   semModel@Pars <- data.frame(
-    label = object$label,
+     label = object$label,
     lhs = ifelse(object$op=="~"|object$op=="~1",object$rhs,object$lhs),
     edge = "--",
     rhs = ifelse(object$op=="~"|object$op=="~1",object$lhs,object$rhs),
@@ -56,17 +56,13 @@ semPlotModel.lavaanModel <- function(object, ...)
   semModel@Pars$edge[object$op=="~1"] <- "int"
   semModel@Pars$edge[grepl("\\|",object$op)] <- "|"
   
-  # Remove constraints:
-  semModel@Pars  <- semModel@Pars[!object$op %in% c('<', '>'),]
-  
   # Move thresholds to Thresholds slot:
   semModel@Thresholds <- semModel@Pars[grepl("\\|",semModel@Pars$edge),-(3:4)]
   # Remove thresholds from Pars:
 #   semModel@Pars <- semModel@Pars[!grepl("\\|",semModel@Pars$edge),]
   
-
   # Remove weird edges:
-  semModel@Pars <- semModel@Pars[!object$op%in%c(':=','<','>','==','|'),]
+  semModel@Pars <- semModel@Pars[!object$op%in%c(':=','<','>','==','|','<', '>'),]
 
   
   semModel@Vars <- data.frame(
