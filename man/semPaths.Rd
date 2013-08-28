@@ -345,7 +345,7 @@ semPaths(res,"std","hide", intAtSide=TRUE)
 
 # MIMIC model ----------------------------------------------------
 ## Lavaan
-
+\dontrun{
 library("lavaan")
 
 # Example 5.8 from mplus user guide:
@@ -372,7 +372,7 @@ semPaths(fit,title=FALSE, curvePivot = TRUE, exoVar = FALSE, exoCov = FALSE)
 semPaths(fit,"std",edge.label.cex=0.5, curvePivot = TRUE, exoVar = FALSE, 
   exoCov = FALSE)
 
-
+}
 ## Mplus
 
 # Same model, now using mplus output:
@@ -387,6 +387,7 @@ semPaths(outfile,intercepts=FALSE)
 
 
 # Thresholds  -----------------------------------------------------
+\dontrun{
 ## Lavaan
 
 # Example 5.8 from mplus user guide:
@@ -402,7 +403,7 @@ fit <- lavaan::cfa(model, data=Data)
 
 # Plot path diagram:
 semPaths(fit,intercepts=FALSE)
-
+}
 
 ## Mplus
 
