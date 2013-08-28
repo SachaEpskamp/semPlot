@@ -74,7 +74,7 @@ semPlotModel.default <- function(object,...)
 {
   if (is(object,'data.frame'))
   {
-    mod <- try(semPlotModel.lavaanModel(object,...),silent=TRUE)
+    mod <- try(semPlotModel_lavaanModel(object,...),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
   }
   
@@ -82,7 +82,7 @@ semPlotModel.default <- function(object,...)
   {
     if (!file.exists(object))
     {
-      mod <- try(semPlotModel.lavaanModel(object,...),silent=TRUE)
+      mod <- try(semPlotModel_lavaanModel(object,...),silent=TRUE)
       if (!"try-error"%in%class(mod)) return(mod) else stop("Input string neither an existing file or Lavaan model.")
     }
     # Find file:
@@ -109,7 +109,7 @@ semPlotModel.default <- function(object,...)
     
     # If all else fais, just try everything and assume you get errors 
     # if it is wrong:
-    mod <- try(semPlotModel.lavaanModel(object,...),silent=TRUE)
+    mod <- try(semPlotModel_lavaanModel(object,...),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
     
     mod <- try(semPlotModel.mplus.model(object),silent=TRUE)

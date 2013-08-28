@@ -15,6 +15,7 @@
 \alias{semPlotModel.msemObjectiveML}
 \alias{semPlotModel_Amos}
 \alias{semPlotModel_Onyx}
+\alias{semPlotModel_lavaanModel}
 \title{
 SEM model representation
 }
@@ -22,28 +23,29 @@ SEM model representation
 Methods to read a SEM object and return a \code{\link{semPlotModel-class}} object.
 }
 \usage{
-\method{semPlotModel}{default}(object)
-\method{semPlotModel}{lm}(object)
-\method{semPlotModel}{principal}(object)
-\method{semPlotModel}{princomp}(object)
-\method{semPlotModel}{loadings}(object)
-\method{semPlotModel}{factanal}(object)
+\method{semPlotModel}{default}(object, \dots)
+\method{semPlotModel}{lm}(object, \dots)
+\method{semPlotModel}{principal}(object, \dots)
+\method{semPlotModel}{princomp}(object, \dots)
+\method{semPlotModel}{loadings}(object, \dots)
+\method{semPlotModel}{factanal}(object, \dots)
 % \method{semPlotModel}{lavaan}(object)
 \method{semPlotModel}{lisrel}(object, \dots)
 % \method{semPlotModel}{semspec}(object)
-\method{semPlotModel}{mplus.model}(object)
-\method{semPlotModel}{sem}(object)
-\method{semPlotModel}{msem}(object)
-\method{semPlotModel}{msemObjectiveML}(object)
+\method{semPlotModel}{mplus.model}(object, \dots)
+\method{semPlotModel}{sem}(object, \dots)
+\method{semPlotModel}{msem}(object, \dots)
+\method{semPlotModel}{msemObjectiveML}(object, \dots)
 semPlotModel_Amos(object)
 semPlotModel_Onyx(object)
+semPlotModel_lavaanModel(object, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
-An object contaning the result of a SEM or GLM analysis, or a string contaning the file path to the output file of a SEM program.
+An object contaning the result of a SEM or GLM analysis, or a string contaning the file path to the output file of a SEM program. Or a Lavaan model.
 }
-\item{\dots}{Arguments sent to 'lisrelModel'}
+\item{\dots}{Arguments sent to 'lisrelModel', not used in other methods.}
 }
 \details{
 A detailed overview of which packages are supported and what is supported for each of them will soon be on my website.

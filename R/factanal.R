@@ -6,7 +6,7 @@
 
 
 ### SINGLE GROUP MODEL ###
-semPlotModel.factanal <- function(object)
+semPlotModel.factanal <- function(object, ...)
 {
   
   # Check if object is of class "sem":

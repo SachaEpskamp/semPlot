@@ -6,7 +6,7 @@
 
 
 ### SINGLE GROUP MODEL ###
-semPlotModel.princomp <- function(object)
+semPlotModel.princomp <- function(object, ...)
 {
   
   # Check if object is of class "sem":

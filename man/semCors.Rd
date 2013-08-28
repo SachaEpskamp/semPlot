@@ -8,7 +8,7 @@ Visually inspect implied and observed correlations
 This function is still in devellopment.
 }
 \usage{
-semCors(object, include, vertical = TRUE, titles = FALSE, ...)
+semCors(object, include, vertical = TRUE, titles = FALSE, layout, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -23,6 +23,9 @@ Should the layout be vertical or horizontal?
 }
   \item{titles}{
 Logical, should titles indicating the group and observed/implied correlations be plotted?
+}
+\item{layout}{
+An optional layout matrix send to \code{\link[qgraph]{qgraph}}.
 }
   \item{\dots}{
 Arguments sent to \code{\link[qgraph]{qgraph}}

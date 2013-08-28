@@ -1,5 +1,5 @@
 
-semPlotModel.lm <- function(object)
+semPlotModel.lm <- function(object, ...)
 {
   coef <- as.matrix(coef(object))
   Nr <- nrow(coef)

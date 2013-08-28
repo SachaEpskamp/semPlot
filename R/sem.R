@@ -16,7 +16,7 @@
 
 
 ### SINGLE GROUP MODEL ###
-semPlotModel.sem <- function(object)
+semPlotModel.sem <- function(object, ...)
 {
   
   # Check if object is of class "sem":
@@ -78,7 +78,7 @@ semPlotModel.sem <- function(object)
 
 
 ### MUTLI GROUP MODEL ###
-semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object)
+semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object, ...)
 {
   
   nGroup <- length(object$ram)

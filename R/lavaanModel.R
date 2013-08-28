@@ -7,7 +7,7 @@
 
 
 ## EXTRACT MODEL ###
-semPlotModel.lavaanModel <- function(object, ...)
+semPlotModel_lavaanModel <- function(object, ...)
 {
 
   # Check if parTable, otherwise run lavaanify:

@@ -5,7 +5,7 @@
 # 
 
 ### SINGLE GROUP MODEL ###
-semPlotModel.loadings <- function(object)
+semPlotModel.loadings <- function(object, ...)
 {
   
   # Check if object is of class "sem":

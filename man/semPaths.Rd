@@ -21,7 +21,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, 
   springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, 
   panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
-  subScale2, subRes = 4, subLinks, ...)
+  subScale2, subRes = 4, subLinks, modelOpts = list(), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -265,6 +265,10 @@ Integer indicating the resolution of which measurment models can be rotated arou
 }
   \item{subLinks}{
 Vector of variables to link to. Currently not well supported so avoid using this argument.
+}
+
+  \item{modelOpts}{
+A lists containing arguments sent to \code{\link{semPlotModel}} in case the input is not of class \code{semPlotModel}.
 }
 
   \item{\dots}{

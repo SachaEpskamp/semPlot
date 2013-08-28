@@ -9,7 +9,7 @@ Use a list contaning several SEM objects (from any source) to plot them as the s
 }
 \usage{
 \method{+}{semPlotModel}(x,y)
-\method{semPlotModel}{list}(object)
+\method{semPlotModel}{list}(object, \dots)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -21,6 +21,9 @@ A \code{"semPlotModel"} object
 }
   \item{object}{
 An object contaning the result of a SEM or GLM analysis, or a string contaning the file path to the output file of a sEM program.
+}
+  \item{\dots}{
+Not used.
 }
 }
 \author{

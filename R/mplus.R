@@ -5,7 +5,7 @@
 #   invisible(semPaths(semPlotModel(object),...))
 # }
 
-semPlotModel.mplus.model <- function(object)
+semPlotModel.mplus.model <- function(object, ...)
 {
   # Check for mplusAutomation:
   if (!require("MplusAutomation")) stop("'MplusAutomation' package must be installed to read Mplus output.")
