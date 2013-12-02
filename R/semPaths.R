@@ -174,15 +174,17 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
 }
 
 semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,
-                     intStyle="multi",rotation=1,curve,nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,sizeInt = 2, 
+                     intStyle="multi",rotation=1,curve, curvature = 1, nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,
                      sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",
-                     title.adj = 0.1, title.line = -1, title.cex = 0.8,
+                     sizeInt = 2,  title.adj = 0.1, title.line = -1, title.cex = 0.8,
                      include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,
                      reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,thresholdColor,thresholdSize = 0.5, fixedStyle=2,freeStyle=1,
-                     as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot,levels,nodeLabels,edgeLabels,
+                     as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot=FALSE,levels,nodeLabels,edgeLabels,
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
-                     subLinks, modelOpts = list(), ...){
+                     subLinks, modelOpts = list(), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  c("exo cov","load dest"), 
+                     equalizeManifests = TRUE,  covAtResiduals = TRUE,
+                     ...){
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -198,6 +200,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   stopifnot("semPlotModel"%in%class(object))
   
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
+  
+  ### edgeConnectPoints dummy:
+  ECP <- NULL
   
   # Set defaults size and shape:
   if (missing(sizeMan2)) sizeMan2 <- sizeMan
@@ -247,10 +252,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   }
   curveDefault <- curve
   
-  if (missing(curvePivot))
-  {
-    curvePivot <- grepl("tree",layout)
-  }
+#   if (missing(curvePivot))
+#   {
+#     curvePivot <- grepl("tree",layout)
+#   }
   
   if (missing(whatLabels))
   {
@@ -763,6 +768,15 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           {
             Layout[exoLat,1] <- seq(-1,1,length=length(exoLat)+2)[-c(1,length(exoLat)+2)]
           }
+
+          
+          if (equalizeManifests)
+          {
+            # Max of number of nodes in lvls 1 and 4:
+            EndoHorRange <- max(sapply(c(0,1,4,5), function(x) sum(Layout[,2] == x)))
+            for (lvl in c(0,1,4,5)) Layout[Layout[,2]==lvl,1] <- sum(Layout[,2]==lvl) * Layout[Layout[,2]==lvl,1] / EndoHorRange
+          }
+          
         } else stop("MeanStyle not supported")
         
         # Optimize layout if reorder = TRUE
@@ -924,7 +938,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           loopRotation[exoLat] <- 6/4 * pi
         }
         
-        loopRotation <- loopRotation - 0.5 * (rotation-1) *pi
         
         if (any(GroupVars$exogenous) & optimizeLatRes)
         {
@@ -979,7 +992,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         Layout[,2] <- levels[as.numeric(as.factor(Layout[,2]))]
       }
       
-      # Set curves and rotate:    
+      # Set curves, edgeConnectPoints and rotate:    
       if (layout %in% c("tree","tree2","tree3"))
       {
         inBetween <- function(x)
@@ -989,16 +1002,116 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         # Curves:
         inBet <- apply(Edgelist,1,inBetween)
         inBet[inBet>0] <- as.numeric(as.factor(inBet[inBet>0]))
-        if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
+
+#         if (!grepl("lisrel",style,ignore.case=TRUE) | all(!GroupVars$exogenous) | !residuals)
+#         {
+        if (isTRUE(curveAdjacent))
         {
-          Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int",ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
+          percurveAdjacent <- rep(TRUE,nrow(Edgelist))  
         } else {
-          Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
+          percurveAdjacent <- rep(FALSE,nrow(Edgelist))  
+        
+          curveAdjacent <- gsub("<->","cov",curveAdjacent)
+          curveAdjacent <- gsub("(->)|(~>)","reg",curveAdjacent)
+        
+          if (is.character(curveAdjacent))
+          {
+            percurveAdjacent[(any(grepl("reg",curveAdjacent,ignore.case=TRUE))&GroupPars$edge%in%c("->","~>",ignore.case=TRUE))|(any(grepl("cov",curveAdjacent))&GroupPars$edge%in%c("<->"))] <- TRUE
+          }
         }
+        
+          Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int",ifelse(inBet<(1-percurveAdjacent),0,curve+curvature*(inBet)/max(1,max(inBet))*curve),NA)
+#         } else {
+#           Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
+#         }
         ### If origin node is "right" of  destination node, flip curve:
         Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]] <- -1 * Curve[Layout[Edgelist[,1],1] > Layout[Edgelist[,2],1]]
         ## If endo man, flip again:
         Curve <- ifelse(Edgelist[,1]%in%endoMan | Edgelist[,2]%in%endoMan, -1 *  Curve, Curve)
+        
+        
+        ### Cardinal options:
+        # Fuzzy matching:
+        # exo/endo
+        # man/lat
+        # cov/reg/load
+        # start/end
+        
+        if (any(grepl("all",cardinal)) || isTRUE(cardinal)) cardinal <- "exo endo man lat cov reg load source dest"
+        
+        ### Edge connect points:
+        if (length(cardinal) > 0 && !identical(cardinal,FALSE) && !all(grepl("none",cardinal)))
+        {
+          
+          if (packageDescription("qgraph")$Version == "1.2.3") warning("'cardinal' argument requires qgraph version 1.2.4")
+          
+          ECP <- matrix(NA,nrow(Edgelist),2)
+          
+          lvlDiff <- Layout[Edgelist[,1],2] - Layout[Edgelist[,2],2]
+          
+          ECP[lvlDiff>0,1] <- pi
+          ECP[lvlDiff>0,2] <- 0
+          
+          ECP[lvlDiff<0,1] <- 0
+          ECP[lvlDiff<0,2] <- pi
+          
+          
+          ECP[lvlDiff==0,1] <- ifelse(Curve!=0, ifelse((loopRotation[Edgelist[,1]]+0.5*pi)%%2*pi <= pi, pi, 0), NA)[lvlDiff==0]
+          ECP[lvlDiff==0,2] <- ifelse(Curve!=0, ifelse((loopRotation[Edgelist[,1]]+0.5*pi)%%2*pi <= pi, pi, 0), NA)[lvlDiff==0]
+          
+          
+          ECP <- (ECP - 0.5 * (rotation-1) * pi ) %% (2*pi)
+          
+          # All nonspecified to NA:
+          allSelect <- matrix(FALSE,nrow(ECP),2)
+          for (cardGroup in cardinal)
+          {
+            select <- matrix(grepl("(exo)|(endo)|(man)|(lat)|(cov)|(reg)|(load)|(src)|(source)|(dest)",cardGroup),nrow(ECP),2)
+            
+            if (grepl("(endo)|(exo)",cardGroup))
+            {
+              
+              # First node first / endo:
+              select <- select & ((grepl("endo",cardGroup,ignore.case=TRUE) & !GroupVars$exogenous[Edgelist[,1]]) | 
+                                    (grepl("exo",cardGroup,ignore.case=TRUE) & GroupVars$exogenous[Edgelist[,1]] )
+              )
+            }
+            
+            if (grepl("(lat)|(man)",cardGroup))
+            {
+              
+              # Any node man / latent
+              select <- select & ((grepl("lat",cardGroup,ignore.case=TRUE) & (!GroupVars$manifest[Edgelist[,1]] |  !GroupVars$manifest[Edgelist[,2]])) | 
+                                    (grepl("man",cardGroup,ignore.case=TRUE) & (GroupVars$manifest[Edgelist[,1]] |  GroupVars$manifest[Edgelist[,2]]) )
+              )
+            }
+            
+            if (grepl("(cov)|(reg)|(load)",cardGroup))
+            {        
+              # Edge is cov/reg/loading:
+              select <- select & ((grepl("cov",cardGroup,ignore.case=TRUE) & (GroupPars$edge=="<->")) | 
+                                    (grepl("reg",cardGroup,ignore.case=TRUE) & (GroupPars$edge%in%c("->","~>") & !(!GroupVars$manifest[Edgelist[,1]] & GroupVars$manifest[Edgelist[,2]]))) | 
+                                    (grepl("load",cardGroup,ignore.case=TRUE) & (GroupPars$edge%in%c("->","~>") & (!GroupVars$manifest[Edgelist[,1]] & GroupVars$manifest[Edgelist[,2]]))                         )
+              )
+            }
+            
+            if (grepl("(src)|(source)|(dest)",cardGroup))
+            {                
+              # Start/end:
+              select[,1] <- select[,1] & grepl("(src)|(source)",cardGroup,ignore.case=TRUE)
+              select[,2] <- select[,2] & grepl("dest",cardGroup,ignore.case=TRUE)
+            }
+            
+            allSelect[select] <- TRUE
+          }
+          
+          ECP[!allSelect] <- NA
+          
+        }
+        
+        
+        ### Rotate loopRotation:
+        loopRotation <- loopRotation - 0.5 * (rotation-1) *pi
         
         
         #         for (i in unique(Layout[,2]))
@@ -1384,7 +1497,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     }
     
     #     ### CONVERT TO LISREL STYLE ###
-    if (grepl("lisrel",style,ignore.case=TRUE) & residuals)
+    if (grepl("lisrel",style,ignore.case=TRUE) & residuals & covAtResiduals)
     {
       isResid <- GroupPars$edge == "<->" & GroupPars$lhs != GroupPars$rhs & (GroupPars$lhs %in% GroupPars$lhs[GroupPars$edge == "<->" & GroupPars$lhs == GroupPars$rhs] & GroupPars$rhs %in% GroupPars$rhs[GroupPars$edge == "<->" & GroupPars$lhs == GroupPars$rhs])
     } else isResid <- rep(FALSE,nrow(Edgelist))
@@ -1581,7 +1694,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     }
     
     # curveScale:
-    curveScale <- ! layout %in% c('tree','tree2','tree3')
+    curveScale <- ! layout %in% c('tree','tree2','tree3')     
+#     curveScale <- TRUE
     
     ### RUN QGRAPH ###
     
@@ -1616,6 +1730,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              barColor = tColor,
                                              barLength = thresholdSize,
                                              barsAtSide = ThreshAtSide,
+                                             edge.label.cex = edge.label.cex,
+                                             edgeConnectPoints = ECP,
                                              ...)
 
 #     if (thresholds)

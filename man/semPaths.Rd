@@ -10,18 +10,20 @@ This function creates a path diagram of a SEM model (or general linear model), w
 \usage{
 semPaths(object, what = "paths", whatLabels, style, layout = "tree", 
   intercepts = TRUE, residuals = TRUE, thresholds = TRUE, intStyle = "multi", 
-  rotation = 1, curve, nCharNodes = 3, nCharEdges = 3, sizeMan = 5, sizeLat = 8, 
-  sizeInt = 2, sizeMan2, sizeLat2, sizeInt2, shapeMan, shapeLat, 
+  rotation = 1, curve, curvature = 1, nCharNodes = 3, nCharEdges = 3, sizeMan = 5,
+   sizeLat = 8,  sizeInt = 2, sizeMan2, sizeLat2, sizeInt2, shapeMan, shapeLat, 
   shapeInt = "triangle", ask, mar, title, title.color = "black", title.adj = 0.1, 
   title.line = -1, title.cex = 0.8, include, combineGroups = FALSE, manifests, 
   latents, groups, color, residScale, gui = FALSE, allVars = FALSE, edge.color, 
   reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, thresholdColor, 
   thresholdSize = 0.5, fixedStyle = 2, freeStyle = 1, 
-  as.expression = character(0), optimizeLatRes = FALSE, mixCols = TRUE, curvePivot, 
+  as.expression = character(0), optimizeLatRes = FALSE, mixCols = TRUE, curvePivot = FALSE, 
   levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, 
   springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, 
   panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
-  subScale2, subRes = 4, subLinks, modelOpts = list(), ...)
+  subScale2, subRes = 4, subLinks, modelOpts = list(), modelOpts = list(), 
+  curveAdjacent = FALSE, edge.label.cex = 0.8,  cardinal = FALSE, equalizeManifests = TRUE, 
+  covAtResiduals = TRUE,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -89,6 +91,7 @@ A string indicating how the nodes should be placed. Similar to the 'layout' argu
   \item{curve}{
   The curvature of the edges. In tree layouts this argument only curves the edges that are between nodes on the same level. e.g., correlations between exogenous manifest variables.
 }
+  \item{curvature}{Sets the strength of scaling in curvature for curved edges at the same horizontal level in tree layouts. The curve will be set to \code{curve + curvature * n / max(n)}, where \code{n} is the number of nodes in between the two connected nodes.}
   \item{nCharNodes}{
  Number of characters to abbreviate node labels to (using \code{\link[base]{abbreviate}}). Set to 0 to omit abbreviation.
 }
@@ -271,6 +274,16 @@ Vector of variables to link to. Currently not well supported so avoid using this
 A lists containing arguments sent to \code{\link{semPlotModel}} in case the input is not of class \code{semPlotModel}.
 }
 
+  \item{curveAdjacent}{What edges between adjacent horizontal nodes be curved? Can be \code{'<->'} or \code{'cov'} to indicate bidirectional covariances, \code{'->'} or \code{'reg'} for directed regressions or a vector containing both.}
+  
+  \item{edge.label.cex}{Controls the font size of the edge labels. Same as in \code{\link[qgraph]{qgraph}} except that the default is now 0.8.}
+
+  \item{cardinal}{Should edges in a tree layout connect to the four cardinal points of one of the borders of the node rather than point to the center of the node? Can be set to \code{TRUE} or \code{"all"} to enamble this behavior for all edges and \code{FALSE} or \code{"none"} to disable this behavior for all edges. Alternatively a vector with strings can be specified in which each string specifies a certain group of edges. Fuzzy matching is used on the strings \code{"exo"} for edges with the first node being exogenous (or indicator of exogenous latent), \code{endo} for edges with first node being endogeonous, \code{manifest} for edges connected to any manifest node, \code{latent} for edges connected to any latent node, \code{cov} for covariances, \code{reg} for regressions, \code{load} for factor-loadings, \code{source} for only the start of an edge and \code{end} for only the end of a node. These strings can be combined at will. For example, \code{cardinal = c("exo cov","load end")} (the default) or equivelantly \code{cardinal = c("exogenous covariances","source of loadings")} will only cardenalize the edges that repressent exogenous covariances or the end of factor loadings. }
+
+\item{equalizeManifests}{Logical. Should the distances between manifest nodes in the \code{tree1} layout be equalized? Defaults to \code{TRUE}}
+
+\item{covAtResidual}{Logical, should covariances be drawn at the start of residuals when \code{style="lisrel"} is used? Defaults to TRUE.}
+
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function.
 }
@@ -341,6 +354,11 @@ semPaths(res, intAtSide=TRUE)
 # Standardized estimates:
 semPaths(res,"std","hide", intAtSide=TRUE)
 
+# Simple CFA -------------------------------------------
+library("lavaan")
+example(cfa)
+
+semPaths(fit, 'std', 'est', curvePivot = FALSE, curveAdjacent = TRUE, style = "lisrel")
 
 
 # MIMIC model ----------------------------------------------------

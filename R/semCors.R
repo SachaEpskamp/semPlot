@@ -33,5 +33,6 @@ semCors <- function(object,include,vertical=TRUE,titles=FALSE,layout,...){
       if (titles) title(paste("Group",Groups[g],"(implied)"),line=3)
     }
   }
-  return(Res)
+  
+  invisible(Res)
 }
