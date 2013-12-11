@@ -217,9 +217,6 @@ Logical. If this is TRUE, the angle of the incoming residuals on latent variable
   \item{mixCols}{
 Logical, should uncolored nodes obtain a mix of connected colored nodes? Defaults to \code{TRUE}.
 }
-\item{curvePivot}{
-  Same as the \code{curvePivot} argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{TRUE} in tree layouts and FALSE otherwise.
-}
 \item{levels}{A numeric vector usually of length 4. Controls the relative vertical position of variable levels (exogenous and endogenous latents and manifests) under default rotation in tree and circle layouts. This can be used to control the spacing between these levels. e.g., \code{c(1,5,6,7)} will create more space between endogenous manifests and latents.}
 
 \item{nodeLabels}{A vector or list to manually overwrite the node labels. Can include expressions.}
@@ -285,9 +282,95 @@ A lists containing arguments sent to \code{\link{semPlotModel}} in case the inpu
 \item{covAtResidual}{Logical, should covariances be drawn at the start of residuals when \code{style="lisrel"} is used? Defaults to TRUE.}
 
   \item{\dots}{
-  Arguments sent to the \code{\link[qgraph]{qgraph}} function.
+  Arguments sent to the \code{\link[qgraph]{qgraph}} function. These arguments can further control the output of the graph. Some usefull arguments in drawing path diagrams are:
+  \describe{
+  \item{edge.width}{
+    Scales the edge width and arrow size of the plot. These can also be manually set using 'esize' and 'asize'.
+  }
+    \item{node.width}{
+    Scales the width of nodes and also the height if shapes circle and square are used. Can also be a vector with scalar for each node.
+  }
+    \item{node.height}{
+    Scales the height of nodes. Can also be a vector with scalar for each node. Not used with circle and square shapes.
+  }
+  
+    \item{esize}{Size of the largest edge (or what it would be if there was an edge with weight maximum). Defaults to: max((-1/72)*(nNodes)+5.35,1) for weighted graphs and 2 for unweighted graphs. In directed graphs these values are halved.}
+    
+    \item{asize}{Size of the arrowhead. Defaults to 2 for graphs with more than 10 nodes and 2 to smaller graphs.}
+  
+  \item{minimum}{Edges with absolute weights under this value are omitted. Defaults to 0 for graphs with less than 50 nodes or 0.1 for larger graphs.}
+\item{maximum}{qgraph regards the highest of the maximum or highest absolute edge weight as the highest weight to scale the edge widths too. To compare several graphs, set this argument to a higher value than any edge weight in the graphs (typically 1 for correlations).}
+\item{cut}{In weighted graphs, this argument can be used to cut the scaling of edges in width and color saturation. Edges with absolute weights over this value will have the strongest color intensity and become wider the stronger they are, and edges with absolute weights under this value will have the smallest width and become vaguer the weaker the weight. If this is set to NULL, no cutoff is used and all edges vary in width and color. Defaults to NULL for graphs with less then 50 nodes and 0.3 to larger graphs.}
+
+\item{details}{Logical indicating if minimum, maximum and cutoff score should be printed under the graph. Defaults to FALSE.}
+
+\item{mar}{A vector of the form c(bottom, left, top, right) which gives the margins. Works similar to the argument in par(). Defaults to c(3,3,3,3)}
+  \item{filetype}{A character containing the file type to save the output in. "R" outputs in a new R window, "pdf" creates a pdf file. "svg" creates a svg file (requires RSVGTipsDevice). "tex" creates LaTeX code for the graph (requires tikzDevice). 'jpg', 'tiff' and 'png' can also be used. If this is given any other string (e.g. filetype="") no device is opened. Defaults to 'R' if the current device is the NULL-device or no new device if there already is an open device. A function such as \code{x11} can also be used}
+	\item{filename}{Name of the file without extension}
+	\item{width}{Width of the plot, in inches}
+	\item{height}{Height of the plot, in inches}
+  \item{normalize}{Logical, should the plot be normalized to the plot size. If TRUE (default) border width, vertex size, edge width and arrow sizes are adjusted to look the same for all sizes of the plot, corresponding to what they would look in a 7 by 7 inches plot if normalize is FALSE.}
+  
+      \item{DoNotPlot}{Runs qgraph but does not plot. Useful for saving the output (i.e. layout) without plotting}
+  \item{plot}{Logical. Should a new plot be made? Defaults to TRUE. Set to FALSE to add the graph to the existing plot.}
+	\item{rescale}{Logical. Defines if the layout should be rescaled to fit the -1 to 1 x and y area. Defaults to TRUE. Can best be used in combination with plot=FALSE.}
+  
+    \item{label.cex}{Scalar on the label size.}
+    \item{label.color}{Character containing the color of the labels, defaults to "black"}
+    \item{borders}{Logical indicating if borders should be plotted, defaults to TRUE.}
+  \item{border.color}{Color vector indicating colors of the borders. Is repeated if length is equal to 1. Defaults to "black"}
+    \item{border.width}{Controls the width of the border. Defaults to 2 and is comparable to 'lwd' argument in 'points'.}
+    
+        \item{polygonList}{ A list contaning named lists for each element to include polygons to lookup in the \code{shape} arguments. Each element must be named as they are used in \code{shape} and contain a list with elements \code{x} and \code{y} contaning the coordinates of the polygon. By default \code{ellipse} and \code{heart} are added to this list. These polygons are scaled according to \code{vsize} and \code{vsize2}}
+  
+        \item{vTrans}{Transparency of the nodes, must be an integer between 0 and 255, 255 indicating no transparency. Defaults to 255}
+        
+          \item{label.prop}{Controls the proportion of the width of the node that the label rescales to. Defaults to 0.
+  9.}
+    \item{label.norm}{A single string that is used to normalize label size. If the width of the label is lower than the width of the hypothetical label given by this argument the width of label given by this argument is used instead. Defaults to "OOO" so that every label up to three characters has the same fontsize.}
+    \item{label.scale}{Logical indicating if labels should be scaled to fit the node. Defaults to TRUE.}
+\item{label.font}{Integer specifying the label font of nodes. Can be a vector with value for each node}
+
+
+   \item{posCol}{Color of positive edges. Can be a vector of two to indicate color of edges under 'cut' value and color of edges over 'cut' value. If 'fade is set to TRUE the first color will be faded the weaker the edge weight is. If this is only one element this color will also be used for edges stronger than the 'cut' value. Defaults to c("#009900","darkgreen")}
+\item{negCol}{Color of negative edges. Can be a vector of two to indicate color of edges under 'cut' value and color of edges over 'cut' value. If 'fade is set to TRUE the first color will be faded the weaker the edge weight is. If this is only one element this color will also be used for edges stronger than the 'cut' value. Defaults to c("#BF0000","red")}
+\item{unCol}{Color to indicate the default edge color of unweighted graphs. Defaults to "#808080".}
+\item{colFactor}{Exponent of transformation in color intensity of relative strength. Defaults to 1 for linear behavior.}
+  \item{trans}{In weighted graphs: logical indicating if the edges should fade to white (FALSE) or become more transparent (TRUE; use this only if you use a background). In directed graphs this is a value between 0 and 1 indicating the level of transparency. (also used as 'transparency')}
+    \item{fade}{if TRUE (default) and if 'edge.color' is assigned, transparency will be added to edges that are not transparent (or for which no transparency has been assigned) relative to the edge strength, similar if 'trans' is set to TRUE.}
+  \item{loop}{This can be used to scale the size of the loop. defaults to 1.}
+        
+         \item{curvePivot}{Quantile to pivot curves on. This can be used to, rather than round edges, make straight edges as curves with "knicks" in them. Can be logical or numeric. \code{FALSE} (default) indicates no pivoting in the curved edges, a number indicates the quantile (and one minus this value as quantile) on which to pivot curved edges and \code{TRUE} indicates a value of 0.1.}
+        \item{curvePivotShape}{The shape of the curve around the pivots, as used in \code{xspline}. Defaults to \code{0.25}.}
+        
+            \item{edge.label.bg}{Either a logical or character vector/matrix. Indicates the background behind edge labels. If TRUE (default) a white background is plotted behind each edge label. If FALSE no background is plotted behind edge labels. Can also be a single color character, a vector or matrix of color vectors for each edge.}
+    \item{edge.label.position}{Vetor of numbers between 0 and 1 controlling the relative position of each edge label. Defaults to 0.5 for placing edge labels at the middle of the edge.}
+\item{edge.label.font}{Integer specifying the label font of edges. Can be a vector or matrix with value for each node}
+
+  \item{layout.par}{A list of arguments passed to \code{\link{qgraph.layout.fruchtermanreingold}} when layout="spring" or to an igraph function when such a function is assigned to 'layout'}
+  
+    \item{bg}{If this is TRUE, a background is plotted in which node colors cast a light of that color on a black background. Can also be a character containing the color of the background Defaults to FALSE}
+  \item{bgcontrol}{The higher this is, the less light each node gives if bg=TRUE. Defaults to 6.}
+	\item{bgres}{square root of the number of pixels used in bg=TRUE, defaults to 100.}
+  
+    \item{pty}{See 'par'}
+    
+    \item{font}{Integer specifying the default font for node and edge labels}
+    
+    
+      \item{arrows}{A logical indicating if arrows should be drawn, or a number indicating how much arrows should be drawn on each edge. If this is TRUE, a simple arrow is plotted, if this is a number, arrows are put in the middle of the edges.}
+  \item{arrowAngle}{Angle of the arrowhead, in radians. Defaults to pi/8 for unweighted graphs and pi/4 for weighted graphs.}
+	\item{asize}{Size of the arrowhead. Defaults to 2 for graphs with more than 10 nodes and 2 to smaller graphs.}
+	\item{open}{Logical indicating if open (TRUE) or closed (FALSE) arrowheads should be drawn.}
+  
+    \item{weighted}{Logical that can be used to force either a weighted graph (TRUE) or an unweighted graph(FALSE).}
+  
+    \item{XKCD}{If set to TRUE the graph is plotted in XKCD style based on http://stackoverflow.com/a/12680841/567015.}
+    
+  }
 }
 }
+
 
 \details{
 The default \code{"tree"} layout under default rotation places the nodes in one of four horizontal levels. At the top the exogenous manifest variables, under that the exogenous latent variables, under that the endogenous latent variables and at the bottom the endogenous manifest variables. If one of these kinds of variables does not exist its level is omitted. Afterwards, the \code{rotation} argument will rotate the graph and the \code{"circle"} layout will make the layout circular using these levels as nested circles.

@@ -18,172 +18,17 @@
 # fixedStyle: if coercible to numeric lty is assigned this value, else a color for color representation. If this argument is not a number or color representation the edge is not displayed differently.
 
 
-## Mode function:
-Mode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-
-# Function to scale and rotate layouts:
-LayoutScaler <- function(x, xrange=1, yrange=1)
-{
-  if ((max(x[,1]) - min(x[,1])) == 0) x[,1] <- mean(xrange) else x[,1] <- (x[,1] - min(x[,1])) / (max(x[,1]) - min(x[,1])) * 2 - 1
-  if ((max(x[,2]) - min(x[,2])) == 0) x[,2] <- mean(yrange) else x[,2] <- (x[,2] - min(x[,2])) / (max(x[,2]) - min(x[,2])) * 2 - 1
-  
-  x[,1] <- x[,1] * xrange
-  x[,2] <- x[,2] * yrange
-  
-  return(x)
-}
-
-# Rotation function:
-RotMat <- function(d,w2hrat=1) 
-{
-  matrix(c(cos(-d),sin(-d),-sin(-d),cos(-d)),2,2)
-}
-
-
-## Function to compute reingold-tilford layout using igraph:
-rtLayout <- function(roots,GroupPars,Edgelist,layout,exoMan)
-{
-  # Reverse intercepts in graph:
-  #   revNodes <- which((GroupPars$edge == "int" | Edgelist[,2] %in% exoMan) & !Edgelist[,1] %in% roots )
-  #   revNodes <- which((GroupPars$edge == "int" & !Edgelist[,1] %in% roots) | Edgelist[,2] %in% exoMan )
-  #   Edgelist[revNodes,1:2] <- Edgelist[revNodes,2:1]
-  # Remove double headed arrows:
-  Edgelist <- Edgelist[GroupPars$edge != "<->",]
-  
-  # Make igraph object:
-  Graph <- graph.edgelist(Edgelist, FALSE)
-  # Compute layout:
-  Layout <- layout.reingold.tilford(Graph,root=roots,circular = FALSE) 
-  
-  return(Layout)
-}
-
-## Function to mix color vector x with weight w
-mixColfun <- function(x,w)
-{
-  # x = vector of colors
-  # w = weights
-  if (missing(w)) w <- rep(1,length(x))
-  if (length(w)==1) w <- rep(w,length(x))
-  
-  RGB <- col2rgb(x)
-  wMeans <- apply(RGB,1,weighted.mean,w=w)
-  return(rgb(wMeans[1],wMeans[2],wMeans[3],maxColorValue=255))
-}
-
-loopOptim <- function(x,Degrees)
-{
-  NotinRange <- sum(sapply(Degrees,function(d)!any(c(d,d-2*pi,d+2*pi)>(x-pi/4) & c(d,d-2*pi,d+2*pi)<(x+pi/4))))
-  Dist2Edges <- sapply(Degrees,function(d)min(abs(x - c(d,d-2*pi,d+2*pi))))
-  return(NotinRange * 2 * pi * 2 + sum(sort(Dist2Edges)[1:2]))
-}
-
-# RotMat <- function(d) matrix(c(cos(-d),sin(-d),-sin(-d),cos(-d)),2,2)
-
-mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
-{
-  n <- length(vars)
-  
-  if (intAtSide)
-  {
-    if (!trim)
-    {
-      if (n+nrow(intMap)==1)
-      {
-        sq <- 0
-      }
-      if (n+nrow(intMap) == 2)
-      {
-        sq <- c(0,0.5) 
-      } else {
-        sq <- seq(-1,1,length=n+nrow(intMap))
-      }
-    } else {
-      if (n+nrow(intMap) == 2)
-      {
-        sq <- c(0,0.5) 
-      } else {
-        sq <- seq(-1,1,length=n+nrow(intMap)+2)[-c(1,n+nrow(intMap)+2)]
-      }
-    }
-    cent <- median(1:n)
-    c <- 1
-    for (i in seq_along(vars))
-    {
-      if (vars[i]%in%intMap[,2])
-      {
-        if (i < cent)
-        {
-          Layout[intMap[intMap[,2]==vars[i],1],1] <- sq[c]
-          Layout[vars[i],1] <- sq[c+1]
-          c <- c+2
-        } else
-        {
-          Layout[intMap[intMap[,2]==vars[i],1],1] <- sq[c+1]
-          Layout[vars[i],1] <- sq[c]
-          c <- c+2                   
-        }
-      } else
-      {
-        Layout[vars[i],1] <- sq[c]
-        c <- c+1
-      }
-    }
-  } else {
-    if (!trim)
-    {
-      if (n==1)
-      {
-        sq <- 0
-      } else if (n == 2)
-      {
-        sq <- c(-1,1) 
-      } else {
-        sq <- seq(-1,1,length=n)
-      }
-    } else {
-      if (n == 1)
-      {
-        sq <- 0
-      } else if (n == 2)
-      {
-        sq <- c(-0.5,0.5) 
-      } else {
-        sq <- seq(-1,1,length=n+2)[-c(1,n+2)]
-      }
-    }
-    c <- 1
-    for (i in seq_along(vars))
-    {
-      if (vars[i]%in%intMap[,2])
-      {
-        Layout[intMap[intMap[,2]==vars[i],1],1] <- sq[c]
-        Layout[vars[i],1] <- sq[c]
-        c <- c + 1 
-      } else
-      {
-        Layout[vars[i],1] <- sq[c]
-        c <- c+1
-      }
-    }    
-  }
-  return(Layout)
-}
-
 semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,
                      intStyle="multi",rotation=1,curve, curvature = 1, nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,
                      sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",
                      sizeInt = 2,  title.adj = 0.1, title.line = -1, title.cex = 0.8,
                      include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,
                      reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,thresholdColor,thresholdSize = 0.5, fixedStyle=2,freeStyle=1,
-                     as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,curvePivot=FALSE,levels,nodeLabels,edgeLabels,
+                     as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,levels,nodeLabels,edgeLabels,
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
                      subLinks, modelOpts = list(), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  c("exo cov","load dest"), 
-                     equalizeManifests = TRUE,  covAtResiduals = TRUE,
+                     equalizeManifests = TRUE,  covAtResiduals = TRUE, bifactor, 
                      ...){
   
   # Check if input is combination of models:
@@ -239,6 +84,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     layoutFun <- layout
     layout <- "spring"
   } else layoutFun <- NULL
+  
+  if (!missing(bifactor) & !layout %in% c("tree2","tree3","circle2","circle3"))
+  {
+    warning("'bifactor' argument only supported in layouts 'tree2', 'tree3', 'circle2' and 'circle3'")
+  }
   
   
   if (missing(curve))
@@ -312,6 +162,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   {
     object@Pars <- object@Pars[!(object@Pars$edge=="<->"&object@Pars$lhs==object@Pars$rhs),]
   }  
+  
   # Combine groups if combineGroups=TRUE:
   if (combineGroups)
   {
@@ -494,10 +345,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   AllLat <- latNames
   
   par(ask=ask)
-  
+
   ### If no sub, set sub to 0 (root sub)
   if (is.null(object@Pars$sub)) 
-  {
+  {    
     if (!layoutSplit)
     {
       object@Pars$sub <- 0
@@ -550,6 +401,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # -1 is rerun for main graph:
     for (Sub in (max(grSub):0)[max(grSub):0%in%c(grSub,0)])
     {
+      
       if (Sub > 0)
       {
         GroupPars <- object@Pars[object@Pars$group==gr & object@Pars$sub==Sub,]
@@ -782,7 +634,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         # Optimize layout if reorder = TRUE
         
       } else if (layout %in% c("tree2","circle2"))
-      {
+      {             
         # reingold-tilford layout
         #       Layout <- layout.reingold.tilford
         
@@ -810,46 +662,64 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         #         } 
         #       } else 
         #         
-        if (nrow(manIntsExo) > 0)
+        
+        # If bifactor is assigned and exists, bifactor becomes root and all edges not connected to bifactor are reversed:    
+        if (!missing(bifactor) && any(bifactor %in% Labels))
         {
-          roots <- manIntsExo[,1]
-        } else if (length(exoMan) > 0)
-        {
-          roots <- exoMan
-        } else if (nrow(latIntsExo) > 0)
-        {
-          roots <- latIntsExo[,1]
-        } else if (length(exoLat) > 0)
-        {
-          roots <- exoLat
-        } else if (nrow(latIntsEndo) > 0)
-        {
-          roots <- latIntsEndo[,1]
-        } else if (length(endoLat) > 0)
-        {
-          roots <- endoLat
-        } else if (nrow(rbind(manIntsExo,manIntsEndo)) > 0)
-        {
-          roots <- rbind(manIntsExo,manIntsEndo)[,1]
-        } else if (any(GroupPars$edge %in% c("->","~>")))
-        {
-          roots <- Mode(Edgelist[,1][GroupPars$edge %in% c("->","~>")])
+          roots <- which(Labels %in% bifactor)
         } else {
-          roots <- Mode(c(Edgelist[,1],Edgelist[,2]))
+          if (nrow(manIntsExo) > 0)
+          {
+            roots <- manIntsExo[,1]
+          } else if (length(exoMan) > 0)
+          {
+            roots <- exoMan
+          } else if (nrow(latIntsExo) > 0)
+          {
+            roots <- latIntsExo[,1]
+          } else if (length(exoLat) > 0)
+          {
+            roots <- exoLat
+          } else if (nrow(latIntsEndo) > 0)
+          {
+            roots <- latIntsEndo[,1]
+          } else if (length(endoLat) > 0)
+          {
+            roots <- endoLat
+          } else if (nrow(rbind(manIntsExo,manIntsEndo)) > 0)
+          {
+            roots <- rbind(manIntsExo,manIntsEndo)[,1]
+          } else if (any(GroupPars$edge %in% c("->","~>")))
+          {
+            roots <- Mode(Edgelist[,1][GroupPars$edge %in% c("->","~>")])
+          } else {
+            roots <- Mode(c(Edgelist[,1],Edgelist[,2]))
+          }
         }
         
         Layout <- rtLayout(roots,GroupPars,Edgelist,layout,exoMan)
         # Fix top level to use entire range:
         # Layout[Layout[,2]==max(Layout[,2]),1] <- seq(min(Layout[,1]),max(Layout[,1]),length.out=sum(Layout[,2]==max(Layout[,2])))
         # Center all horizontal levels:
-        if (centerLevels) if (length(roots)>1) Layout[,1] <- ave(Layout[,1],Layout[,2],FUN = function(x) scale(x,TRUE,FALSE))
+#         if (centerLevels) if (length(roots)>1) Layout[,1] <- ave(Layout[,1],Layout[,2],FUN = function(x) scale(x,TRUE,FALSE))
+        if (centerLevels) Layout[,1] <- ave(Layout[,1],Layout[,2],FUN = function(x) scale(x,TRUE,FALSE))
         
       } else if (layout%in%c("tree3","circle3"))
       {
         
         # Igraph:
+        # Select only directed edges:
         Edgelist2 <- Edgelist[GroupPars$edge%in%c("->","~>"),]
+        
+        # Flip edges connected to manifest indicators of exogenous latents:
         Edgelist2[Edgelist2[,2]%in%which(GroupVars$manifest&GroupVars$exogenous),] <- Edgelist2[Edgelist2[,2]%in%which(GroupVars$manifest&GroupVars$exogenous),2:1]
+        
+        # Flip all edges that are not connected to the bifactor:
+        if (!missing(bifactor) && any(bifactor %in% Labels))
+        {
+          Edgelist2[!Labels[Edgelist2[,1]] %in% bifactor & !Labels[Edgelist2[,2]] %in% bifactor,1:2] <- Edgelist2[!Labels[Edgelist2[,1]] %in% bifactor & !Labels[Edgelist2[,2]] %in% bifactor,2:1]
+        }
+        
         iG <- graph.edgelist(Edgelist2)
         sp <- shortest.paths(iG,mode="out")
         sp[!is.finite(sp)] <- 0
@@ -992,6 +862,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         Layout[,2] <- levels[as.numeric(as.factor(Layout[,2]))]
       }
       
+      ECP <- matrix(NA,nrow(Edgelist),2)
+      
       # Set curves, edgeConnectPoints and rotate:    
       if (layout %in% c("tree","tree2","tree3"))
       {
@@ -1108,7 +980,16 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           ECP[!allSelect] <- NA
           
         }
+
         
+        ### Flip ECP, loopRotation and curve for any non bifactor variables, if specified:
+        if (!missing(bifactor) && any(bifactor %in% Labels) && layout %in% c("tree2", "tree3", "circle2", "circle3"))
+        {
+          loopRotation[!Labels %in% bifactor] <- loopRotation[!Labels %in% bifactor] + pi
+          ECP[!GroupPars$lhs%in%bifactor,1] <- ECP[!GroupPars$lhs%in%bifactor,1] + pi
+          ECP[!GroupPars$lhs%in%bifactor,2] <- ECP[!GroupPars$lhs%in%bifactor,2] + pi
+          Curve[!GroupPars$lhs%in%bifactor & !GroupPars$lhs%in%bifactor] <- -1 * Curve[!GroupPars$lhs%in%bifactor & !GroupPars$lhs%in%bifactor]
+        }
         
         ### Rotate loopRotation:
         loopRotation <- loopRotation - 0.5 * (rotation-1) *pi
@@ -1167,19 +1048,19 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       if (layout == "spring") loopRotation <- rep(NA, length(Labels))
       
  
-      
       if (layoutSplit & length(unique(grSub)) > 1 & Sub > 0)
       {
         if (is.character(Layout))
         {
-          Layout <- qgraph(Edgelist, layout = Layout, DoNotPlot = TRUE)$layout
+          Layout <- qgraph(Edgelist, layout = Layout, DoNotPlot = TRUE, edgelist=TRUE)$layout
         }
       ## Store in submodel list (could well be moved earlier but whatever)
       subModList[[Sub]] <- list(
         Layout = Layout,
         loopRotation = loopRotation,
         Curve = Curve,
-        Labels = Labels
+        Labels = Labels,
+        ECP = ECP
         )
         
       }
@@ -1188,6 +1069,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     ### COMBINE SUB MODELS ###
     if (layoutSplit & length(unique(grSub)) > 1 & length(subModList) > 1)
     {
+    
       ### Rescale subScale to height in width relative to diameter of device in inches ###
       din <- par("din")
       diamet <- sqrt(sum(din^2))
@@ -1197,7 +1079,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       {
         Layout <- qgraph(Edgelist, layout = Layout, DoNotPlot = TRUE)$layout
       }
-#       browser()
       # Rescale main layout:
       Layout <- LayoutScaler(Layout,  din[1]/2, din[2]/2)
       subModList[[1]]$Layout <- LayoutScaler(subModList[[1]]$Layout)
@@ -1259,20 +1140,25 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                   
           Layout[subLabnums,] <- subModList[[g]]$Layout
           Curve[GroupPars$sub == g] <- subModList[[g]]$Curve
+        
         if (g == 1)
         {
           loopRotation[subLabnums] <- subModList[[g]]$loopRotation
+          ECP[object@Pars$sub == g,]  <- subModList[[g]]$ECP
+          
           for (g2 in length(subModList):2)
           {
             if (!is.null(subModList[[g2]]))
             {
               loopRotation[Labels==latNames[g2-1]] <- centAngles[g2-1]
+#               ECP[object@Pars$sub == g,]  <- centAngles[g2-1]
             }
           }
           
         } else 
         {
           loopRotation[subLabnums] <- (subModList[[g]]$loopRotation + centAngles[link[1]]) %% ( 2*pi)
+          ECP[object@Pars$sub == g,] <- (subModList[[g]]$ECP + centAngles[link[1]]) %% ( 2*pi)
         }
         
       }
@@ -1565,10 +1451,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         #       }
         #       
         # Add 3 to top if top consist of latent residuals:
-        if (length(exoMan)==0)
-        {
-          Mar[3] <- Mar[3] + 3
-        }
+#         if (length(exoMan)==0)
+#         {
+#           Mar[3] <- Mar[3] + 3
+#         }
         
         # Rotate:
         Mar <- Mar[(0:3 + (rotation-1)) %% 4 + 1]
@@ -1721,7 +1607,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              edgelist = TRUE,
                                              curveDefault = curveDefault,
                                              knots = GroupPars$knot,
-                                             curvePivot = curvePivot,
+#                                              curvePivot = curvePivot,
                                              aspect = layoutSplit,
                                              CircleEdgeEnd = CircleEdgeEnd,
                                              curveScale = curveScale,

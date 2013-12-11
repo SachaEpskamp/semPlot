@@ -6,6 +6,9 @@ Changes in Version 0.3.4
     o Added the argument 'cardinal' that controls which edges will be linked to cardinal sides of a node. With this argument the behavior of many path diagram drawing programs can be mirrored. By default, only exogenous covariances and the end of factor loadings will be linked to cardinal points.
     o Added the 'equalizeManifests' argument to equalize the spacing between manifest variables in the 'tree1' layout.
     o Added the 'covAtResiduals' argument that controls if covariances should be linked to residuals rather than nodes themselves if style="lisrel"
+    o Fixed a bug where 'layoutSplit' resulted in a crash if there were only two connections in the structural model and "spring" layout was used.
+    o A list of usefull qgraph arguments that can be used in semPaths is now listed in the semPaths help page.
+    o Added the 'bifactor' argument to create bifactor layouts. Only supported with layouts 'tree2', 'tree3', 'circle2' and 'circle3'.
 
 Changes in Version 0.3.3
     o Lavaan model syntax is now supported as input
