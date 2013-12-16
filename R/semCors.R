@@ -1,4 +1,4 @@
-semCors <- function(object,include,vertical=TRUE,titles=FALSE,layout,...){
+semCors <- function(object,include,vertical=TRUE,titles=FALSE,layout,maximum,...){
   if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object) 
   
   if (!object@Computed) stop("SEM model has not been evaluated; there are no implied covariances")
@@ -23,15 +23,50 @@ semCors <- function(object,include,vertical=TRUE,titles=FALSE,layout,...){
     
     if (any(grepl("obs",include,ignore.case=TRUE)))
     {
-      Res[[g]]$Observed <- qgraph(round(cov2cor(object@ObsCovs[[g]]),5),maximum=1,layout=layout,...)
-      if (titles) title(paste("Group",Groups[g],"(observed)"),line=3)
+      Res[[g]]$Observed <- qgraph(round(cov2cor(object@ObsCovs[[g]]),5),maximum=ifelse(missing(maximum),1,maximum),layout=layout,...)
+      layout <- Res[[g]]$Observed$layout
+      if (titles) 
+      {
+        if (Ng > 1)
+        {
+          text(mean(par('usr')[1:2]),par("usr")[4],paste("Group",Groups[g],"(observed)"), adj = c(0.5,1))
+        } else {
+          text(mean(par('usr')[1:2]),par("usr")[4],"Observed", adj = c(0.5,1))
+        }
+      }
     }
-
-    if (any(grepl("obs",include,ignore.case=TRUE)) | any(grepl("exp",include,ignore.case=TRUE)) | any(grepl("imp",include,ignore.case=TRUE)))
+    
+    if (any(grepl("exp",include,ignore.case=TRUE)) | any(grepl("imp",include,ignore.case=TRUE)))
     {
-      Res[[g]]$Implied <- qgraph(round(cov2cor(object@ImpCovs[[g]]),5),maximum=1,layout=Res[[g]]$Observed$layout,...)
-      if (titles) title(paste("Group",Groups[g],"(implied)"),line=3)
+      Res[[g]]$Implied <- qgraph(round(cov2cor(object@ImpCovs[[g]]),5),maximum=ifelse(missing(maximum),1,maximum),layout=layout,...)
+      layout <- Res[[g]]$Implied$layout
+      if (titles) 
+      {
+        if (Ng > 1)
+        {
+          text(mean(par('usr')[1:2]),par("usr")[4],paste("Group",Groups[g],"(implied)"), adj = c(0.5,1))
+        } else {
+          text(mean(par('usr')[1:2]),par("usr")[4],"Implied", adj = c(0.5,1))
+        }
+      }
     }
+    
+    
+    if (any(grepl("dif",include,ignore.case=TRUE)) | any(grepl("res",include,ignore.case=TRUE)))
+    {
+      Res[[g]]$Difference <- qgraph(round(cov2cor(object@ObsCovs[[g]]) - cov2cor(object@ImpCovs[[g]]),5),maximum=ifelse(missing(maximum),.1,maximum),layout=layout,diag = TRUE, ...)
+      if (titles) 
+      {
+        if (Ng > 1)
+        {
+          text(mean(par('usr')[1:2]),par("usr")[4],paste("Group",Groups[g],"(observed - implied)"), adj = c(0.5,1))
+        } else {
+          text(mean(par('usr')[1:2]),par("usr")[4],"Observed - Implied", adj = c(0.5,1))
+        }
+      }
+    }
+    
+    
   }
   
   invisible(Res)
