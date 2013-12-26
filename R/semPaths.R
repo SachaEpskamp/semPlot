@@ -27,9 +27,11 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,levels,nodeLabels,edgeLabels,
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
-                     subLinks, modelOpts = list(), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  c("exo cov","load dest"), 
-                     equalizeManifests = TRUE,  covAtResiduals = TRUE, bifactor, 
+                     subLinks, modelOpts = list(), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  "none", 
+                     equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, 
                      ...){
+  
+#   c("exo cov","load dest","endo man cov")
   
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
@@ -891,9 +893,13 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
             percurveAdjacent[(any(grepl("reg",curveAdjacent,ignore.case=TRUE))&GroupPars$edge%in%c("->","~>",ignore.case=TRUE))|(any(grepl("cov",curveAdjacent))&GroupPars$edge%in%c("<->"))] <- TRUE
           }
         }
-        
+
+        # Original curve:
           Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int",ifelse(inBet<(1-percurveAdjacent),0,curve+curvature*(inBet)/max(1,max(inBet))*curve),NA)
-#         } else {
+#           Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int",ifelse(inBet<(1-percurveAdjacent),0,curve),NA)
+        
+        
+        #         } else {
 #           Curve <- ifelse(Layout[Edgelist[,1],2]==Layout[Edgelist[,2],2]&Edgelist[,1]!=Edgelist[,2]&GroupPars$edge!="int" & Labels[Edgelist[,1]]%in%manNames & Labels[Edgelist[,2]]%in%manNames,ifelse(inBet<1,0,curve+inBet/max(inBet)*curve),NA)
 #         }
         ### If origin node is "right" of  destination node, flip curve:
@@ -944,8 +950,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
             {
               
               # First node first / endo:
-              select <- select & ((grepl("endo",cardGroup,ignore.case=TRUE) & !GroupVars$exogenous[Edgelist[,1]]) | 
-                                    (grepl("exo",cardGroup,ignore.case=TRUE) & GroupVars$exogenous[Edgelist[,1]] )
+              select <- select & ((grepl("endo",cardGroup,ignore.case=TRUE) & !GroupVars$trueExo[Edgelist[,1]]) | 
+                                    (grepl("exo",cardGroup,ignore.case=TRUE) & GroupVars$trueExo[Edgelist[,1]] )
               )
             }
             
@@ -1000,6 +1006,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         #           Layout[Layout[,2]==i,1] <- (as.numeric(as.factor(Layout[Layout[,2]==i,1])) - 1) / (sum(Layout[,2]==i) - 1)
         #         }
         # FLIP LAYOUT ###
+        
         if (rotation==2) 
         {
           Layout <- Layout[,2:1]
