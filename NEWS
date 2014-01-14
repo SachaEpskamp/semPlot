@@ -9,6 +9,7 @@ Changes in Version 0.3.4
     o Fixed a bug where 'layoutSplit' resulted in a crash if there were only two connections in the structural model and "spring" layout was used.
     o A list of usefull qgraph arguments that can be used in semPaths is now listed in the semPaths help page.
     o Added the 'bifactor' argument to create bifactor layouts. Only supported with layouts 'tree2', 'tree3', 'circle2' and 'circle3'.
+    o 'mixCols' renamed to 'inheritColor'
 
 Changes in Version 0.3.3
     o Lavaan model syntax is now supported as input

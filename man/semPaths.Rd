@@ -17,7 +17,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   latents, groups, color, residScale, gui = FALSE, allVars = FALSE, edge.color, 
   reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, thresholdColor, 
   thresholdSize = 0.5, fixedStyle = 2, freeStyle = 1, 
-  as.expression = character(0), optimizeLatRes = FALSE, mixCols = TRUE, curvePivot = FALSE, 
+  as.expression = character(0), optimizeLatRes = FALSE, inheritColor = TRUE, curvePivot = FALSE, 
   levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, 
   springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, 
   panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
@@ -214,7 +214,7 @@ A character vector indicating which labels should be treated as an \code{\link[b
   \item{optimizeLatRes}{
 Logical. If this is TRUE, the angle of the incoming residuals on latent variables is attempted to be optimally chosen so its position conflicts with the least amount of connected edges.
 }
-  \item{mixCols}{
+  \item{inheritColor}{
 Logical, should uncolored nodes obtain a mix of connected colored nodes? Defaults to \code{TRUE}.
 }
 \item{levels}{A numeric vector usually of length 4. Controls the relative vertical position of variable levels (exogenous and endogenous latents and manifests) under default rotation in tree and circle layouts. This can be used to control the spacing between these levels. e.g., \code{c(1,5,6,7)} will create more space between endogenous manifests and latents.}

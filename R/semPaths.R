@@ -22,9 +22,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      intStyle="multi",rotation=1,curve, curvature = 1, nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,
                      sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",
                      sizeInt = 2,  title.adj = 0.1, title.line = -1, title.cex = 0.8,
-                     include,combineGroups=FALSE,manifests,latents,groups,color,residScale,gui=FALSE,allVars=FALSE,edge.color,
+                     include,combineGroups=FALSE,manifests,latents,groups,color, residScale,gui=FALSE,allVars=FALSE,edge.color,
                      reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,thresholdColor,thresholdSize = 0.5, fixedStyle=2,freeStyle=1,
-                     as.expression=character(0),optimizeLatRes=FALSE,mixCols=TRUE,levels,nodeLabels,edgeLabels,
+                     as.expression=character(0),optimizeLatRes=FALSE,inheritColor=TRUE,levels,nodeLabels,edgeLabels,
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
                      subLinks, modelOpts = list(), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  "none", 
@@ -270,8 +270,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     {
       if (pastel)
       {
+        if (length(groups) == 1) color <- "white" else 
         color <- rainbow_hcl(length(groups), start = rainbowStart * 360, end = (360 * rainbowStart + 360*(length(groups)-1)/length(groups)))
       } else {
+        if (length(groups) == 1) color <- "white" else 
         color <- rainbow(length(groups), start = rainbowStart, end = (rainbowStart + (max(1,length(groups)-1))/length(groups)) %% 1)   
       }
     }
@@ -281,6 +283,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       color <- "background"
     } 
   }
+
   
   #   # Define exogenous variables (only if any is NA):
   #   if (any(is.na(object@Vars$exogenous)))
@@ -1261,6 +1264,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     {
       NodeGroups <- groups
       
+      
+      
       Ng <- length(NodeGroups)
       
       if (length(color)==1)
@@ -1282,9 +1287,15 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       if (length(color)==Ng)
       {
         Vcolors <- rep("",nN)
+        
         for (g in 1:Ng)
         {
-          if (mode(NodeGroups[[g]])=="character") NodeGroups[[g]] <- match(NodeGroups[[g]],Labels)
+          if (mode(NodeGroups[[g]])=="character") 
+          {
+            ### hier grepl!
+            NodeGroups[[g]] <- matchVar(NodeGroups[[g]], GroupVars, manIntsExo, manIntsEndo, latIntsExo, latIntsEndo)
+              #             NodeGroups[[g]] <- match(NodeGroups[[g]],Labels)
+          }
           Vcolors[NodeGroups[[g]]] <- color[g]
         }
         
@@ -1310,7 +1321,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     # If missing color, obtain weighted mix of connected colors:
     if (any(Vcolors==""))
     {
-      if (mixCols)
+      if (inheritColor)
       {
         VcolorsBU <- Vcolors
         W <- 1
