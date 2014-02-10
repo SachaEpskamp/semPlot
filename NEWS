@@ -1,15 +1,25 @@
-Changes in Version 0.3.4
-    o Fixed a bug where using style='lisrel' did not correctly curve covariances between latents.
+Changes in Version 1.0.0
+
+New features:
     o Added the argument 'curveAdjacent' to also curve the covariances between two adjacent nodes as curved edges.
     o A frequently asked question is how to decrease the font size of edge labels. This can be done via the 'edge.label.cex' argument of the qgraph backend. But because this was not clear the argument now has been added to semPaths as well. The default is slightly smaller than the original qgraph default: 0.6 versus 1.
-    o The argument curvePivot now defaults to FALSE, causing covariances by default to once again be drawn by circular curved edges.
-    o Added the argument 'cardinal' that controls which edges will be linked to cardinal sides of a node. With this argument the behavior of many path diagram drawing programs can be mirrored. By default, only exogenous covariances and the end of factor loadings will be linked to cardinal points.
+    o Added the argument 'cardinal' that controls which edges will be linked to cardinal sides of a node. With this argument the behavior of many path diagram drawing programs can be mirrored. 
     o Added the 'equalizeManifests' argument to equalize the spacing between manifest variables in the 'tree1' layout.
     o Added the 'covAtResiduals' argument that controls if covariances should be linked to residuals rather than nodes themselves if style="lisrel"
-    o Fixed a bug where 'layoutSplit' resulted in a crash if there were only two connections in the structural model and "spring" layout was used.
-    o A list of usefull qgraph arguments that can be used in semPaths is now listed in the semPaths help page.
     o Added the 'bifactor' argument to create bifactor layouts. Only supported with layouts 'tree2', 'tree3', 'circle2' and 'circle3'.
+
+Changes:
+    o The argument curvePivot now defaults to FALSE, causing covariances by default to once again be drawn by circular curved edges.
+    o A list of usefull qgraph arguments that can be used in semPaths is now listed in the semPaths help page.
     o 'mixCols' renamed to 'inheritColor'
+    o The color argument can now be assined a list for assignng specific colors to all manifests, latents or intercepts
+    o Some improvements to 'semCors'
+
+
+Bug fixes:
+    o Fixed a bug where using style='lisrel' did not correctly curve covariances between latents.
+    o Fixed a bug where 'layoutSplit' resulted in a crash if there were only two connections in the structural model and "spring" layout was used.
+
 
 Changes in Version 0.3.3
     o Lavaan model syntax is now supported as input

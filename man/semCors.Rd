@@ -8,7 +8,7 @@ Visually inspect implied and observed correlations
 This function is still in devellopment.
 }
 \usage{
-semCors(object, include, vertical = TRUE, titles = FALSE, layout, ...)
+semCors(object, include, vertical = TRUE, titles = FALSE, layout, maximum, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

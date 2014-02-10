@@ -20,8 +20,8 @@
 
 semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercepts=TRUE,residuals=TRUE,thresholds=TRUE,
                      intStyle="multi",rotation=1,curve, curvature = 1, nCharNodes=3,nCharEdges=3,sizeMan = 5,sizeLat = 8,
-                     sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",
-                     sizeInt = 2,  title.adj = 0.1, title.line = -1, title.cex = 0.8,
+                     sizeInt = 2,  sizeMan2 ,sizeLat2 ,sizeInt2, shapeMan, shapeLat, shapeInt = "triangle", ask,mar,title,title.color="black",
+                     title.adj = 0.1, title.line = -1, title.cex = 0.8,
                      include,combineGroups=FALSE,manifests,latents,groups,color, residScale,gui=FALSE,allVars=FALSE,edge.color,
                      reorder=TRUE,structural=FALSE,ThreshAtSide=FALSE,thresholdColor,thresholdSize = 0.5, fixedStyle=2,freeStyle=1,
                      as.expression=character(0),optimizeLatRes=FALSE,inheritColor=TRUE,levels,nodeLabels,edgeLabels,

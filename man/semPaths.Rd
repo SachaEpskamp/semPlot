@@ -17,13 +17,13 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   latents, groups, color, residScale, gui = FALSE, allVars = FALSE, edge.color, 
   reorder = TRUE, structural = FALSE, ThreshAtSide = FALSE, thresholdColor, 
   thresholdSize = 0.5, fixedStyle = 2, freeStyle = 1, 
-  as.expression = character(0), optimizeLatRes = FALSE, inheritColor = TRUE, curvePivot = FALSE, 
+  as.expression = character(0), optimizeLatRes = FALSE, inheritColor = TRUE, 
   levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, 
   springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, 
   panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
-  subScale2, subRes = 4, subLinks, modelOpts = list(), modelOpts = list(), 
-  curveAdjacent = FALSE, edge.label.cex = 0.8,  cardinal = FALSE, equalizeManifests = TRUE, 
-  covAtResiduals = TRUE,...)
+  subScale2, subRes = 4, subLinks, modelOpts = list(),
+  curveAdjacent = '<->', edge.label.cex = 0.6,  cardinal = "none", equalizeManifests = FALSE, 
+  covAtResiduals = TRUE, bifactor, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -279,7 +279,13 @@ A lists containing arguments sent to \code{\link{semPlotModel}} in case the inpu
 
 \item{equalizeManifests}{Logical. Should the distances between manifest nodes in the \code{tree1} layout be equalized? Defaults to \code{TRUE}}
 
-\item{covAtResidual}{Logical, should covariances be drawn at the start of residuals when \code{style="lisrel"} is used? Defaults to TRUE.}
+\item{covAtResiduals}{Logical, should covariances be drawn at the start of residuals when \code{style="lisrel"} is used? Defaults to TRUE.}
+
+
+\item{bifactor}{
+A string vector containing the name(s) of the general bifactor(s). This will automatically create a bifactor plot.
+}
+
 
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function. These arguments can further control the output of the graph. Some usefull arguments in drawing path diagrams are:
