@@ -7,6 +7,8 @@ New features:
     o Added the 'equalizeManifests' argument to equalize the spacing between manifest variables in the 'tree1' layout.
     o Added the 'covAtResiduals' argument that controls if covariances should be linked to residuals rather than nodes themselves if style="lisrel"
     o Added the 'bifactor' argument to create bifactor layouts. Only supported with layouts 'tree2', 'tree3', 'circle2' and 'circle3'.
+   o optimizeLatRes has been improved
+   o Added 'optimizePoints' arguments that can be given a vector of radians residuals can optimize to if optimizeLatRes = TRUE.
 
 Changes:
     o The argument curvePivot now defaults to FALSE, causing covariances by default to once again be drawn by circular curved edges.

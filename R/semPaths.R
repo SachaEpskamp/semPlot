@@ -28,7 +28,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
                      subLinks, modelOpts = list(), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  "none", 
-                     equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, 
+                     equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4),
                      ...){
   
 #   c("exo cov","load dest","endo man cov")
@@ -815,8 +815,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         
         
         if (any(GroupVars$exogenous) & optimizeLatRes)
-        {
-          ### For latents that have loops, find opposite of mean angle
+        {        
+          ### For latents that have loops, find a nice angle:
           for (i in which(Labels%in%latNames & Labels%in%GroupPars$lhs[GroupPars$lhs==GroupPars$rhs]))
           {
             # Layout subset of all connected:
@@ -827,22 +827,39 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
             if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
             
             subLayout <- Layout[conNodes,,drop=FALSE]
-            Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
-            if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupPars$edge=="<->"))
+            
+            # Add degree of edges passing node:
+            lower <- which(Layout[,2] < Layout[i,2])
+            higher <- which( Layout[,2] > Layout[i,2])
+            passNode <- which((Edgelist[,1] %in% lower & Edgelist[,2] %in% higher) | (Edgelist[,2] %in% lower & Edgelist[,1] %in% higher))
+            
+            if (length(passNode) > 0)
             {
-              loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
-            } else {
-              # Layout subset of all connected:
-              subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupPars$edge=="<->",]
-              conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
-              
-              # Test for empty:
-              if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
-              
-              subLayout <- Layout[conNodes,]
-              goodDegrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
-              loopRotation[i] <- optimize(loopOptim,c(min(goodDegrees-pi/4),max(goodDegrees+pi/4)),Degrees=Degrees,maximum=TRUE)$maximum
+              passLayout <- do.call(rbind,lapply(passNode, function(ii)c(mean(Layout[Edgelist[ii,],1]), mean(Layout[Edgelist[ii,],2]))))
+              subLayout <- rbind(subLayout, passLayout) 
             }
+            
+            Degrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
+            
+            loopRotation[i] <- optimPoints[which.max(sapply(optimPoints,loopOptim,Degrees=Degrees))]
+            
+            # Completely forgot point of this whole thing here:
+#             if (!grepl("lisrel",style,ignore.case=TRUE) | !any((Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupPars$edge=="<->"))
+#             {
+# #               loopRotation[i] <- optimize(loopOptim,c(0,2*pi),Degrees=Degrees,maximum=TRUE)$maximum
+#               loopRotation[i] <- optimPoints[which.max(sapply(optimPoints,loopOptim,c(0,2*pi),Degrees=Degrees))]
+#             } else {
+#               # Layout subset of all connected:
+#               subEdgelist <- Edgelist[(Edgelist[,1]==i|Edgelist[,2]==i)&(Edgelist[,1]!=Edgelist[,2])&GroupPars$edge=="<->",]
+#               conNodes <- c(subEdgelist[subEdgelist[,1]==i,2],subEdgelist[subEdgelist[,2]==i,1])
+#               
+#               # Test for empty:
+#               if (nrow(subEdgelist)==0) conNodes <- sort(unique(c(Edgelist[,1:2])))
+#               
+#               subLayout <- Layout[conNodes,]
+#               goodDegrees <- apply(subLayout,1,function(x)atan2(x[1]-Layout[i,1],x[2]-Layout[i,2]))
+#               loopRotation[i] <- optimize(loopOptim,c(min(goodDegrees-pi/4),max(goodDegrees+pi/4)),Degrees=Degrees,maximum=TRUE)$maximum
+#             }
           }
         }
         #     } else if (layout=="tree3"|layout=="circle3")

@@ -23,7 +23,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
   subScale2, subRes = 4, subLinks, modelOpts = list(),
   curveAdjacent = '<->', edge.label.cex = 0.6,  cardinal = "none", equalizeManifests = FALSE, 
-  covAtResiduals = TRUE, bifactor, ...)
+  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -286,6 +286,10 @@ A lists containing arguments sent to \code{\link{semPlotModel}} in case the inpu
 A string vector containing the name(s) of the general bifactor(s). This will automatically create a bifactor plot.
 }
 
+\item{optimPoints}{
+A vector of radians residuals can optimize to if \code{optimizeLatRes = TRUE}
+}
+
 
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function. These arguments can further control the output of the graph. Some usefull arguments in drawing path diagrams are:
@@ -447,7 +451,7 @@ semPaths(res,"std","hide", intAtSide=TRUE)
 library("lavaan")
 example(cfa)
 
-semPaths(fit, 'std', 'est', curvePivot = FALSE, curveAdjacent = TRUE, style = "lisrel")
+semPaths(fit, 'std', 'est', curveAdjacent = TRUE, style = "lisrel")
 
 
 # MIMIC model ----------------------------------------------------
@@ -470,13 +474,13 @@ library("lavaan")
 fit <- lavaan:::cfa(model.Lavaan, data=Data, std.lv=TRUE)
 
 # Plot path diagram:
-semPaths(fit,title=FALSE, curvePivot = TRUE)
+semPaths(fit,title=FALSE)
 
 # Omit exogenous covariances:
-semPaths(fit,title=FALSE, curvePivot = TRUE, exoVar = FALSE, exoCov = FALSE)
+semPaths(fit,title=FALSE, exoVar = FALSE, exoCov = FALSE)
 
 # Standardized parameters:
-semPaths(fit,"std",edge.label.cex=0.5, curvePivot = TRUE, exoVar = FALSE, 
+semPaths(fit,"std",edge.label.cex=0.5=, exoVar = FALSE, 
   exoCov = FALSE)
 
 }
