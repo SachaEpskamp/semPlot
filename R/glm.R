@@ -27,8 +27,13 @@ semPlotModel.lm <- function(object, ...)
     colnames(coef) <- names(object$model)[1:Nc]
   }
   
+  namesCoef <- rownames(coef)
+  stdCoef <- coef(standardize(object))
+  names(stdCoef) <- gsub("`","",names(stdCoef))
+  
   NamesR <- rownames(coef)
   NamesC <- colnames(coef)
+
   
   Pars  <- data.frame(
     label = "", 
@@ -36,7 +41,7 @@ semPlotModel.lm <- function(object, ...)
     edge = "->",
     rhs = rep(NamesC,each=Nr),
     est = c(coef),
-    std = c(coef(standardize(object))),
+    std = unname(c(stdCoef[paste0(namesCoef,"s")])),
     group = "",
     fixed = FALSE,
     par = 1:(Nr*Nc),

@@ -480,7 +480,7 @@ semPaths(fit,title=FALSE)
 semPaths(fit,title=FALSE, exoVar = FALSE, exoCov = FALSE)
 
 # Standardized parameters:
-semPaths(fit,"std",edge.label.cex=0.5=, exoVar = FALSE, 
+semPaths(fit,"std", edge.label.cex = 0.5, exoVar = FALSE, 
   exoCov = FALSE)
 
 }
