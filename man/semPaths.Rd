@@ -187,7 +187,7 @@ A value indicating the color of all edges or a vector indicating the color of ea
 Logical. Should manifest variables be reordered to be near latent factors they are most connected to in the "tree" layout? If FALSE manifest variables are placed in the order they appear in the Pars.
 }
   \item{structural}{
-Logical. Set this to FALSE to only show the structural model (omit all manifest variables.)
+Logical. Set this to TRUE to only show the structural model (omit all manifest variables.)
 }
   \item{ThreshAtSide}{
  Logical. If TRUE, thresholds are plotted as small lines at the side of manifest nodes, otherwise they are plotted as lines inside the nodes.
