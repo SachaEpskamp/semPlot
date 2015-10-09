@@ -37,9 +37,9 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   if (is.null(pars$label)) pars$label <- rep("",nrow(pars))
   
   semModel <- new("semPlotModel")
-  
+browser()
   if (is.null(pars$group)) pars$group <- ""
-  
+
   # Create edges dataframe
   semModel@Pars <- data.frame(
     label = pars$label,
@@ -49,9 +49,10 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
     est = pars$est,
     std = pars$std.all,
     group = pars$group,
-    fixed = list$free==0,
-    par = list$free,
+    fixed = list$free[list$op!="=="]==0,
+    par = list$free[list$op!="=="],
     stringsAsFactors=FALSE)
+
 
   semModel@Pars$edge[pars$op=="~~"] <- "<->"  
   semModel@Pars$edge[pars$op=="~*~"] <- "<->"  
