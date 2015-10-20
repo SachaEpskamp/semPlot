@@ -37,7 +37,7 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
   if (is.null(pars$label)) pars$label <- rep("",nrow(pars))
   
   semModel <- new("semPlotModel")
-browser()
+
   if (is.null(pars$group)) pars$group <- ""
 
   # Create edges dataframe
