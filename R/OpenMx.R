@@ -53,7 +53,7 @@ semPlotModel_MxRAMModel <- function(object){
 #     # browser()
 #     # Function by Ryne Estabrook (http://openmx.psyc.virginia.edu/thread/718)
 #     
-#     # standObj <- standardizeRAM(object,"model")
+# standObj <- standardizeRAM(object,"model")
 #     
 #     # Extract directed paths:
 #     # DirpathsValuesStd <- t(standObj@matrices$A@values)[Dirpaths]
@@ -64,13 +64,12 @@ semPlotModel_MxRAMModel <- function(object){
 #       
 #       # Extract means:
 #     
-#     if (!is.null(standObj@matrices$M))
-#     {
-#       MeansValuesStd <- standObj@matrices$S@values[Means]
-#     } else
-#     {
-#       MeansValuesStd <- numeric(0)
-#     }
+#if (!is.null(standObj@matrices$M))
+#    {
+#    MeansValuesStd <- standObj@matrices$S@values[Means]
+#   } else    {
+#      MeansValuesStd <- numeric(0)
+#    }
 #   } else 
 #   {
 #     DirpathsValuesStd <- rep(NA,nrow(Dirpaths)) 
@@ -86,7 +85,25 @@ semPlotModel_MxRAMModel <- function(object){
     stringsAsFactors=FALSE)
   
   
+  
+  
+ # standObj <- semTools::standardizeMx(object,free=T)
+  
+
+  
   # Maybe remove ints?
+  MeanEst <-data.frame(
+    label = c(object@matrices$M$labels),
+    lhs = '',
+    rhs = c(colnames(object@matrices$M$values)),
+    edge = 'int',
+    est = c(object@matrices$M$values),
+    std = semTools::standardizeMx(object,free=T)[which(names(semTools::standardizeMx(object,free=T))%in%object@matrices$M$labels)],
+    group = '',
+    fixed = c(!object@matrices$M$free),
+    par = 0,
+    stringsAsFactors = FALSE )
+  
   Edges <- std
   
   # Define Pars:
@@ -97,10 +114,14 @@ semPlotModel_MxRAMModel <- function(object){
     rhs = Edges$row,
     est = Edges$Raw.Value,
     std = Edges$Std.Value,
-    group = object@name,
+    group = '',
     fixed = Edges$Raw.SE==0,
     par = 0,
     stringsAsFactors=FALSE)
+  
+  Pars <- rbind(Pars,MeanEst)
+  
+  
   
   Pars$par[is.na(Pars$label)] <- seq_len(sum(is.na(Pars$label)))
   for (lbl in unique(Pars$label[!is.na(Pars$label)]))
