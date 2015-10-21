@@ -5,11 +5,14 @@
 #   invisible(semPaths(semPlotModel(object),...))
 # }
 
-semPlotModel.mplus.model <- function(object, ...)
-{
+semPlotModel.mplus.model <- function (object, ...)
+  {
+
+  
   # Check for mplusAutomation:
   if (!require("MplusAutomation")) stop("'MplusAutomation' package must be installed to read Mplus output.")
   
+
   addInteractions <- FALSE
   if (is.character(object))
   {
@@ -103,15 +106,25 @@ semPlotModel.mplus.model <- function(object, ...)
 #     }
 #   }
   
+  #Standardization
   
-  if (!is.null(object$parameters$std.standardized))
-  {
-    Pars$std <- object$parameters$std.standardized$est
+  #Call args from semPaths()
+  ifelse(!is.null(sys.call(which =1 )$mplusStd), mplusStd <- sys.call(which =1 )$mplusStd, mplusStd <- "std")
+
+  if (!is.null(object$parameters$std.standardized) & 
+      (grepl("stand",sys.call(which =1)[3])|grepl("std",sys.call(which =1)[3])) & mplusStd=="std")
+  {   
+    warning("Mplus std parameters will be plotted. Use mplusStd argument to plot stdy, or stdyx parameters.")
+      Pars$std <- object$parameters$std.standardized$est
+  }else if (!is.null(object$parameters$stdy.standardized) & mplusStd=="stdy"){
+      Pars$std <- object$parameters$stdy.standardized$est
+  }else if (!is.null(object$parameters$stdyx.standardized) & mplusStd=="stdyx"){
+    Pars$std <- object$parameters$stdyx.standardized$est
   }
-  
+    
   Pars$lhs[grepl(".BY$",parsUS$paramHeader)] <- gsub("\\.BY$","",parsUS$paramHeader[grepl(".BY$",parsUS$paramHeader)])
   Pars$edge[grepl(".BY$",parsUS$paramHeader)] <- "->"
-  
+    
   Pars$lhs[grepl(".ON$",parsUS$paramHeader)] <- gsub("\\.ON$","",parsUS$paramHeader[grepl(".ON$",parsUS$paramHeader)])
   Pars$edge[grepl(".ON$",parsUS$paramHeader)] <- "~>"
   Pars[grepl(".ON$",parsUS$paramHeader),c("lhs","rhs")] <- Pars[grepl(".ON$",parsUS$paramHeader),c("rhs","lhs")]

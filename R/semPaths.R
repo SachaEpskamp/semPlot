@@ -28,11 +28,13 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
                      subLinks, modelOpts = list(), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  "none", 
-                     equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4),
+                     equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4), mplusStd=c("std","stdy","stdyx"),
                      ...){
   
 #   c("exo cov","load dest","endo man cov")
-  
+
+
+
   # Check if input is combination of models:
   call <- paste(deparse(substitute(object)), collapse = "")
   if (grepl("\\+",call)) 
