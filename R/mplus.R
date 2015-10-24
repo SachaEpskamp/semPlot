@@ -5,10 +5,9 @@
 #   invisible(semPaths(semPlotModel(object),...))
 # }
 
-semPlotModel.mplus.model <- function (object, ...)
+semPlotModel.mplus.model <- function (object,...)
   {
 
-  
   # Check for mplusAutomation:
   if (!require("MplusAutomation")) stop("'MplusAutomation' package must be installed to read Mplus output.")
   
@@ -107,18 +106,17 @@ semPlotModel.mplus.model <- function (object, ...)
 #   }
   
   #Standardization
-  
+ # mplusStd <- modelOpts$mplusStd
   #Call args from semPaths()
-  ifelse(!is.null(sys.call(which =1 )$mplusStd), mplusStd <- sys.call(which =1 )$mplusStd, mplusStd <- "std")
 
   if (!is.null(object$parameters$std.standardized) & 
-      (grepl("stand",sys.call(which =1)[3])|grepl("std",sys.call(which =1)[3])) & mplusStd=="std")
+      (grepl("stand",sys.call(which =1)[3])|grepl("std",sys.call(which =1)[3])) & sys.call(3)$mplusStd=="std")
   {   
-    warning("Mplus std parameters will be plotted. Use mplusStd argument to plot stdy, or stdyx parameters.")
       Pars$std <- object$parameters$std.standardized$est
-  }else if (!is.null(object$parameters$stdy.standardized) & mplusStd=="stdy"){
+      warning("Mplus std parameters will be plotted. To change that, use the modelOpts argument and set mplusStd to stdy, or stdyx parameters.")
+  }else if (!is.null(object$parameters$stdy.standardized) & sys.call(3)$mplusStd=="stdy"){
       Pars$std <- object$parameters$stdy.standardized$est
-  }else if (!is.null(object$parameters$stdyx.standardized) & mplusStd=="stdyx"){
+  }else if (!is.null(object$parameters$stdyx.standardized) & sys.call(3)$mplusStd=="stdyx"){
     Pars$std <- object$parameters$stdyx.standardized$est
   }
     
