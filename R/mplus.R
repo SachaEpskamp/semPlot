@@ -106,7 +106,7 @@ semPlotModel.mplus.model <- function (object,...)
 #   }
   
   #Standardization
- # mplusStd <- modelOpts$mplusStd
+  #mplusStd <- modelOpts$mplusStd
   #Call args from semPaths()
 
   if (!is.null(object$parameters$std.standardized) & 
