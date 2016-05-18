@@ -21,24 +21,25 @@ Pars2Matrix <- function(Pars, edges, rows, cols, symmetrical, lhsisrow = FALSE)
   colnames(empMatrix) <- gsub("@L@","",cols)
   for (i in seq_along(Groups))
   {
+    GroupPars <- Pars[Pars$group == Groups[i],]
     ResMatrix[[i]] <- list()
     ResMatrix[[i]]$est <- empMatrix
     ResMatrix[[i]]$std <- empMatrix
     ResMatrix[[i]]$par <- empMatrix
     ResMatrix[[i]]$fixed <- empMatrix
     mode(ResMatrix[[i]]$fixed) <- "logical"
-    for (j in seq_len(nrow(Pars)))
+    for (j in seq_len(nrow(GroupPars)))
     {
-      ResMatrix[[i]]$est[match(Pars$rhs[j],rows),match(Pars$lhs[j],cols)] <- Pars$est[j]
-      ResMatrix[[i]]$std[match(Pars$rhs[j],rows),match(Pars$lhs[j],cols)] <- Pars$std[j]
-      ResMatrix[[i]]$fixed[match(Pars$rhs[j],rows),match(Pars$lhs[j],cols)] <- Pars$fixed[j]
-      ResMatrix[[i]]$par[match(Pars$rhs[j],rows),match(Pars$lhs[j],cols)] <- Pars$par[j]
+      ResMatrix[[i]]$est[match(GroupPars$rhs[j],rows),match(GroupPars$lhs[j],cols)] <- GroupPars$est[j]
+      ResMatrix[[i]]$std[match(GroupPars$rhs[j],rows),match(GroupPars$lhs[j],cols)] <- GroupPars$std[j]
+      ResMatrix[[i]]$fixed[match(GroupPars$rhs[j],rows),match(GroupPars$lhs[j],cols)] <- GroupPars$fixed[j]
+      ResMatrix[[i]]$par[match(GroupPars$rhs[j],rows),match(GroupPars$lhs[j],cols)] <- GroupPars$par[j]
       if (symmetrical)
       {
-        ResMatrix[[i]]$est[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$est[j]
-        ResMatrix[[i]]$std[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$std[j]
-        ResMatrix[[i]]$fixed[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$fixed[j]
-        ResMatrix[[i]]$par[match(Pars$lhs[j],rows),match(Pars$rhs[j],cols)] <- Pars$par[j]        
+        ResMatrix[[i]]$est[match(GroupPars$lhs[j],rows),match(GroupPars$rhs[j],cols)] <- GroupPars$est[j]
+        ResMatrix[[i]]$std[match(GroupPars$lhs[j],rows),match(GroupPars$rhs[j],cols)] <- GroupPars$std[j]
+        ResMatrix[[i]]$fixed[match(GroupPars$lhs[j],rows),match(GroupPars$rhs[j],cols)] <- GroupPars$fixed[j]
+        ResMatrix[[i]]$par[match(GroupPars$lhs[j],rows),match(GroupPars$rhs[j],cols)] <- GroupPars$par[j]        
       }
     }
   }
