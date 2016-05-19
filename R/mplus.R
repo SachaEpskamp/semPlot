@@ -215,7 +215,9 @@ semPlotModel.mplus.model <- function (object,mplusStd=c("std", "stdy", "stdxy"),
   semModel@Original <- list(object)
   semModel@ObsCovs <- list()
   semModel@Thresholds <- Thresh
-  semModel@ImpCovs <- semMatrixAlgebra(semModel,  Lambda %*% Imin(Beta, TRUE) %*% Psi %*% t(Imin(Beta, TRUE)) %*% t(Lambda) + Theta,model = "mplus")
+  ImpCovs <- semMatrixAlgebra(semModel,  Lambda %*% Imin(Beta, TRUE) %*% Psi %*% t(Imin(Beta, TRUE)) %*% t(Lambda) + Theta,model = "mplus")
+  if (!is.list(ImpCovs)) ImpCovs <- list(ImpCovs)
+  semModel@ImpCovs <- ImpCovs
   
   return(semModel)
 }
