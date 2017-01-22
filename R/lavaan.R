@@ -76,7 +76,7 @@ setMethod("semPlotModel.S4",signature("lavaan"),function(object){
     exogenous = NA,
     stringsAsFactors=FALSE)
     
-  semModel@ObsCovs <- object@SampleStats@cov
+  semModel@ObsCovs <- object@SampleStats@res.cov
   names(semModel@ObsCovs) <- object@Data@group.label
   for (i in 1:length(semModel@ObsCovs))
   {
