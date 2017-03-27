@@ -89,21 +89,6 @@ semPlotModel_MxRAMModel <- function(object){
   
  # standObj <- semTools::standardizeMx(object,free=T)
   
-
-  
-  # Maybe remove ints?
-  MeanEst <-data.frame(
-    label = c(object@matrices$M$labels),
-    lhs = '',
-    rhs = c(colnames(object@matrices$M$values)),
-    edge = 'int',
-    est = c(object@matrices$M$values),
-    std = semTools::standardizeMx(object,free=T)[which(names(semTools::standardizeMx(object,free=T))%in%object@matrices$M$labels)],
-    group = '',
-    fixed = c(!object@matrices$M$free),
-    par = 0,
-    stringsAsFactors = FALSE )
-  
   Edges <- std
   
   # Define Pars:
@@ -119,7 +104,28 @@ semPlotModel_MxRAMModel <- function(object){
     par = 0,
     stringsAsFactors=FALSE)
   
-  Pars <- rbind(Pars,MeanEst)
+  
+  
+  # Maybe remove ints?
+  if (!is.null(object@matrices$M)){
+    MeanStd <- c(object@matrices$M$values)
+    names(MeanStd) <- c(object@matrices$M$labels)
+    MeanStd[!is.na(names(MeanStd))] <- semTools::standardizeMx(object,free=T)[which(names(semTools::standardizeMx(object,free=T))%in%object@matrices$M$labels)]
+    
+    MeanEst <-data.frame(
+      label = c(object@matrices$M$labels),
+      lhs = '',
+      rhs = c(colnames(object@matrices$M$values)),
+      edge = 'int',
+      est = c(object@matrices$M$values),
+      std = MeanStd,
+      group = '',
+      fixed = c(!object@matrices$M$free),
+      par = 0,
+      stringsAsFactors = FALSE )
+    Pars <- rbind(Pars,MeanEst)
+  }
+
   
   
   

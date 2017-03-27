@@ -5,19 +5,26 @@
 #   invisible(semPaths(semPlotModel(object),...))
 # }
 
+readModels <- NULL
+
 semPlotModel.mplus.model <- function (object,mplusStd=c("std", "stdy", "stdxy"),...)
   {
   mplusStd <- match.arg(mplusStd)
 
   # Check for mplusAutomation:
-  if (!require("MplusAutomation")) stop("'MplusAutomation' package must be installed to read Mplus output.")
+  if (!requireNamespace("MplusAutomation")) stop("'MplusAutomation' package must be installed to read Mplus output.")
   
 
   addInteractions <- FALSE
   if (is.character(object))
   {
     modfile <- object
-    object <- readModels(object)
+    object <- MplusAutomation::readModels(object)
+    
+    Lambda <- NULL
+    Beta <- NULL
+    Psi <- NULL
+    Theta <- NULL
     
     mod <- readLines(modfile)
     # Find XWITH:

@@ -7,7 +7,7 @@
 
 
 ## EXTRACT MODEL ###
-setMethod("semPlotModel.S4",signature("lavaan"),function(object){
+setMethod("semPlotModel_S4",signature("lavaan"),function(object){
 
   if (class(object)!="lavaan") stop("Input must me a 'lavaan' object")
 

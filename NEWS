@@ -1,5 +1,9 @@
-Changes in Version 1.2
+Changes in Version 1.1
   o Fixed a bug with lavaan input
+  o Fixed a bug with OpenMx 2 input
+  o The 'mplusStd' argument of semPlotModel can now be used to specify standardization of mplus models
+  o Fixed a bug related to model constraints
+  o Several updates to accomidate new CRAN checks
 
 Changes in Version 1.0.1
   o Fixed a dependency related bug causing examples to crash.

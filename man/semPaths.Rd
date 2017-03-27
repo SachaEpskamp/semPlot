@@ -21,9 +21,10 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   levels, nodeLabels, edgeLabels, pastel = FALSE, rainbowStart = 0, intAtSide, 
   springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, 
   panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
-  subScale2, subRes = 4, subLinks, modelOpts = list(), curveAdjacent = '<->', 
-  edge.label.cex = 0.6,  cardinal = "none", equalizeManifests = FALSE, 
-  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4), ...)
+  subScale2, subRes = 4, subLinks, modelOpts = list(mplusStd = "std"), 
+  curveAdjacent = '<->', edge.label.cex = 0.6,  cardinal = "none", 
+  equalizeManifests = FALSE, covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4), 
+  ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -483,7 +484,6 @@ semPaths(fit,title=FALSE, exoVar = FALSE, exoCov = FALSE)
 semPaths(fit,"std", edge.label.cex = 0.5, exoVar = FALSE, 
   exoCov = FALSE)
 
-}
 ## Mplus
 
 # Same model, now using mplus output:
@@ -498,7 +498,6 @@ semPaths(outfile,intercepts=FALSE)
 
 
 # Thresholds  -----------------------------------------------------
-\dontrun{
 ## Lavaan
 
 # Example 5.8 from mplus user guide:
@@ -514,7 +513,6 @@ fit <- lavaan::cfa(model, data=Data)
 
 # Plot path diagram:
 semPaths(fit,intercepts=FALSE)
-}
 
 ## Mplus
 
@@ -529,8 +527,7 @@ semPaths(outfile)
 
 
 # OpenMx ----------------------------------------------------------
-\dontrun{
-# To isntall OpenMx see:
+# To install OpenMx see:
 # http://openmx.psyc.virginia.edu/
 
 library("OpenMx")
@@ -557,12 +554,8 @@ semPaths(model, color = list(
           mar = c(10, 5, 10, 5))
 
 ## Factor Analysis:
-source("http://openmx.psyc.virginia.edu/svn/trunk/demo/TwoFactorModel_PathCov.R")
+source("http://openmx.ssri.psu.edu/docs/OpenMx/latest/_static/demo/TwoFactorModel_PathCov.R")
 semPaths(twoFactorFit, layout = "tree2")
-
-
-
-
 
 # Multi-group analysis -------------------------------------------
 ## LISREL:

@@ -14,8 +14,8 @@ setClass( "semPlotModel", representation(
   ImpCovs = "list",
   Original = "list"))
 
-setGeneric("semPlotModel.S4", function(object,...) {
-  standardGeneric("semPlotModel.S4")
+setGeneric("semPlotModel_S4", function(object,...) {
+  standardGeneric("semPlotModel_S4")
 })
 # 
 # setGeneric("semPaths.S4", function(object,...) {
@@ -52,7 +52,7 @@ semPlotModel <- function (object, ...) {
   if ("MxModel"%in%class(object)) return(semPlotModel_MxModel(object))
   if(isS4(object)) 
   {
-    semPlotModel.S4(object)
+    semPlotModel_S4(object)
   } else
   {
     UseMethod("semPlotModel", object)

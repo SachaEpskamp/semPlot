@@ -1,8 +1,8 @@
-\name{semPlotModel.S4-methods}
+\name{semPlotModel_S4-methods}
 \docType{methods}
-\alias{semPlotModel.S4-methods}
-\alias{semPlotModel.S4,lavaan-method}
-\alias{semPlotModel.S4}
+\alias{semPlotModel_S4-methods}
+\alias{semPlotModel_S4,lavaan-method}
+\alias{semPlotModel_S4}
 \title{ S4 methods for semPlotModel }
 \description{
  S4 generic used only for the \code{\link[lavaan]{lavaan-class}} class. See \code{\link{semPlotModel}} for more information and \code{\link{semPlotModel-class}} for the resulting object.
