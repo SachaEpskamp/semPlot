@@ -32,7 +32,7 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 % \method{semPlotModel}{lavaan}(object)
 \method{semPlotModel}{lisrel}(object, \dots)
 % \method{semPlotModel}{semspec}(object)
-\method{semPlotModel}{mplus.model}(object, mplusStd = c("std", "stdy", "stdxy"), \dots)
+\method{semPlotModel}{mplus.model}(object, mplusStd = c("std", "stdy", "stdyx"), \dots)
 \method{semPlotModel}{sem}(object, \dots)
 \method{semPlotModel}{msem}(object, \dots)
 \method{semPlotModel}{msemObjectiveML}(object, \dots)
