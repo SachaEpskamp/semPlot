@@ -9,6 +9,7 @@
 ## EXTRACT MODEL ###
 setMethod("semPlotModel_S4",signature("lavaan"),function(object){
 
+  if (class(object)=="blavaan") class(object) <- 'lavaan'
   if (class(object)!="lavaan") stop("Input must me a 'lavaan' object")
 
   # Extract parameter estimates:
