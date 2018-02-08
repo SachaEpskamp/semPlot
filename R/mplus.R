@@ -80,6 +80,13 @@ semPlotModel.mplus.model <- function (object,mplusStd=c("std", "stdy", "stdxy"),
     }
   }
   
+  # Only find fixed if SE is present:
+  if (!is.null(parsUS$se)){
+    fixed <- parsUS$se==0
+  } else {
+    fixed <- FALSE
+  }
+  
   # Define Pars:
   Pars <- data.frame(
     label = "", 
@@ -89,14 +96,18 @@ semPlotModel.mplus.model <- function (object,mplusStd=c("std", "stdy", "stdxy"),
     est = parsUS$est,
     std = NA,
     group = parsUS$Group,
-    fixed = parsUS$se==0,
+    fixed = fixed,
     par = 0,
     BetweenWithin = parsUS$BetweenWithin,
     stringsAsFactors=FALSE)
   
+  # This code will check if parameters are equal. Check on as many of these columns as possible:
+  checkCols <- c("est","se", "posterior_sd" ,"pval","lower_2.5ci","upper_2.5ci" )
+  checkCols <- checkCols[checkCols %in% names(parsUS)]
+  
   if (!noPars)
   {
-    parNums <- dlply(cbind(sapply(parsUS[c("est","se")],function(x)round(as.numeric(x),10)),data.frame(num=1:nrow(parsUS))),c("est","se"),'[[',"num")
+    parNums <- dlply(cbind(sapply(parsUS[checkCols],function(x)round(as.numeric(x),10)),data.frame(num=1:nrow(parsUS))),checkCols,'[[',"num")
     for (i in 1:length(parNums)) Pars$par[parNums[[i]]] <- i
     Pars$par[Pars$fixed] <- 0  
   } else Pars$par <- 1:nrow(Pars)
