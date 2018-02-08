@@ -1,7 +1,7 @@
 
-semPlotModel.list <- function(object, ...)
+semPlotModel.list <- function(object,...)
 {
-  if ("mplus.model"%in%class(object)) return(semPlotModel.mplus.model(object))
+  if ("mplus.model"%in%class(object)) return(semPlotModel.mplus.model(object,...))
   
   mod <- try(semPlotModel_lavaanModel(object,...),silent=TRUE)
   if (!"try-error"%in%class(mod)) return(mod)

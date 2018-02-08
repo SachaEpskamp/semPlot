@@ -99,7 +99,7 @@ semPlotModel.default <- function(object,...)
     head <- readLines(object, 10)
     if (any(grepl("mplus",head,ignore.case=TRUE)))
     {
-      return(semPlotModel.mplus.model(object))
+      return(semPlotModel.mplus.model(object,...))
     }
     
     if (any(grepl("l\\s*i\\s*s\\s*r\\s*e\\s*l",head,ignore.case=TRUE)))
@@ -112,7 +112,7 @@ semPlotModel.default <- function(object,...)
     mod <- try(semPlotModel_lavaanModel(object,...),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
     
-    mod <- try(semPlotModel.mplus.model(object),silent=TRUE)
+    mod <- try(semPlotModel.mplus.model(object,...),silent=TRUE)
     if (!"try-error"%in%class(mod)) return(mod)
 
     mod <- try(semPlotModel(readLisrel(object)),silent=TRUE)
