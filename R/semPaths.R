@@ -1621,7 +1621,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     
     ### RUN QGRAPH ###
     
-    qgraphRes[[which(Groups==gr)]] <- qgraph(Edgelist,
+    qgraphRes[[which(Groups==gr)]] <- qgraph::qgraph(Edgelist,
                                              labels=nLab,
                                              bidirectional=Bidir,
                                              directed=Directed,
