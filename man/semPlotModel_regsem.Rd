@@ -55,6 +55,6 @@ fit <- cfa(mod, bfi2)
 out.reg <- regsem(fit, type="lasso", pars_pen=c(1:7), n.lambda=23)
 
 # plot the model
-semPaths(semPlotModel_regsem(object = out.reg))
+semPaths(semPlotModel.regsem(object = out.reg))
 
 }
