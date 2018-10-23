@@ -25,6 +25,7 @@ S3method(semPlotModel,msem)
 S3method(semPlotModel,msemObjectiveML)
 export(semPlotModel_regsem)
 export(semPlotModel_Onyx)
+export(semPlotModel_cvregsem)
 export(semPlotModel_Amos)
 export(exo,"exo<-",endo,"endo<-",lat,"lat<-",man,"man<-")
 
