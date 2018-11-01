@@ -7,6 +7,7 @@ Bridge between cv_regsem output and sempaths
  The package regsem (Jacobucci, 2017) is designed for a specific type of SEM called regularized structural equation modelling (RegSEM). For more information about RegSEM and the implementation in R we refer to the manual written by Jacobucci (2017).This function creates a bridge between the regsem and semplot packages, making it possible to use output from the regsem() and cv_regsem() functions to create models in sempaths.}
 \usage{
 semPlotModel_cvregsem(object,model)
+\method{semPlotModel}{cv_regsem}(object, model, \dots)
 }
 \arguments{
   \item{object}{
