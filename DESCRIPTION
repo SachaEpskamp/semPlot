@@ -6,7 +6,7 @@ Author: Sacha Epskamp, with contributions from Simon Stuber
 Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
 Depends: R (>= 2.15.0)
 Suggests: MplusAutomation (>= 0.5-3)
-Imports:  qgraph (>= 1.2.4), lavaan (>= 0.5-11), sem (>= 3.1-0), plyr, XML, igraph (>= 0.6-3), lisrelToR, rockchalk, colorspace, corpcor, methods, semTools, OpenMx
+Imports:  qgraph (>= 1.2.4), lavaan (>= 0.5-11), sem (>= 3.1-0), plyr, XML, igraph (>= 0.6-3), lisrelToR, rockchalk, colorspace, corpcor, methods, semTools, OpenMx, regsem
 ByteCompile: yes
 Description: Path diagrams and visual analysis of various SEM packages' output.
 URL: https://github.com/SachaEpskamp/semPlot

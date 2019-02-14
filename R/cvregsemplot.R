@@ -1,6 +1,6 @@
 
 
-semPlotModel_cvregsem <- function(object,model){
+semPlotModel.cvregsemplot <- function(object,model,...){
   
   ## Save parts of the output in objects 
   object1 <- object  # parameters

@@ -33,8 +33,6 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 \method{semPlotModel}{lisrel}(object, \dots)
 % \method{semPlotModel}{semspec}(object)
 \method{semPlotModel}{mplus.model}(object, mplusStd = c("std", "stdy", "stdyx"), \dots)
-\method{semPlotModel}{regsem}(object, \dots)
-\method{semPlotModel}{cv_regsem}(object, model, \dots)
 \method{semPlotModel}{sem}(object, \dots)
 \method{semPlotModel}{msem}(object, \dots)
 \method{semPlotModel}{msemObjectiveML}(object, \dots)
@@ -49,6 +47,9 @@ An object contaning the result of a SEM or GLM analysis, or a string contaning t
 }
 \item{mplusStd}{
 What standardization to use in Mplus models?
+}
+\item{model}{
+The original sem model (used in cvregsem)
 }
 \item{\dots}{Arguments sent to 'lisrelModel', not used in other methods.}
 }
