@@ -1,3 +1,7 @@
+Changes in Version 1.1.1
+  o Added regsem bridge to semPlotModel
+  o Added cv regsem bridge to semPlotModel
+
 Changes in Version 1.1
   o Fixed a bug with lavaan input
   o Fixed a bug with OpenMx 2 input

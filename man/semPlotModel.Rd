@@ -48,6 +48,9 @@ An object contaning the result of a SEM or GLM analysis, or a string contaning t
 \item{mplusStd}{
 What standardization to use in Mplus models?
 }
+\item{model}{
+The original sem model (used in cvregsem)
+}
 \item{\dots}{Arguments sent to 'lisrelModel', not used in other methods.}
 }
 \details{
