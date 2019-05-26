@@ -91,21 +91,24 @@ semPlotModel_MxRAMModel <- function(object){
   
   Edges <- std
   
+  # Only edges in mats A and S:
+  corMats <- Edges$matrix %in% c("A","S")
+  
   # Define Pars:
   Pars <- data.frame(
-    label = ifelse(is.na(Edges$label),"",Edges$label), 
-    lhs = Edges$col,
-    edge = ifelse(Edges$matrix=="A","->","<->"),
-    rhs = Edges$row,
-    est = Edges$Raw.Value,
-    std = Edges$Std.Value,
+    label = ifelse(is.na(Edges$label[corMats]),"",Edges$label[corMats]), 
+    lhs = Edges$col[corMats],
+    edge = ifelse(Edges$matrix[corMats]=="A","->","<->"),
+    rhs = Edges$row[corMats],
+    est = Edges$Raw.Value[corMats],
+    std = Edges$Std.Value[corMats],
     group = '',
-    fixed = Edges$Raw.SE==0,
+    fixed = Edges$Raw.SE[corMats]==0,
     par = 0,
     stringsAsFactors=FALSE)
   
   
-  
+
   # Maybe remove ints?
   if (!is.null(object@matrices$M)){
     MeanStd <- c(object@matrices$M$values)
