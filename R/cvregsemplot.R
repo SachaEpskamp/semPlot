@@ -1,7 +1,9 @@
 
 
-semPlotModel.cvregsemplot <- function(object,model,...){
-  
+semPlotModel.cvregsem <- function(object,model,...){
+  if (missing(model)){
+    stop("Please supply lavaan model with 'model' argument!")
+  }
   ## Save parts of the output in objects 
   object1 <- object  # parameters
   object2 <- model@ParTable  # lavaan parameters

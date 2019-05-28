@@ -1,6 +1,5 @@
 Changes in Version 1.1.1
-  o Added regsem bridge to semPlotModel
-  o Added cv regsem bridge to semPlotModel
+  o regsem and cv_regsem support added, thanks to Myrthe Veenman and Jason Nak!
 
 Changes in Version 1.1
   o Fixed a bug with lavaan input

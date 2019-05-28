@@ -60,7 +60,4 @@ semPaths(do.call(ramModel, RAM), as.expression = "edges", intercepts = FALSE)
 LISREL <- modelMatrices(outfile, "lisrel")
 semPaths(do.call(lisrelModel, LISREL), as.expression = "edges", intercepts = FALSE)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+

@@ -1,6 +1,6 @@
 
 
-semPlotModel.regsemplot <- function(object,...){
+semPlotModel.regsem <- semPlotModel.regsemplot <- function(object,...){
   
   ## Save parts of the output in objects 
   object1 <- object$lav.model@ParTable  # parameters 

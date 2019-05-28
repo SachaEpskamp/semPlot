@@ -353,6 +353,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   par(ask=ask)
 
   ### If no sub, set sub to 0 (root sub)
+
   if (is.null(object@Pars$sub)) 
   {    
     if (!layoutSplit)
@@ -884,7 +885,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         if (length(levels)<length(unique(Layout[,2]))) stop(paste("'levels' argument must have at least",length(unique(Layout[,2])),"elements"))
         Layout[,2] <- levels[as.numeric(as.factor(Layout[,2]))]
       }
-      
       ECP <- matrix(NA,nrow(Edgelist),2)
       
       # Set curves, edgeConnectPoints and rotate:    
@@ -1172,7 +1172,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         if (g == 1)
         {
           loopRotation[subLabnums] <- subModList[[g]]$loopRotation
-          ECP[object@Pars$sub == g,]  <- subModList[[g]]$ECP
+          ECP[object@Pars$sub == g & object@Pars$group == gr,]  <- subModList[[g]]$ECP
           
           for (g2 in length(subModList):2)
           {
@@ -1186,7 +1186,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         } else 
         {
           loopRotation[subLabnums] <- (subModList[[g]]$loopRotation + centAngles[link[1]]) %% ( 2*pi)
-          ECP[object@Pars$sub == g,] <- (subModList[[g]]$ECP + centAngles[link[1]]) %% ( 2*pi)
+          ECP[object@Pars$sub == g & object@Pars$group == gr,] <- (subModList[[g]]$ECP + centAngles[link[1]]) %% ( 2*pi)
+          # ECP <- (subModList[[g]]$ECP + centAngles[link[1]]) %% ( 2*pi)
         }
         
       }

@@ -2,7 +2,12 @@ Package: semPlot
 Type: Package
 Title: Path Diagrams and Visual Analysis of Various SEM Packages' Output
 Version: 1.1.1
-Author: Sacha Epskamp, with contributions from Simon Stuber
+Authors@R: c(
+  person("Sacha", "Epskamp", email = "mail@sachaepskamp.com",role = c("aut", "cre")),
+  person("Simon", "Stuber", role = c("ctb")),
+  person("Jason", "Nak", role = c("ctb")),
+  person("Myrthe", "Veenman", role = c("ctb"))
+  )
 Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
 Depends: R (>= 2.15.0)
 Suggests: MplusAutomation (>= 0.5-3)
