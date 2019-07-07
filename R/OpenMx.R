@@ -16,10 +16,15 @@ semPlotModel_MxRAMModel <- function(object){
   # Extract names:
   varNames <- object@manifestVars
   factNames <- object@latentVars
-  
+  if (!(length(varNames) || length(factNames))) 
+    stop(as.character(substitute(object)), '@manifestVars (and ',
+         as.character(substitute(object)),  '@latentVars if the model has ',
+         'latent variables) must contain variable names. You can set them ',
+         'using the manifestVars= and latentVars= arguments in mxModel().')
+
   # Standardized object:
   std <- OpenMx::mxStandardizeRAMpaths(object, SE = TRUE)
-  
+
   # Extract directed paths:
 #   Dirpaths <- which(t(object@matrices$A@free | object@matrices$A@values!=0),arr.ind=TRUE)
 #   DirpathsFixed <- !t(object@matrices$A@free)[Dirpaths]
@@ -87,7 +92,7 @@ semPlotModel_MxRAMModel <- function(object){
   
   
   
- # standObj <- semTools::standardizeMx(object,free=T)
+ # standObj <- standardizeMx(object,free=T) # old semTools function, now in this file
   
   Edges <- std
   
@@ -110,15 +115,37 @@ semPlotModel_MxRAMModel <- function(object){
   
 
   # Maybe remove ints?
-  if (!is.null(object@matrices$M)){
+  if (!is.null(object@matrices$M)) {
     MeanStd <- c(object@matrices$M$values)
-    names(MeanStd) <- c(object@matrices$M$labels)
-    MeanStd[!is.na(names(MeanStd))] <- semTools::standardizeMx(object,free=T)[which(names(semTools::standardizeMx(object,free=T))%in%object@matrices$M$labels)]
+    
+    ## in case labels are NA, use variable names
+    if (!is.null(colnames(object@matrices$M$values))) {
+      v.names <- colnames(object@matrices$M$values)
+      v.idx <- v.names
+      names(MeanStd) <- v.names
+    } else {
+      #FIXME? Warn users that this assumes order is {all manifest, all latent}
+      v.names <- c(varNames, factNames) 
+      v.idx <- seq_along(v.names)
+    }
+    ## extract rows of std corresponding to the M matrix
+    stdM <- std[std$matrix == "M", , drop = FALSE]
+    ## loop over variable names that have a standardized estimate
+    ## (only free parameters; assume others are fixed to zero)
+    for (v in seq_along(stdM$col)) {
+      MeanStd[ v.idx[v] ] <- stdM$Std.Value[stdM$col == v.idx[v] ]
+    }
+    ## old method (using deprecated semTools function, now at the bottom of this script)
+    ## standardizeMx(object,free=T)[which(names(standardizeMx(object,free=T))%in%object@matrices$M$labels)]
     
     MeanEst <-data.frame(
       label = c(object@matrices$M$labels),
+      ##### or, if they are NA, replace with variable names?
+      # label = ifelse(!is.na(object@matrices$M$labels),
+      #                yes = object@matrices$M$labels,
+      #                no = v.names),
       lhs = '',
-      rhs = c(colnames(object@matrices$M$values)),
+      rhs = v.names,
       edge = 'int',
       est = c(object@matrices$M$values),
       std = MeanStd,
@@ -213,3 +240,115 @@ semPlotModel_MxModel <- function(object){
   
   return(semModel)
 }
+
+
+
+
+
+## -----------------------------------------------------------------
+## semTools function (no longer used, but can be borrowed if needed)
+## -----------------------------------------------------------------
+
+standardizeMx <- function(object, free = TRUE) {
+  .Deprecated(msg = c("The standardizeMx function is deprecated, and it will",
+                      " cease to be included in future versions of semTools.",
+                      " See help('semTools-deprecated) for details."))
+  # objectOrig <- object
+  multigroup <- length(object@submodels) > 0
+  if(multigroup) {
+    defVars <- lapply(object@submodels, findDefVars)
+    defVars <- do.call(c, defVars)
+  } else {
+    defVars <- findDefVars(object)
+  }
+  if(length(defVars) > 0) stop("The standardizeMx is not available for the model with definition variable.")
+  if(multigroup) {
+    object@submodels <- lapply(object@submodels, standardizeMxSingleGroup)
+  } else {
+    object <- standardizeMxSingleGroup(object)
+  }
+  vectorizeMx(object, free=free)
+}
+
+## Hidden functions
+
+findDefVars <- function(object) {
+  ## borrowed from OpenMx::imxIsDefinitionVariable
+  imxSeparatorChar <- "."
+  imxIsDefinitionVariable <- function (name) {
+    if (is.na(name)) {
+      return(FALSE)
+    }
+    components <- unlist(strsplit(name, imxSeparatorChar, fixed = TRUE))
+    if (length(components) == 2 && components[[1]] == "data") {
+      return(TRUE)
+    }
+    else if (length(components) > 2 && components[[2]] == "data") {
+      return(TRUE)
+    }
+    else {
+      return(FALSE)
+    }
+  }
+  ## end borrowed code
+  mat <- lapply(object@matrices, slot, "labels")
+  defvars <- sapply(mat, function(x) x[apply(x, c(1,2), imxIsDefinitionVariable)])
+  Reduce("c", defvars)
+}
+
+vectorizeMx <- function(object, free = TRUE) {
+  multigroup <- length(object@submodels) > 0
+  if(multigroup) {
+    object <- object@submodels
+  } else {
+    object <- list(object)
+  }
+  result <- NULL
+  for(i in seq_along(object)) {
+    name <- ""
+    if(multigroup) name <- paste0(object[[i]]@name, ".")
+    mat <- object[[i]]@matrices
+    for(j in seq_along(mat)) {
+      tempname <- paste0(name, mat[[j]]@name)
+      lab <- mat[[j]]@labels
+      tempfree <- as.vector(mat[[j]]@free)
+      madeLab <- paste0(tempname, "[", row(lab), ",", col(lab), "]")
+      lab <- as.vector(lab)
+      madeLab[!is.na(lab)] <- lab[!is.na(lab)]
+      if(!free) tempfree <- rep(TRUE, length(tempfree))
+      temp <- mat[[j]]@values[tempfree]
+      names(temp) <- madeLab[tempfree]
+      result <- c(result, temp)
+    }
+  }
+  
+  result[!duplicated(names(result))]
+}
+
+standardizeMxSingleGroup <- function(object) {
+  if (!is(object@expectation, "MxExpectationRAM"))
+    stop("The standardizeMx function is available for the MxExpectationRAM only.")
+  A <- object@matrices$A@values
+  I <- diag(nrow(A))
+  S <- object@matrices$S@values
+  # F <- object@matrices$F@values
+  Z <- solve(I - A)
+  impliedCov <- Z %*% S %*% t(Z)
+  temp <- sqrt(diag(impliedCov))
+  if (length(temp) == 1) {
+    ImpliedSd <- as.matrix(temp)
+  } else {
+    ImpliedSd <- diag(temp)
+  }
+  ImpliedInvSd <- solve(ImpliedSd)
+  object@matrices$S@values <- ImpliedInvSd %*% S %*% ImpliedInvSd
+  object@matrices$A@values <- ImpliedInvSd %*% A %*% ImpliedSd
+  if (!is.null(object@matrices$M)) {
+    M <- object@matrices$M@values
+    object@matrices$M@values <- M %*% ImpliedInvSd
+  }
+  object
+}
+
+
+

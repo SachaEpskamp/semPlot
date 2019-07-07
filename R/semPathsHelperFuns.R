@@ -49,6 +49,8 @@ mixColfun <- function(x,w)
   # w = weights
   if (missing(w)) w <- rep(1,length(x))
   if (length(w)==1) w <- rep(w,length(x))
+  ## w == 0 leads to NaN from weighted.mean()
+  if (w <= 0) w <- 0.0000001
   
   RGB <- col2rgb(x)
   wMeans <- apply(RGB,1,weighted.mean,w=w)

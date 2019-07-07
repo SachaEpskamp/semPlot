@@ -6,7 +6,8 @@ Authors@R: c(
   person("Sacha", "Epskamp", email = "mail@sachaepskamp.com",role = c("aut", "cre")),
   person("Simon", "Stuber", role = c("ctb")),
   person("Jason", "Nak", role = c("ctb")),
-  person("Myrthe", "Veenman", role = c("ctb"))
+  person("Myrthe", "Veenman", role = c("ctb")),
+  person(given = c("Terrence","D."), family = "Jorgensen", role = c("ctb"), comment = c(ORCID = "0000-0001-5111-6773"))
   )
 Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
 Depends: R (>= 2.15.0)
