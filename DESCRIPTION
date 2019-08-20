@@ -1,7 +1,7 @@
 Package: semPlot
 Type: Package
 Title: Path Diagrams and Visual Analysis of Various SEM Packages' Output
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: c(
   person("Sacha", "Epskamp", email = "mail@sachaepskamp.com",role = c("aut", "cre")),
   person("Simon", "Stuber", role = c("ctb")),
