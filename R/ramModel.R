@@ -1,13 +1,15 @@
 
 
 ### SINGLE GROUP MODEL ###
-ramModel <- function(A,S,F,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels = FALSE)
+ramModel <- function(A,S,F,M,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels = FALSE)
 {
+  # Check if meanstructure is included:
+  meanstructure <- !missing(M)
   # Input matrices either in matrix form or list containing  'est', 'std', ; fixed', and 'par' or 'parSpec' matrices. If 'stdComp' is in the list it overwrites 'std' (compatibility with 'lisrelToR' package):
   
   # Or a list of such lists for each group.
   # Check input, replace matrices with list: 
-  mats <- c("A","S","F")
+  mats <- c("A","S","F", "M")
   for (m in mats)
   {
     if (!do.call(missing,list(m)))
@@ -17,9 +19,10 @@ ramModel <- function(A,S,F,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels =
       assign(m,list())
     }
   }
-  #browser()
+  
   ### Fix matrices:
   matList <- list(A,S,F)
+  
   Ng <- max(sapply(matList,length))
   Nvar <- max(sapply(matList,function(x)sapply(x,function(y)ncol(y$est))))
   if (length(F)>0 && !is.null(F[[1]]$est))
@@ -57,6 +60,13 @@ ramModel <- function(A,S,F,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels =
   {
     F <- lapply(seq_len(Ng),function(x)list(est=cbind(diag(1,Nman,Nman),matrix(0,Nman,Nvar-Nman))))
   } else if (length(F) < Ng) F <- rep(F,length=Ng)
+  
+  # Fix M:
+  if (length(M)==0)
+  {
+    M <- lapply(seq_len(Ng),function(x)list(est=rep(0,Nvar)))
+  } else if (length(M) < Ng) M <- rep(M,length=Ng)
+  
   
   ### NAMES ###
   # If names missing, set default::
@@ -115,27 +125,27 @@ ramModel <- function(A,S,F,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels =
   {
     # Compute model implied covariance matrix and standardized matrices:
     # M is matrix list:
-    M <- list(A=A[[g]]$est, S=S[[g]]$est, F=F[[g]]$est)    
+    Mod <- list(A=A[[g]]$est, S=S[[g]]$est, F=F[[g]]$est)    
     
-    IminAinv <- InvEmp(diag(1,nrow(M$A),ncol(M$A)) - M$A)
+    IminAinv <- InvEmp(diag(1,nrow(Mod$A),ncol(Mod$A)) - Mod$A)
     if (missing(ImpCovs))
     { 
-      modCovs[[g]] <- with(M, F %*% IminAinv %*% S %*% t(IminAinv) %*% t(F))
+      modCovs[[g]] <- with(Mod, F %*% IminAinv %*% S %*% t(IminAinv) %*% t(F))
         
       rownames(modCovs[[g]]) <- colnames(modCovs[[g]]) <- manNames
     }
     
-    Mstd <- M
+    Mstd <- Mod
     ## Standardize matrices
-    I <- diag(nrow(M$S))
-    expCov <- IminAinv %*% M$S %*% t(IminAinv)
+    I <- diag(nrow(Mod$S))
+    expCov <- IminAinv %*% Mod$S %*% t(IminAinv)
     invSDs <- 1/sqrt(diag(expCov))
     diag(I) <- invSDs
     # standardize the A, S and M matrices
     # A paths are value*sd(from)/sd(to) = I %*% A %*% solve(I)
     # S paths are value/(sd(from*sd(to))) = I %*% S %*% I
-    Mstd$A <- I %*% M$A %*% solve(I)
-    Mstd$S <- I %*% M$S %*% I
+    Mstd$A <- I %*% Mod$A %*% solve(I)
+    Mstd$S <- I %*% Mod$S %*% I
     
     # Store matrices:
     if (length(A) > 0 && !is.null(A[[g]]$est) && is.null(A[[g]]$std)) A[[g]]$std <- Mstd$A
@@ -145,8 +155,11 @@ ramModel <- function(A,S,F,manNames,latNames,Names,ObsCovs,ImpCovs,modelLabels =
     if (length(A)>0) APars <- modMat2Pars(A[[g]],"->","A",symmetric=FALSE,vec=FALSE,Names,Names,group=paste("Group",g),exprsup="") else APars <- dumPars
     if (length(S)>0) SPars <- modMat2Pars(S[[g]],"<->","S",symmetric=TRUE,vec=FALSE,Names,Names,group=paste("Group",g),exprsup="") else SPars <- dumPars
     
+    if (length(M)>0) MPars <- modMat2Pars(M[[g]],"int","M",symmetric=FALSE,vec=TRUE,"",Names,group=paste("Group",g),exprsup="") else Mpars <- dumPars
+    
+    
     # Combine ParsS:
-    Parss[[g]] <- rbind(APars,SPars)
+    Parss[[g]] <- rbind(APars,SPars,MPars)
     
     # Remove zeroes:
     Parss[[g]] <- Parss[[g]][Parss[[g]]$est!=0,]

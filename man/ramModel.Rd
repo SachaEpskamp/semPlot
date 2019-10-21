@@ -8,7 +8,7 @@ Construct SEM model using RAM matrix specification.
 This function creates a 'semPlotModel' object using matrices of the RAM model (McArdle & McDonald, 1984). 
 }
 \usage{
-ramModel(A, S, F, manNames, latNames, Names, ObsCovs, ImpCovs, modelLabels = FALSE)
+ramModel(A, S, F, M, manNames, latNames, Names, ObsCovs, ImpCovs, modelLabels = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,6 +20,9 @@ Specification of the symmetric (S) matrix, see details.
 }
   \item{F}{
 Specification of the filter (F) matrix, see details.
+}
+  \item{M}{
+Specification of the means (M) vector, see details.
 }
   \item{manNames}{
 Character vector of the manifest names.
