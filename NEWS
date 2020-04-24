@@ -1,3 +1,6 @@
+Changes in Version 1.1.4
+  o Fixed issues with new lavaan version
+
 Changes in Version 1.1.3
   o the 'ramModel' function now supports meanstructure with the 'M' argument.
 

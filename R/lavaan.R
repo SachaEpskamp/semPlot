@@ -78,30 +78,37 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
     exogenous = NA,
     stringsAsFactors=FALSE)
     
-  if (!is.null(object@SampleStats@res.cov) && !length(object@SampleStats@res.cov) == 0){
-      if (!is.null(object@SampleStats@res.cov[[1]])){
-        semModel@ObsCovs <- object@SampleStats@res.cov    
-      } else {
-        semModel@ObsCovs <- object@SampleStats@cov
-      }    
-  } else {
-    semModel@ObsCovs <- list(matrix(NA,
-           length(varNames),length(varNames)))
-  } 
+  # res.cov <- lavTech(object, "sampstat")$res.cov
+  # lavTech(object, "sampstat")$cov
+  # if (!is.null(res.cov) && !length(res.cov) == 0){
+      # if (!is.null(res.cov[[1]])){
+      #   semModel@ObsCovs <- object@SampleStats@res.cov    
+      # } else {
+      #   semModel@ObsCovs <- object@SampleStats@cov
+      # }    
+  # } else {
+  #   semModel@ObsCovs <- list(matrix(NA,
+  #          length(varNames),length(varNames)))
+  # } 
   
+  if (lavInspect(object, "options")$conditional.x){
+    semModel@ObsCovs <- lapply(lavTech(object, "sampstat"),"[[","res.cov")
+  } else {
+    semModel@ObsCovs <- lapply(lavTech(object, "sampstat"),"[[","cov")
+  }
 
-  names(semModel@ObsCovs) <- object@Data@group.label
+  names(semModel@ObsCovs) <- lavInspect(object, "group.label")
   for (i in 1:length(semModel@ObsCovs))
   {
-    rownames(semModel@ObsCovs[[i]]) <- colnames(semModel@ObsCovs[[i]]) <- object@Data@ov.names[[i]]
+    rownames(semModel@ObsCovs[[i]]) <- colnames(semModel@ObsCovs[[i]]) <- lavaanNames(object, type="ov") #object@Data@ov.names[[i]]
   }
   
-  semModel@ImpCovs <- object@Fit@Sigma.hat
-  names(semModel@ImpCovs) <- object@Data@group.label
+  semModel@ImpCovs <- lapply(lavTech(object, "implied"), "[[", "cov")
+  names(semModel@ImpCovs) <- lavInspect(object, "group.label") # object@Data@group.label
 
   for (i in 1:length(semModel@ImpCovs))
   {
-    rownames(semModel@ImpCovs[[i]]) <- colnames(semModel@ImpCovs[[i]]) <- object@Data@ov.names[[i]]
+    rownames(semModel@ImpCovs[[i]]) <- colnames(semModel@ImpCovs[[i]]) <- lavaanNames(object, type="ov") 
   }
   
   semModel@Computed <- TRUE
