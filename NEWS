@@ -1,5 +1,6 @@
 Changes in Version 1.1.3
   o the 'ramModel' function now supports meanstructure with the 'M' argument.
+  o Fixed an issue with lavaan
 
 Changes in Version 1.1.1
   o regsem and cv_regsem support added, thanks to Myrthe Veenman and Jason Nak!

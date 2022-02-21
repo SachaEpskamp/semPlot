@@ -66,7 +66,7 @@ A string indicating how the nodes should be placed. Similar to the 'layout' argu
     \item{tree}{The integrated tree-like layout. Places exogenous variables at the top and endogenous variables at the bottom. See 'details' for more details.}
     \item{circle}{The same layout as "tree", except that afterwards the horizontal levels of the layout are placed in circles. Especially useful for models with a large number of manifest variables and a relatively small number of latent variables.}
     \item{spring}{Calls the "spring" layout in \code{\link[qgraph]{qgraph}}, which uses the Fruchterman-reingold algorithm (Fruchterman & Reingold, 1991).}
-    \item{tree2}{Calls the \code{\link[igraph]{layout.reingold.tilford}} function from the igraph package (Csardi & Nepusz, 2006), which uses the Reingold-Tilford algorithm (Reingold & Tilford, 1981). Before calling the algorithm roots are chosen and a slightly modified version of the graph is used to produce consistent results. See 'details'.}
+    \item{tree2}{Calls the \code{layout.reingold.tilford} function from the igraph package (Csardi & Nepusz, 2006), which uses the Reingold-Tilford algorithm (Reingold & Tilford, 1981). Before calling the algorithm roots are chosen and a slightly modified version of the graph is used to produce consistent results. See 'details'.}
     \item{circle2}{The same layout as "tree2", except that afterwards the horizontal levels of the layout are placed in circles.}
     \item{Other options}{If the assigned value is not in this list it is sent to \code{\link[qgraph]{qgraph}}. This allows for manual specification of the layout as well as using functions found in the 'igraph;  library.}
      }
@@ -390,7 +390,7 @@ If not manually set (see \code{\link{semPlotModel-edit}}), \code{semPath} will a
 
 Intercepts are placed on the same level as the variable, either on the left or right side of the node (pointing outward from the center). Residuals for manifest variables are placed at the top or bottom (for exogenous and endogenous manifests respectively). Residuals of latents are placed at the bottom or top respectively for exogenous and endogenous variables, but is switched if the latent is not connected to a manifest. Residuals for the leftmost and rightmost latent are placed at the left and right side respectively, or diagonal if the latent is connected to an intercept.
 
-The \code{"tree2"} and \code{"circle2"} layouts call the \code{\link[igraph]{layout.reingold.tilford}} function from the \code{igraph} package. As roots are used the first available variables of the following list:
+The \code{"tree2"} and \code{"circle2"} layouts call the \code{layout.reingold.tilford} function from the \code{igraph} package. As roots are used the first available variables of the following list:
 \itemize{
 \item Intercepts of exogenous manifests
 \item Exogenous manifest
@@ -402,7 +402,7 @@ The \code{"tree2"} and \code{"circle2"} layouts call the \code{\link[igraph]{lay
 \item The endogenous manifest with the most outgoing edges (this should not be possible by default, but can be manually set)
 \item The most connected endogenous manigest.
 }
-To compute an optimal layout \code{\link[igraph]{layout.reingold.tilford}} is run on a slightly altered version of the path diagram. In this version, the direction of edges from all intercepts that are not roots is reversed, the direction of all edges leading to exogenous manifests is reversed and all bidirectional edges are removed.
+To compute an optimal layout \code{layout.reingold.tilford} is run on a slightly altered version of the path diagram. In this version, the direction of edges from all intercepts that are not roots is reversed, the direction of all edges leading to exogenous manifests is reversed and all bidirectional edges are removed.
 }
 
 \value{

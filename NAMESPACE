@@ -36,7 +36,7 @@ importFrom(lavaan,"lavaan","cfa","standardizedSolution", "standardizedsolution",
 importClassesFrom(lavaan,"lavaan")
 importFrom(stats,"factanal")
 importFrom(rockchalk,standardize)
-importFrom(regsem, "regsem","cv_regsem")
+#importFrom(regsem, "regsem","cv_regsem")
 import(plyr)
 import(lisrelToR)
 import(XML)
