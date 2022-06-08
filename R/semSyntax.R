@@ -55,7 +55,6 @@ semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
   ### SEM ###
   if (syntax == "sem")
   {
-    browser()
     
     Pars <- object@Pars
     

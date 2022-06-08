@@ -32,7 +32,7 @@ S3method(semPlotModel,cvregsem)
 
 # importFrom(MplusAutomation,"readModels")
 importFrom(sem,"sem","standardizedCoefficients","specifyModel")
-importFrom(lavaan,"lavaan","cfa","standardizedSolution", "standardizedsolution", "parameterEstimates", "parameterestimates","inspect","lavaanNames","lavaanify")
+importFrom(lavaan,"lavaan","cfa","standardizedSolution", "standardizedsolution", "parameterEstimates", "parameterestimates","inspect","lavaanNames","lavaanify","lavInspect","lavTech")
 importClassesFrom(lavaan,"lavaan")
 importFrom(stats,"factanal")
 importFrom(rockchalk,standardize)

@@ -51,7 +51,13 @@ Sacha Epskamp <mail@sachaepskamp.com>
 
 \examples{
 # MIMIC model, example 5.8 from mplus user guide:
-Data <- read.table("http://www.statmodel.com/usersguide/chap5/ex5.8.dat")
+tryres <- try({
+ Data <- read.table("http://www.statmodel.com/usersguide/chap5/ex5.8.dat")
+})
+
+if (!is(tryres,"try-error")){
+
+
 names(Data) <- c(paste("y", 1:6, sep=""),
                  paste("x", 1:3, sep=""))
 
@@ -92,4 +98,5 @@ semPaths(fit.Lavaan,"std",title=FALSE)
 title("Lavaan",line=3)
 semPaths(fit.sem, "std",title=FALSE)
 title("sem",line=3)
+}
 }

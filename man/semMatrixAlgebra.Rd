@@ -58,8 +58,11 @@ Sacha Epskamp <mail@sachaepskamp.com>
 \examples{
 ## Mplus user guide SEM example:
 outfile <- tempfile(fileext=".out")
-download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.out",outfile)
+tryres <- try({
+  download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.out",outfile)
+})
 
+if (!is(tryres,"try-error")){
 # Plot model:
 semPaths(outfile,intercepts=FALSE)
 
@@ -96,4 +99,5 @@ title("RAM model")
 dev.off()
 }
 # They are the same.
+}
 }
