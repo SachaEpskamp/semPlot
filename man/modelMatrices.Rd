@@ -48,7 +48,7 @@ Sacha Epskamp <mail@sachaepskamp.com>
 ## Mplus user guide SEM example:
 outfile <- tempfile(fileext=".out")
 tryres <- try({
-  download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.out",outfile)
+  download.file("http://www.statmodel.com/usersguide/chap5/ex5.11.html",outfile)
 })
 
 if (!is(tryres,"try-error")){

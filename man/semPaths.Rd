@@ -488,7 +488,7 @@ semPaths(fit,"std", edge.label.cex = 0.5, exoVar = FALSE,
 
 # Same model, now using mplus output:
 outfile <- tempfile(fileext=".out")
-download.file("http://www.statmodel.com/usersguide/chap5/ex5.8.out",outfile)
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.8.html",outfile)
 
 # Plot model:
 semPaths(outfile,intercepts=FALSE)
@@ -518,7 +518,7 @@ semPaths(fit,intercepts=FALSE)
 
 # Same model, now using mplus output:
 outfile <- tempfile(fileext=".out")
-download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.out",outfile)
+download.file("http://www.statmodel.com/usersguide/chap5/ex5.2.html",outfile)
 
 # Plot model:
 semPaths(outfile)

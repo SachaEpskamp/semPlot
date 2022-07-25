@@ -1,3 +1,6 @@
+Changes in Version 1.1.5
+  o Small change to a link used in an example
+
 Changes in Version 1.1.4
   o Fixed issues with new lavaan version
   o Small fix for CRAN
