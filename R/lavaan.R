@@ -100,15 +100,27 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
   names(semModel@ObsCovs) <- lavInspect(object, "group.label")
   for (i in 1:length(semModel@ObsCovs))
   {
-    rownames(semModel@ObsCovs[[i]]) <- colnames(semModel@ObsCovs[[i]]) <- lavaanNames(object, type="ov") #object@Data@ov.names[[i]]
+    if (lavInspect(object, "options")$conditional.x){
+      rownames(semModel@ObsCovs[[i]]) <- colnames(semModel@ObsCovs[[i]]) <- lavaanNames(object, type="ov.model") #object@Data@ov.names[[i]]
+    } else {
+      rownames(semModel@ObsCovs[[i]]) <- colnames(semModel@ObsCovs[[i]]) <- lavaanNames(object, type="ov") #object@Data@ov.names[[i]]
+    }
   }
   
-  semModel@ImpCovs <- lapply(lavTech(object, "implied"), "[[", "cov")
+  if (lavInspect(object, "options")$conditional.x){
+    semModel@ImpCovs <- lapply(lavTech(object, "implied"), "[[", "res.cov")
+  } else {
+    semModel@ImpCovs <- lapply(lavTech(object, "implied"), "[[", "cov")
+  }
   names(semModel@ImpCovs) <- lavInspect(object, "group.label") # object@Data@group.label
 
   for (i in 1:length(semModel@ImpCovs))
   {
-    rownames(semModel@ImpCovs[[i]]) <- colnames(semModel@ImpCovs[[i]]) <- lavaanNames(object, type="ov") 
+    if (lavInspect(object, "options")$conditional.x){
+      rownames(semModel@ImpCovs[[i]]) <- colnames(semModel@ImpCovs[[i]]) <- lavaanNames(object, type="ov.model") 
+    } else {
+      rownames(semModel@ImpCovs[[i]]) <- colnames(semModel@ImpCovs[[i]]) <- lavaanNames(object, type="ov") 
+    }
   }
   
   semModel@Computed <- TRUE
