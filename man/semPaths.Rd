@@ -358,7 +358,7 @@ A vector of radians residuals can optimize to if \code{optimizeLatRes = TRUE}
     \item{edge.label.position}{Vetor of numbers between 0 and 1 controlling the relative position of each edge label. Defaults to 0.5 for placing edge labels at the middle of the edge.}
 \item{edge.label.font}{Integer specifying the label font of edges. Can be a vector or matrix with value for each node}
 
-  \item{layout.par}{A list of arguments passed to \code{\link{qgraph.layout.fruchtermanreingold}} when layout="spring" or to an igraph function when such a function is assigned to 'layout'}
+  \item{layout.par}{A list of arguments passed to \code{qgraph.layout.fruchtermanreingold} when layout="spring" or to an igraph function when such a function is assigned to 'layout'}
   
     \item{bg}{If this is TRUE, a background is plotted in which node colors cast a light of that color on a black background. Can also be a character containing the color of the background Defaults to FALSE}
   \item{bgcontrol}{The higher this is, the less light each node gives if bg=TRUE. Defaults to 6.}
