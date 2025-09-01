@@ -1,3 +1,10 @@
+
+# NEw export:
+export(semPlotModel)
+S3method(semPlotModel, semspec)
+S3method(semPlotModel, regsemplot)
+S3method(semPlotModel, semPlotModel)
+
 export(semPaths,semPlotModel,semCors,lisrelModel,ramModel,semSyntax,
        semMatrixAlgebra,modelMatrices,Imin,semPlotModel_lavaanModel)
 

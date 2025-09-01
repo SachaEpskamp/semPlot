@@ -1,7 +1,7 @@
 ## This function is commented out because semspec is not yet on CRAN. For the full version of this function please see
 ## www.sachaepskamp.com/semPlot
 
-semPlotModel.semspec <- function(object)
+semPlotModel.semspec <- function(object,...)
 {
   
   stop("This function is not included in the CRAN release because semspec is not on CRAN. Please see www.sachaepskamp.com for the function")
