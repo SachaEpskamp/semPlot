@@ -30,7 +30,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      subLinks, modelOpts = list(mplusStd="std"), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  "none", 
                      equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4),
                      ...){
-  
+
+  # Check if DoNotPlot is passed via ... (for qgraph):
+  DoNotPlot <- !is.null(list(...)$DoNotPlot) && list(...)$DoNotPlot
+
 #   c("exo cov","load dest","endo man cov")
 
 
@@ -413,7 +416,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       {
         GroupPars <- object@Pars[object@Pars$group==gr & object@Pars$sub==Sub,]
         GroupVars <- object@Vars
-        GroupThresh <- object@Thresholds[object@Thresholds$group==gr & object@Pars$sub==Sub,]        
+        GroupThresh <- object@Thresholds[object@Thresholds$group==gr,]
         
       } else 
       {
@@ -1167,12 +1170,18 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           subLabnums <- c(subLabnums,latInts[match(match(GroupPars$rhs[GroupPars$sub==g & GroupPars$edge == "int" & GroupPars$rhs %in% latNames],Labels),latInts[,2]),1])
                   
           Layout[subLabnums,] <- subModList[[g]]$Layout
-          Curve[GroupPars$sub == g] <- subModList[[g]]$Curve
-        
+          subCurveIdx <- which(GroupPars$sub == g)
+          if (length(subCurveIdx) == length(subModList[[g]]$Curve)) {
+            Curve[subCurveIdx] <- subModList[[g]]$Curve
+          }
+
         if (g == 1)
         {
           loopRotation[subLabnums] <- subModList[[g]]$loopRotation
-          ECP[object@Pars$sub == g & object@Pars$group == gr,]  <- subModList[[g]]$ECP
+          subECPIdx <- which(object@Pars$sub == g & object@Pars$group == gr)
+          if (length(subECPIdx) == nrow(subModList[[g]]$ECP)) {
+            ECP[subECPIdx,] <- subModList[[g]]$ECP
+          }
           
           for (g2 in length(subModList):2)
           {
@@ -1186,7 +1195,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         } else 
         {
           loopRotation[subLabnums] <- (subModList[[g]]$loopRotation + centAngles[link[1]]) %% ( 2*pi)
-          ECP[object@Pars$sub == g & object@Pars$group == gr,] <- (subModList[[g]]$ECP + centAngles[link[1]]) %% ( 2*pi)
+          subECPIdx2 <- which(object@Pars$sub == g & object@Pars$group == gr)
+          if (length(subECPIdx2) == nrow(subModList[[g]]$ECP)) {
+            ECP[subECPIdx2,] <- (subModList[[g]]$ECP + centAngles[link[1]]) %% ( 2*pi)
+          }
           # ECP <- (subModList[[g]]$ECP + centAngles[link[1]]) %% ( 2*pi)
         }
         
@@ -1497,7 +1509,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
         Mar <- Mar[(0:3 + (rotation-1)) %% 4 + 1]
         
         # Add 2 to top for title:
-        if (title) Mar[3] <- Mar[3] + 2
+        if (title && !DoNotPlot) Mar[3] <- Mar[3] + 2
       } else 
       {
         Mar <- c(3,3,3,3)
@@ -1687,7 +1699,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
 #       }
 #     }
     
-    if (title)
+    if (title && !DoNotPlot)
     {
       #       if (length(Groups)==1) title("Path Diagram",line=3) else title(paste0("Path Diagram for group '",gr,"'"),line=3)
       title(gr, col.main=title.color, adj = title.adj, outer = TRUE, cex.main = title.cex, line = title.line)

@@ -91,37 +91,20 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
   #          length(varNames),length(varNames)))
   # } 
   
+  # Use add.labels=TRUE so lavTech returns named matrices (handles multigroup with different vars)
   if (lavInspect(object, "options")$conditional.x){
-    semModel@ObsCovs <- lapply(lavTech(object, "sampstat"),"[[","res.cov")
+    semModel@ObsCovs <- lapply(lavTech(object, "sampstat", add.labels = TRUE),"[[","res.cov")
   } else {
-    semModel@ObsCovs <- lapply(lavTech(object, "sampstat"),"[[","cov")
+    semModel@ObsCovs <- lapply(lavTech(object, "sampstat", add.labels = TRUE),"[[","cov")
   }
-
   names(semModel@ObsCovs) <- lavInspect(object, "group.label")
-  for (i in 1:length(semModel@ObsCovs))
-  {
-    if (lavInspect(object, "options")$conditional.x){
-      rownames(semModel@ObsCovs[[i]]) <- colnames(semModel@ObsCovs[[i]]) <- lavaanNames(object, type="ov.model") #object@Data@ov.names[[i]]
-    } else {
-      rownames(semModel@ObsCovs[[i]]) <- colnames(semModel@ObsCovs[[i]]) <- lavaanNames(object, type="ov") #object@Data@ov.names[[i]]
-    }
-  }
-  
+
   if (lavInspect(object, "options")$conditional.x){
-    semModel@ImpCovs <- lapply(lavTech(object, "implied"), "[[", "res.cov")
+    semModel@ImpCovs <- lapply(lavTech(object, "implied", add.labels = TRUE), "[[", "res.cov")
   } else {
-    semModel@ImpCovs <- lapply(lavTech(object, "implied"), "[[", "cov")
+    semModel@ImpCovs <- lapply(lavTech(object, "implied", add.labels = TRUE), "[[", "cov")
   }
   names(semModel@ImpCovs) <- lavInspect(object, "group.label") # object@Data@group.label
-
-  for (i in 1:length(semModel@ImpCovs))
-  {
-    if (lavInspect(object, "options")$conditional.x){
-      rownames(semModel@ImpCovs[[i]]) <- colnames(semModel@ImpCovs[[i]]) <- lavaanNames(object, type="ov.model") 
-    } else {
-      rownames(semModel@ImpCovs[[i]]) <- colnames(semModel@ImpCovs[[i]]) <- lavaanNames(object, type="ov") 
-    }
-  }
   
   semModel@Computed <- TRUE
   

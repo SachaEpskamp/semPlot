@@ -28,7 +28,17 @@ semPlotModel.lm <- function(object, ...)
   }
   
   namesCoef <- rownames(coef)
-  stdCoef <- coef(standardize(object))
+  # standardize() fails for non-gaussian GLMs (e.g. binomial) because
+  # standardizing the response breaks the link function constraints.
+  # Fall back to raw coefficients in that case.
+  stdCoef <- tryCatch(
+    coef(standardize(object)),
+    error = function(e) {
+      warning("Could not compute standardized coefficients: ", e$message,
+              ". Using raw coefficients instead.")
+      coef(object)
+    }
+  )
   names(stdCoef) <- gsub("`","",names(stdCoef))
   
   NamesR <- rownames(coef)

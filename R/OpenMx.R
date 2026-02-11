@@ -133,7 +133,10 @@ semPlotModel_MxRAMModel <- function(object){
     ## loop over variable names that have a standardized estimate
     ## (only free parameters; assume others are fixed to zero)
     for (v in seq_along(stdM$col)) {
-      MeanStd[ v.idx[v] ] <- stdM$Std.Value[stdM$col == v.idx[v] ]
+      match_idx <- which(stdM$col == v.idx[v])
+      if (length(match_idx) > 0) {
+        MeanStd[ v.idx[v] ] <- stdM$Std.Value[match_idx]
+      }
     }
     ## old method (using deprecated semTools function, now at the bottom of this script)
     ## standardizeMx(object,free=T)[which(names(standardizeMx(object,free=T))%in%object@matrices$M$labels)]

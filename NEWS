@@ -1,3 +1,11 @@
+Changes in Version 1.1.8
+  o Fixed DoNotPlot = TRUE causing an error in multigroup models (#50)
+  o Fixed multigroup models with different variables per group crashing due to dimnames mismatch (#38)
+  o Fixed logistic regression and other non-gaussian GLMs crashing due to standardize() (#43)
+  o Fixed OpenMx models crashing with "replacement has length zero" for M matrix standardization (#35)
+  o Fixed layoutSplit causing "logical subscript too long" error (#15)
+  o Covariance matrices from lavaan now use lavTech with add.labels=TRUE for proper per-group naming
+
 Changes in Version 1.1.5
   o Small change to a link used in an example
 
