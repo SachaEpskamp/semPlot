@@ -13,10 +13,23 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
   if (!is(object,"lavaan")) stop("Input must me a 'lavaan' object")
 
   
-  # Extract parameter estimates:
+  # Extract parameter estimates and the parameter table:
   pars <- parameterEstimates(object,standardized=TRUE)
-  list <- inspect(object,"list")
-  
+  pt <- parTable(object)
+  pt <- pt[!pt$op %in% c("==","<",">"), , drop = FALSE]
+
+  # Align pars with the parameter table by matching keys rather than
+  # positionally (robust against row-set differences between lavaan
+  # versions). Key columns are those present in both tables:
+  keyCols <- intersect(c("lhs","op","rhs","group","block"),
+                       intersect(names(pars), names(pt)))
+  keyOf <- function(d) do.call(paste, c(d[keyCols], sep = "\r"))
+  ptIdx <- match(keyOf(pars), keyOf(pt))
+  if (any(is.na(ptIdx)))
+  {
+    stop("semPlot: could not align parameterEstimates() with parTable(). Please report this issue, including your lavaan version.")
+  }
+
   # Remove mean structure (TEMP SOLUTION)
   # meanstructure <- pars$op=="~1"
   # pars <- pars[!meanstructure,]
@@ -25,8 +38,8 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
   # varNames <- fit@Model@dimNames$lambda[[1]]
   # factNames <- fit@Model@dimNames$lambda[[2]]
 #   Lambda <- inspect(object,"coef")$lambda
-  varNames <- lavaanNames(object, type="ov")
-  factNames <- lavaanNames(object, type="lv")
+  varNames <- lavNames(object, type="ov")
+  factNames <- lavNames(object, type="lv")
 #   rm(Lambda)
   
   factNames <- factNames[!factNames%in%varNames]
@@ -42,29 +55,43 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
 
   if (is.null(pars$group)) pars$group <- ""
 
-  # Create edges dataframe
+  # Create edges dataframe. Regressions ('~'), intercepts ('~1') and
+  # composite/formative loadings ('<~') store the arrow origin in rhs:
   semModel@Pars <- data.frame(
     label = pars$label,
-    lhs = ifelse(pars$op=="~"|pars$op=="~1",pars$rhs,pars$lhs),
+    lhs = ifelse(pars$op%in%c("~","~1","<~"),pars$rhs,pars$lhs),
     edge = "--",
-    rhs = ifelse(pars$op=="~"|pars$op=="~1",pars$lhs,pars$rhs),
+    rhs = ifelse(pars$op%in%c("~","~1","<~"),pars$lhs,pars$rhs),
     est = pars$est,
     std = pars$std.all,
     group = pars$group,
-    fixed = list$free[list$op!="=="]==0,
-    par = list$free[list$op!="=="],
+    fixed = pt$free[ptIdx]==0,
+    par = pt$free[ptIdx],
     stringsAsFactors=FALSE)
 
 
-  semModel@Pars$edge[pars$op=="~~"] <- "<->"  
-  semModel@Pars$edge[pars$op=="~*~"] <- "<->"  
+  semModel@Pars$edge[pars$op=="~~"] <- "<->"
+  semModel@Pars$edge[pars$op=="~*~"] <- "<->"
   semModel@Pars$edge[pars$op=="~"] <- "~>"
   semModel@Pars$edge[pars$op=="=~"] <- "->"
+  semModel@Pars$edge[pars$op=="<~"] <- "~>"
   semModel@Pars$edge[pars$op=="~1"] <- "int"
   semModel@Pars$edge[grepl("\\|",pars$op)] <- "|"
-  
+
+  # Mark composite indicator edges so semSyntax() can re-emit them as '<~':
+  semModel@Pars$composite <- pars$op == "<~"
+
+  # Multilevel models: map lavaan's level column onto the Within/Between
+  # panel mechanism of semPaths (level 1 = Within, higher levels = Between):
+  nLevels <- lavInspect(object, "nlevels")
+  if (nLevels > 1 && !is.null(pars$level))
+  {
+    if (nLevels > 2) warning("Models with more than two levels are displayed as Within (level 1) versus Between (all higher levels).")
+    semModel@Pars$BetweenWithin <- ifelse(pars$level == 1, "Within", "Between")
+  }
+
   # Move thresholds to Thresholds slot:
-  semModel@Thresholds <- semModel@Pars[grepl("\\|",semModel@Pars$edge),-(3:4)]
+  semModel@Thresholds <- semModel@Pars[grepl("\\|",semModel@Pars$edge), !names(semModel@Pars) %in% c("edge","rhs")]
   
   # Remove constraints and weird stuff:
   semModel@Pars  <- semModel@Pars[!pars$op %in% c('<', '>',':=','<','>','==','|'),]
@@ -92,19 +119,24 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
   # } 
   
   # Use add.labels=TRUE so lavTech returns named matrices (handles multigroup with different vars)
-  if (lavInspect(object, "options")$conditional.x){
-    semModel@ObsCovs <- lapply(lavTech(object, "sampstat", add.labels = TRUE),"[[","res.cov")
-  } else {
-    semModel@ObsCovs <- lapply(lavTech(object, "sampstat", add.labels = TRUE),"[[","cov")
-  }
-  names(semModel@ObsCovs) <- lavInspect(object, "group.label")
+  covName <- if (isTRUE(lavInspect(object, "options")$conditional.x)) "res.cov" else "cov"
+  semModel@ObsCovs <- lapply(lavTech(object, "sampstat", add.labels = TRUE), "[[", covName)
+  semModel@ImpCovs <- lapply(lavTech(object, "implied", add.labels = TRUE), "[[", covName)
 
-  if (lavInspect(object, "options")$conditional.x){
-    semModel@ImpCovs <- lapply(lavTech(object, "implied", add.labels = TRUE), "[[", "res.cov")
+  # Name the blocks: group labels, crossed with Within/Between for
+  # multilevel models (lavaan blocks are ordered group-major):
+  grpLab <- lavInspect(object, "group.label")
+  if (length(grpLab) == 0) grpLab <- ""
+  if (nLevels > 1)
+  {
+    lvlLab <- c("Within", rep("Between", nLevels - 1))
+    blockNames <- as.vector(t(outer(grpLab, lvlLab, function(g, l) trimws(paste(g, "-", l)))))
+    blockNames <- sub("^- ", "", blockNames)
   } else {
-    semModel@ImpCovs <- lapply(lavTech(object, "implied", add.labels = TRUE), "[[", "cov")
+    blockNames <- grpLab
   }
-  names(semModel@ImpCovs) <- lavInspect(object, "group.label") # object@Data@group.label
+  if (length(semModel@ObsCovs) == length(blockNames) && any(blockNames != "")) names(semModel@ObsCovs) <- blockNames
+  if (length(semModel@ImpCovs) == length(blockNames) && any(blockNames != "")) names(semModel@ImpCovs) <- blockNames
   
   semModel@Computed <- TRUE
   

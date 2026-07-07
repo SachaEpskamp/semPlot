@@ -25,6 +25,13 @@ semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
     object@Pars <- object@Pars[object@Pars$knot == 0, ]
   }
 
+  # Multilevel (Within/Between) structure is not represented in the emitted
+  # syntax; all levels are merged:
+  if (!is.null(object@Pars$BetweenWithin) && length(unique(object@Pars$BetweenWithin)) > 1)
+  {
+    warning("Multilevel (Within/Between) structure cannot be represented in lavaan/sem syntax; the emitted syntax merges all levels.")
+  }
+
   # If all fixed, simply set all fixed = TRUE:
   if (allFixed)
   {
@@ -43,6 +50,13 @@ semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
     # Change operators:
     Pars$edge[Pars$edge=='->'&!(Pars$lhs%in%object@Vars$name[!object@Vars$manifest] & Pars$rhs%in%object@Vars$name[object@Vars$manifest])] <- "~"
     Pars$edge[Pars$edge=='->'&(Pars$lhs%in%object@Vars$name[!object@Vars$manifest] & Pars$rhs%in%object@Vars$name[object@Vars$manifest])] <- "=~"
+    # Composite (formative) indicators imported from lavaan's '<~' operator
+    # must be re-emitted as '<~' (they were reversed above with the other
+    # '~>' rows, so lhs now holds the composite):
+    if (!is.null(Pars$composite))
+    {
+      Pars$edge[Pars$composite %in% TRUE & Pars$edge == "~>"] <- "<~"
+    }
     Pars$edge[Pars$edge == "~>"] <- "~"
     Pars$edge[Pars$edge == "<->"] <- "~~"
     Pars$rhs[Pars$edge == "int"] <- "1"

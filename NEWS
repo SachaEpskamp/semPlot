@@ -1,3 +1,37 @@
+Changes in Version 1.2
+  o semPaths() and semPlotModel() no longer crash on inline calls containing
+    a '+' (e.g. semPaths(lm(y ~ x + z, data))); combining models with '+' now
+    uses AST inspection of the unevaluated argument (#audit-1)
+  o Fixed the all-NA 'std' column for non-gaussian GLMs (fallback of the 1.1.8
+    standardize() fix) (#audit-2)
+  o semPaths(DoNotPlot=TRUE) no longer opens a graphics device; par(ask) and
+    panelGroups/semCors layout() are restored exception-safely (#audit-3)
+  o semPlotModel.default now reports every importer's failure message instead
+    of 'Object not recognized as SEM model' (#audit-4)
+  o glm importer classifies intercepts by exact name; semCors errors
+    informatively for models without covariance matrices; semSyntax skips
+    interaction terms with a warning (#audit-6)
+  o NEW: psychonetrics support (lvm and varcov frameworks, all cov/ggm/chol/
+    prec subtypes; multigroup). GGM blocks are displayed as undirected
+    network edges, with delta scalings replaced by implied variances by
+    default (delta argument: 'variance', 'ignore', 'show') (#audit-10)
+  o Undirected ('--') edges are now first-class: symmetric layout roles
+    (defExo), curveAdjacent support (new default c('<->','--')), and a
+    semSyntax guard (#audit-11)
+  o NEW: lavaan efa() output (efaList) can be plotted; select solutions with
+    the 'which' argument (#audit-9)
+  o lavaan composites ('<~') import as directed edges into the composite and
+    re-emit as '<~' in semSyntax (previously drawn as undirected placeholder
+    edges) (#audit-8)
+  o Multilevel lavaan models (cluster=) now map level 1/2 onto Within/Between
+    panels instead of silently conflating both levels in one diagram
+    (#audit-8)
+  o The lavaan importer aligns parameterEstimates() with parTable() by key
+    matching (robust across lavaan versions) and uses the maintained
+    parTable()/lavNames() accessors (#audit-8)
+  o Combining models with '+' uses column-union binding, so models from
+    different importers (e.g. lavaan + lm) can be combined (#audit-8)
+
 Changes in Version 1.1.8
   o Fixed DoNotPlot = TRUE causing an error in multigroup models (#50)
   o Fixed multigroup models with different variables per group crashing due to dimnames mismatch (#38)
