@@ -1,4 +1,7 @@
 Changes in Version 1.2
+  o NEW: lavaan.mi support -- pooled multiple-imputation fits display
+    Rubin's-rules pooled estimates and pooled standardized solutions
+    (#audit-13)
   o NEW: piecewiseSEM support -- psem() models import their directed paths
     (with piecewiseSEM's standardized estimates) and correlated errors
     (x %~~% y) as bidirectional edges (#audit-15b)

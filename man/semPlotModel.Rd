@@ -20,6 +20,7 @@
 \alias{semPlotModel_Onyx}
 \alias{semPlotModel_lavaanModel}
 \alias{semPlotModel_psychonetrics}
+\alias{semPlotModel_lavaan_mi}
 \title{
 SEM model representation
 }
@@ -47,6 +48,7 @@ semPlotModel_Amos(object)
 semPlotModel_Onyx(object)
 semPlotModel_lavaanModel(object, ...)
 semPlotModel_psychonetrics(object, delta = c("variance", "ignore", "show"), ...)
+semPlotModel_lavaan_mi(object, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -86,6 +88,12 @@ frameworks, including all subtypes of their (co)variance structures:
 \code{"chol"} and \code{"prec"} (both displayed as implied covariances).
 The development version of psychonetrics
 (\code{remotes::install_github("SachaEpskamp/psychonetrics")}) is recommended.
+
+Pooled multiple-imputation models from the lavaan.mi package
+(\code{semPlotModel_lavaan_mi}, dispatched automatically) are displayed with
+Rubin's-rules pooled estimates and pooled standardized solutions; observed and
+implied covariance matrices are not defined for pooled fits, so
+\code{\link{semCors}} is unavailable for them.
 
 psych's fa() and omega() outputs are supported (omega as a bifactor structure; pair it with semPaths(..., bifactor = 'g', layout = 'tree2')); principal() was already supported.
 

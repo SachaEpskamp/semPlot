@@ -575,5 +575,48 @@ if (!requireNamespace("piecewiseSEM", quietly = TRUE)) {
     sum(m@Pars$edge == "~>") == 2 })
 }
 
+## ================= item13 =================
+# Item 13: lavaan.mi pooled multiple-imputation importer
+if (!requireNamespace("lavaan.mi", quietly = TRUE)) {
+  cat("SKIP item13: lavaan.mi not installed\n")
+} else {
+  mi_fit <- local({
+    set.seed(11)
+    d <- HS[paste0("x",1:6)]
+    d[sample(nrow(d), 30), "x1"] <- NA
+    imps <- lapply(1:3, function(i){ di <- d
+      for (v in names(di)){ na <- is.na(di[[v]])
+        di[[v]][na] <- mean(di[[v]], na.rm = TRUE) + rnorm(sum(na), 0, sd(di[[v]], na.rm = TRUE)) }
+      di })
+    quiet(lavaan.mi::cfa.mi(" visual =~ x1+x2+x3\n textual =~ x4+x5+x6 ", data = imps))
+  })
+
+  check("T13a lavaan.mi imports with pooled estimates", {
+    m <- quiet(semPlotModel(mi_fit))
+    pe <- quiet(lavaan.mi::parameterEstimates.mi(mi_fit))
+    inherits(m, "semPlotModel") && nrow(m@Pars) == nrow(pe) &&
+      all(abs(sort(m@Pars$est) - sort(pe$est)) < 1e-10) })
+
+  check("T13b lavaan.mi std column pools standardizedSolution.mi", {
+    m <- quiet(semPlotModel(mi_fit))
+    ss <- quiet(lavaan.mi::standardizedSolution.mi(mi_fit))
+    ld <- m@Pars[m@Pars$edge == "->", ]
+    rows_ok <- sapply(seq_len(nrow(ld)), function(i){
+      row <- ss[ss$lhs == ld$lhs[i] & ss$op == "=~" & ss$rhs == ld$rhs[i], ]
+      nrow(row) == 1 && abs(row$est.std - ld$std[i]) < 1e-10 })
+    all(rows_ok) })
+
+  check("T13c lavaan.mi renders and semCors errors informatively", {
+    p <- quiet(semPaths(mi_fit, DoNotPlot = TRUE))
+    e <- tryCatch({ semCors(quiet(semPlotModel(mi_fit))); NULL },
+                  error = function(e) conditionMessage(e))
+    inherits(p, "qgraph") && !is.null(e) && grepl("covariance", e) })
+
+  check("T13d lavaan.mi edge structure matches complete-data fit", {
+    fitc <- quiet(cfa(" visual =~ x1+x2+x3\n textual =~ x4+x5+x6 ", data = HS))
+    mc <- quiet(semPlotModel(fitc)); mm <- quiet(semPlotModel(mi_fit))
+    identical(table(mc@Pars$edge), table(mm@Pars$edge)) })
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

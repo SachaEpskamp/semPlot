@@ -144,6 +144,7 @@ semPlotModel <- function (object, ...) {
   }
 
   if (is(object, "psychonetrics")) return(semPlotModel_psychonetrics(object, ...))
+  if (is(object, "lavaan.mi")) return(semPlotModel_lavaan_mi(object, ...))
   if ("MxRAMModel"%in%class(object)) return(semPlotModel_MxRAMModel(object))
   if ("MxModel"%in%class(object)) return(semPlotModel_MxModel(object))
   if(isS4(object)) 
