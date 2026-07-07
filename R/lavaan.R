@@ -115,3 +115,43 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
 
 
 
+# lavaan's efa() returns an 'efaList': a plain (non-S4) list of complete lavaan
+# fits, one per requested number of factors, named e.g. "nf2", "nf3". Import a
+# selected solution by delegating to the existing lavaan (S4) importer.
+semPlotModel.efaList <- function(object, which, ...)
+{
+  fits <- unclass(object)
+
+  # Besides the fits (named e.g. "nf2"), recent lavaan versions store extra
+  # elements (such as "loadings") in the list -- keep only the lavaan fits:
+  fits <- Filter(function(x) is(x, "lavaan"), fits)
+  if (length(fits) == 0) stop("This efaList contains no lavaan fits.")
+
+  # Default to the last solution (the highest number of factors):
+  if (missing(which)) which <- length(fits)
+
+  # Validate the selection and resolve a display name:
+  nms <- names(fits)
+  if (is.character(which)) {
+    if (!which %in% nms) {
+      stop("'which' must be one of: ", paste(nms, collapse = ", "))
+    }
+    selName <- which
+  } else {
+    if (!is.numeric(which) || length(which) != 1 ||
+        which < 1 || which > length(fits)) {
+      stop("'which' must be a single index between 1 and ", length(fits),
+           ", or one of: ", paste(nms, collapse = ", "))
+    }
+    selName <- if (is.null(nms) || is.na(nms[[which]])) as.character(which) else nms[[which]]
+  }
+
+  if (length(fits) > 1) {
+    available <- if (is.null(nms)) seq_along(fits) else nms
+    message("efaList contains ", length(fits), " solutions (",
+            paste(available, collapse = ", "), "); importing '", selName,
+            "'. Use 'which' to select another.")
+  }
+
+  semPlotModel(fits[[which]], ...)
+}

@@ -13,6 +13,7 @@
 \alias{semPlotModel.sem}
 \alias{semPlotModel.msem}
 \alias{semPlotModel.msemObjectiveML}
+\alias{semPlotModel.efaList}
 \alias{semPlotModel_Amos}
 \alias{semPlotModel_Onyx}
 \alias{semPlotModel_lavaanModel}
@@ -37,6 +38,7 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 \method{semPlotModel}{sem}(object, \dots)
 \method{semPlotModel}{msem}(object, \dots)
 \method{semPlotModel}{msemObjectiveML}(object, \dots)
+\method{semPlotModel}{efaList}(object, which, \dots)
 semPlotModel_Amos(object)
 semPlotModel_Onyx(object)
 semPlotModel_lavaanModel(object, ...)
@@ -49,6 +51,11 @@ An object contaning the result of a SEM or GLM analysis, or a string contaning t
 }
 \item{mplusStd}{
 What standardization to use in Mplus models?
+}
+\item{which}{
+Which solution to import from a lavaan \code{efa()} result (an \code{efaList}):
+a numeric index or a name such as \code{"nf2"}. Defaults to the last (highest
+number of factors).
 }
 \item{model}{
 The original sem model (used in cvregsem)
