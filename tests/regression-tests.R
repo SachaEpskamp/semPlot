@@ -482,5 +482,49 @@ check("T14d validator passes a real imported model", {
   m <- quiet(semPlotModel(fit_cfa))
   identical(validateSemPlotModel(m), m) })
 
+## ================= item15a =================
+# Item 15a: psych fa()/omega() importers
+if (!requireNamespace("psych", quietly = TRUE)) {
+  cat("SKIP item15a: psych not installed\n")
+} else {
+  fa3 <- quiet(psych::fa(HS[paste0("x",1:9)], nfactors = 3, rotate = "oblimin", fm = "ml"))
+
+  check("T15a1 fa() imports: loadings, Phi, uniquenesses", {
+    m <- quiet(semPlotModel(fa3))
+    sum(m@Pars$edge == "->") == 27 &&
+      sum(m@Pars$edge == "<->" & m@Pars$lhs != m@Pars$rhs) == 3 &&
+      sum(m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs) == 9 &&
+      sum(!m@Vars$manifest) == 3 })
+
+  check("T15a2 fa() renders", {
+    inherits(quiet(semPaths(fa3, DoNotPlot = TRUE)), "qgraph") })
+
+  check("T15a3 fa() varimax: no factor correlations", {
+    fv <- quiet(psych::fa(HS[paste0("x",1:9)], nfactors = 2, rotate = "varimax", fm = "ml"))
+    m <- quiet(semPlotModel(fv))
+    sum(m@Pars$edge == "<->" & m@Pars$lhs != m@Pars$rhs) == 0 })
+
+  check("T15a4 fa() cut argument drops small loadings", {
+    m0 <- quiet(semPlotModel(fa3))
+    m3 <- quiet(semPlotModel(fa3, cut = 0.3))
+    sum(m3@Pars$edge == "->") < sum(m0@Pars$edge == "->") &&
+      all(abs(m3@Pars$est[m3@Pars$edge == "->"]) >= 0.3) })
+
+  check("T15a5 omega() imports bifactor with g first and renders", {
+    om <- quiet(psych::omega(HS[paste0("x",1:9)], nfactors = 3, plot = FALSE))
+    m <- quiet(semPlotModel(om, cut = 0.01))
+    lats <- m@Vars$name[!m@Vars$manifest]
+    gload <- m@Pars[m@Pars$edge == "->" & m@Pars$lhs == "g", ]
+    lats[1] == "g" && nrow(gload) >= 8 &&
+      sum(m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs) == 9 &&
+      sum(m@Pars$edge == "<->" & m@Pars$lhs != m@Pars$rhs) == 0 &&
+      inherits(quiet(semPaths(om, bifactor = "g", layout = "tree2", DoNotPlot = TRUE)), "qgraph") })
+
+  check("T15a6 principal() still works via delegation", {
+    pc <- quiet(psych::principal(HS[paste0("x",1:9)], nfactors = 2))
+    m <- quiet(semPlotModel(pc))
+    inherits(m, "semPlotModel") })
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

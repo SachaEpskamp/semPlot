@@ -3,6 +3,7 @@
 \alias{semPlotModel.default}
 \alias{semPlotModel.lm}
 \alias{semPlotModel.principal}
+\alias{semPlotModel.psych}
 \alias{semPlotModel.princomp}
 \alias{semPlotModel.loadings}
 \alias{semPlotModel.factanal}
@@ -28,6 +29,7 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 \method{semPlotModel}{default}(object, \dots)
 \method{semPlotModel}{lm}(object, \dots)
 \method{semPlotModel}{principal}(object, \dots)
+\method{semPlotModel}{psych}(object, cut, \dots)
 \method{semPlotModel}{princomp}(object, \dots)
 \method{semPlotModel}{loadings}(object, \dots)
 \method{semPlotModel}{factanal}(object, \dots)
@@ -51,6 +53,9 @@ An object contaning the result of a SEM or GLM analysis, or a string contaning t
 }
 \item{mplusStd}{
 What standardization to use in Mplus models?
+}
+\item{cut}{
+Loadings with absolute value below this cutoff are omitted when importing psych fa/omega objects. Defaults to 0 (keep all).
 }
 \item{which}{
 Which solution to import from a lavaan \code{efa()} result (an \code{efaList}):
@@ -79,6 +84,8 @@ frameworks, including all subtypes of their (co)variance structures:
 \code{"chol"} and \code{"prec"} (both displayed as implied covariances).
 The development version of psychonetrics
 (\code{remotes::install_github("SachaEpskamp/psychonetrics")}) is recommended.
+
+psych's fa() and omega() outputs are supported (omega as a bifactor structure; pair it with semPaths(..., bifactor = 'g', layout = 'tree2')); principal() was already supported.
 }
 \value{
 A \code{"semPlotModel"} object. See \code{link{semPlotModel-class}}

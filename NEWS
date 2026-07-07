@@ -1,4 +1,9 @@
 Changes in Version 1.2
+  o NEW: psych support -- fa() (directed loadings, factor correlations for
+    oblique rotations, uniqueness self-loops) and omega() (bifactor /
+    Schmid-Leiman structure; pair with semPaths(..., bifactor = 'g',
+    layout = 'tree2')); new 'cut' argument to omit small loadings.
+    principal() was already supported (#audit-15a)
   o NEW: registerSemPlotImporter() lets other packages plug importers for
     their model classes into semPlotModel()/semPaths(); the new
     validateSemPlotModel() checks the semPlotModel contract and is run
