@@ -14,7 +14,8 @@ semCors <- function(object,include,vertical=TRUE,titles=FALSE,layout,maximum,...
   
   l <- matrix(1:(Ng*length(include)),length(include),)
   if (vertical) layout(t(l)) else layout(l)
-  
+  on.exit(layout(1), add = TRUE)
+
   Res <- list()
   
   for (g in 1:Ng)

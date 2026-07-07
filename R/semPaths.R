@@ -335,21 +335,26 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   {
     if (length(Groups)>1) ask <- TRUE else ask <- FALSE
   }
-  askOrig <- par("ask")
-  
+  if (!DoNotPlot)
+  {
+    askOrig <- par("ask")
+    on.exit(par(ask = askOrig), add = TRUE)
+  }
+
   if (missing(include)) include <- 1:length(Groups)
-  
-  if (panelGroups)
+
+  if (panelGroups && !DoNotPlot)
   {
     layout(t(1:length(include)))
+    on.exit(layout(1), add = TRUE)
   }
-  
+
   # Reassign labels (temporary solution for excluding vars in multi group)
   AllLabs <- Labels
   AllMan <- manNames
   AllLat <- latNames
-  
-  par(ask=ask)
+
+  if (!DoNotPlot) par(ask=ask)
 
   ### If no sub, set sub to 0 (root sub)
 
@@ -1701,7 +1706,6 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       title(gr, col.main=title.color, adj = title.adj, outer = TRUE, cex.main = title.cex, line = title.line)
     }
   }
-  par(ask=askOrig)
   if (length(qgraphRes)==1) qgraphRes <- qgraphRes[[1]]
   invisible(qgraphRes)
 }
