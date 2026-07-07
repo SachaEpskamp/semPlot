@@ -12,6 +12,10 @@
           
 ### SINGLE GROUP ###
 semPlotModel_MxRAMModel <- function(object){
+  if (!requireNamespace("OpenMx", quietly = TRUE))
+  {
+    stop("The 'OpenMx' package is required to import OpenMx models. Install it with install.packages('OpenMx').")
+  }
 
   # Extract names:
   varNames <- object@manifestVars
@@ -214,6 +218,10 @@ semPlotModel_MxRAMModel <- function(object){
 
 
 semPlotModel_MxModel <- function(object){
+  if (!requireNamespace("OpenMx", quietly = TRUE))
+  {
+    stop("The 'OpenMx' package is required to import OpenMx models. Install it with install.packages('OpenMx').")
+  }
 
   if (any(!"MxRAMModel"%in%sapply(object@submodels,class))) stop("Model or all submodels must be of class 'MxRAMModel'")
   for (i in 1:length(object@submodels)) object@submodels[[i]]@output <- list(TRUE)

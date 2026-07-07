@@ -85,6 +85,10 @@ semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
   ### SEM ###
   if (syntax == "sem")
   {
+    if (!requireNamespace("sem", quietly = TRUE))
+    {
+      stop("The 'sem' package is required for syntax = 'sem'. Install it with install.packages('sem').")
+    }
     
     Pars <- object@Pars
     
@@ -133,7 +137,7 @@ semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
       write(paste0("\nModel <- specifyModel()\n",Mod,"\n\n",sep=""),file)
     }
 
-    Mod <- specifyModel( textConnection( Mod ))
+    Mod <- sem::specifyModel( textConnection( Mod ))
     
     return(Mod)
   }

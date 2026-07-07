@@ -19,7 +19,7 @@ standcoefmsem <- function (object, ...)
     group <- list(coeff = par.gr, t = t, ram = ram[[g]], 
                   A = A[[g]], P = P[[g]], par.posn = par.posn, param.names = par.names)
     class(group) <- "sem"
-    Res[[g]] <- standardizedCoefficients(group, ...)
+    Res[[g]] <- sem::standardizedCoefficients(group, ...)
   }
   return(Res)
 }

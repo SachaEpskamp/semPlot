@@ -134,7 +134,11 @@ semPlotModel.default <- function(object,...)
     
     if (any(grepl("l\\s*i\\s*s\\s*r\\s*e\\s*l",head,ignore.case=TRUE)))
     {
-      return(semPlotModel(readLisrel(object)))
+      if (!requireNamespace("lisrelToR", quietly = TRUE))
+      {
+        stop("This looks like LISREL output; the 'lisrelToR' package is required to import it. Install it with install.packages('lisrelToR').")
+      }
+      return(semPlotModel(lisrelToR::readLisrel(object)))
     }
     
     # If all else fais, just try everything and assume you get errors
@@ -143,7 +147,10 @@ semPlotModel.default <- function(object,...)
     attempts <- list(
       lavaan = function() semPlotModel_lavaanModel(object, ...),
       Mplus  = function() semPlotModel.mplus.model(object, ...),
-      LISREL = function() semPlotModel(readLisrel(object)),
+      LISREL = function() {
+        if (!requireNamespace("lisrelToR", quietly = TRUE)) stop("package 'lisrelToR' is not installed")
+        semPlotModel(lisrelToR::readLisrel(object))
+      },
       Onyx   = function() semPlotModel_Onyx(object),
       Amos   = function() semPlotModel_Amos(object)
     )

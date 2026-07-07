@@ -1,34 +1,38 @@
 
 semPlotModel_Onyx <- function(object)
 {
+  if (!requireNamespace("XML", quietly = TRUE))
+  {
+    stop("The 'XML' package is required to import Onyx models. Install it with install.packages('XML').")
+  }
   # Parse Onyx model:
-  doc <- xmlParse(object)
+  doc <- XML::xmlParse(object)
   
   # Get Nodes and Edges:
-  Nodes <- getNodeSet(doc, "/model/graph/node")
-  Edges <- getNodeSet(doc, "/model/graph/edge")
-  Const <- as.logical(sapply(Nodes, function(n) xmlGetAttr(n, "constant")))
+  Nodes <- XML::getNodeSet(doc, "/model/graph/node")
+  Edges <- XML::getNodeSet(doc, "/model/graph/edge")
+  Const <- as.logical(sapply(Nodes, function(n) XML::xmlGetAttr(n, "constant")))
   
   # Get NodeNames:
-  NodeNames <- sapply(Nodes, function(n) xmlGetAttr(n, "caption"))
+  NodeNames <- sapply(Nodes, function(n) XML::xmlGetAttr(n, "caption"))
   NodeNames[Const] <- ""
   
   # Get edgelist:
   Edgelist <- data.frame(
-    From = as.numeric(as.character(sapply(Edges, function(n) xmlGetAttr(n, "sourceNodeId")))),
-    To = as.numeric(as.character(sapply(Edges, function(n) xmlGetAttr(n, "targetNodeId")))),  
+    From = as.numeric(as.character(sapply(Edges, function(n) XML::xmlGetAttr(n, "sourceNodeId")))),
+    To = as.numeric(as.character(sapply(Edges, function(n) XML::xmlGetAttr(n, "targetNodeId")))),  
     stringsAsFactors=FALSE) + 1
   
   # Define Pars:
   Pars <- data.frame(
-    label = sapply(Edges, function(n) xmlGetAttr(n, "parameterName")), 
+    label = sapply(Edges, function(n) XML::xmlGetAttr(n, "parameterName")), 
     lhs = NodeNames[Edgelist$From],
-    edge = ifelse(as.logical(sapply(Edges, function(n) xmlGetAttr(n, "doubleHeaded"))),"<->","->"),
+    edge = ifelse(as.logical(sapply(Edges, function(n) XML::xmlGetAttr(n, "doubleHeaded"))),"<->","->"),
     rhs = NodeNames[Edgelist$To],
-    est = as.numeric(as.character(sapply(Edges, function(n) xmlGetAttr(n, "value")))),
+    est = as.numeric(as.character(sapply(Edges, function(n) XML::xmlGetAttr(n, "value")))),
     std = NA,
     group = "",
-    fixed = as.logical(sapply(Edges, function(n) xmlGetAttr(n, "fixed"))),
+    fixed = as.logical(sapply(Edges, function(n) XML::xmlGetAttr(n, "fixed"))),
     par = 0,
     stringsAsFactors=FALSE)
   
@@ -38,7 +42,7 @@ semPlotModel_Onyx <- function(object)
   # Vars:
   Vars <- data.frame(
     name = NodeNames,
-    manifest = !as.logical(sapply(Nodes, function(n) xmlGetAttr(n, "latent"))),
+    manifest = !as.logical(sapply(Nodes, function(n) XML::xmlGetAttr(n, "latent"))),
     exogenous = NA,
     stringsAsFactors=FALSE)
   

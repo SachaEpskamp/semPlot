@@ -18,6 +18,10 @@
 ### SINGLE GROUP MODEL ###
 semPlotModel.sem <- function(object, ...)
 {
+  if (!requireNamespace("sem", quietly = TRUE))
+  {
+    stop("The 'sem' package is required to import sem models. Install it with install.packages('sem').")
+  }
   
   # Check if object is of class "sem":
   if (!any(class(object)%in%c("sem","semmod"))) stop("Input must be a 'sem' object")
@@ -29,7 +33,7 @@ semPlotModel.sem <- function(object, ...)
     edge = "--",
     rhs = object$ram[,2],
     est = object$ram[,5],
-    std = standardizedCoefficients(object)[,2],
+    std = sem::standardizedCoefficients(object)[,2],
     group = 1,
     fixed = object$ram[,4]==0,
     par = object$ram[,4],
@@ -80,6 +84,10 @@ semPlotModel.sem <- function(object, ...)
 ### MUTLI GROUP MODEL ###
 semPlotModel.msem <- semPlotModel.msemObjectiveML <- function(object, ...)
 {
+  if (!requireNamespace("sem", quietly = TRUE))
+  {
+    stop("The 'sem' package is required to import sem models. Install it with install.packages('sem').")
+  }
   
   nGroup <- length(object$ram)
   GroupNames <- object$groups

@@ -32,15 +32,22 @@ semPlotModel.lm <- function(object, ...)
   # standardizing the response breaks the link function constraints.
   # Fall back to raw coefficients in that case.
   std_ok <- TRUE
-  stdCoef <- tryCatch(
-    coef(standardize(object)),
-    error = function(e) {
-      warning("Could not compute standardized coefficients: ", e$message,
-              ". Using raw coefficients instead.")
-      std_ok <<- FALSE
-      coef(object)
-    }
-  )
+  if (requireNamespace("rockchalk", quietly = TRUE))
+  {
+    stdCoef <- tryCatch(
+      coef(rockchalk::standardize(object)),
+      error = function(e) {
+        warning("Could not compute standardized coefficients: ", e$message,
+                ". Using raw coefficients instead.")
+        std_ok <<- FALSE
+        coef(object)
+      }
+    )
+  } else {
+    warning("The 'rockchalk' package is not installed; using raw coefficients instead of standardized ones.")
+    std_ok <- FALSE
+    stdCoef <- coef(object)
+  }
   names(stdCoef) <- gsub("`","",names(stdCoef))
   
   NamesR <- rownames(coef)
