@@ -1,6 +1,10 @@
 
 semPlotModel_Amos <- function(object)
 {
+  if (!requireNamespace("XML", quietly = TRUE))
+  {
+    stop("The 'XML' package is required to import Amos output. Install it with install.packages('XML').")
+  }
   ## Warnings:
   warning("(Residual) variances of Amos model is not yet supported")
   
@@ -43,7 +47,7 @@ semPlotModel_Amos <- function(object)
     EstTabs <- substring(str,open[startSect],close[curClose] + 5)
     
     # Extract tables:
-    Tabs <- readHTMLTable(EstTabs)
+    Tabs <- XML::readHTMLTable(EstTabs)
     
     # Find names of tables;
     Tabspl <- strsplit(EstTabs,split="<table>")[[1]]
