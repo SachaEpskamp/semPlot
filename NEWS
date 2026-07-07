@@ -1,4 +1,7 @@
 Changes in Version 1.2
+  o blavaan objects are imported natively (via lavaan-method inheritance)
+    instead of overwriting their class; posterior means and standardized
+    posterior solutions display as est/std (#audit-12)
   o NEW: metaSEM stage-2 models (tssem2()/wls()) plot via metaSEM's
     meta2semPlot() bridge; stage-1 pooling objects error informatively
     (#audit-15d)

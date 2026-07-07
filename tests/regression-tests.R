@@ -673,5 +673,36 @@ if (!(requireNamespace("metaSEM", quietly = TRUE) && not_cran2())) {
   }
 }
 
+## ================= item12 =================
+# Item 12: blavaan support without the class-overwrite hack
+not_cran3 <- function() !exists("not_cran") || isTRUE(not_cran)
+if (!(requireNamespace("blavaan", quietly = TRUE) && not_cran3())) {
+  cat("SKIP item12: blavaan not installed or CRAN mode\n")
+} else {
+  suppressMessages(require(blavaan, quietly = TRUE))
+  fit_blav <- local({
+    f <- function(){
+      sink(tempfile()); on.exit(sink(), add = TRUE)
+      quiet(blavaan::bcfa(" visual =~ x1 + x2 + x3 ", data = HS,
+                          burnin = 100, sample = 100))
+    }
+    tryCatch(f(), error = function(e) { cat("note: blavaan fit error:", conditionMessage(e), "\n"); NULL })
+  })
+  if (is.null(fit_blav)) {
+    cat("SKIP item12: blavaan example fit failed\n")
+  } else {
+    check("T12a blavaan imports with class intact and posterior std", {
+      m <- quiet(semPlotModel(fit_blav))
+      is(m@Original[[1]], "blavaan") &&
+        sum(!is.na(m@Pars$std)) == nrow(m@Pars) &&
+        inherits(m, "semPlotModel") })
+    check("T12b blavaan matches lavaan edge structure and renders", {
+      fitl <- quiet(cfa(" visual =~ x1 + x2 + x3 ", data = HS))
+      ml <- quiet(semPlotModel(fitl)); mb <- quiet(semPlotModel(fit_blav))
+      identical(table(ml@Pars$edge), table(mb@Pars$edge)) &&
+        inherits(quiet(semPaths(fit_blav, DoNotPlot = TRUE)), "qgraph") })
+  }
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

@@ -9,8 +9,11 @@
 ## EXTRACT MODEL ###
 setMethod("semPlotModel_S4",signature("lavaan"),function(object){
 
-  if (is(object,"blavaan")) class(object) <- 'lavaan'
-  if (!is(object,"lavaan")) stop("Input must me a 'lavaan' object")
+  # blavaan objects extend lavaan and dispatch here via inheritance; all
+  # accessors used below (parameterEstimates, parTable, lavNames, lavInspect,
+  # lavTech) work on them natively, so no class manipulation is needed (an
+  # older version overwrote class(object), discarding Bayesian information).
+  if (!is(object,"lavaan")) stop("Input must be a 'lavaan' object")
 
   
   # Extract parameter estimates and the parameter table:
