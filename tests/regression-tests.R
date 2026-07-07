@@ -639,5 +639,39 @@ if (!(requireNamespace("umx", quietly = TRUE) && not_cran0())) {
     inherits(m, "semPlotModel") && sum(m@Pars$edge == "->") == 3 && inherits(p, "qgraph") })
 }
 
+## ================= item15d =================
+# Item 15d: metaSEM stage-2 (wls) importer via meta2semPlot
+not_cran2 <- function() !exists("not_cran") || isTRUE(not_cran)
+if (!(requireNamespace("metaSEM", quietly = TRUE) && not_cran2())) {
+  cat("SKIP item15d: metaSEM not installed or CRAN mode\n")
+} else {
+  ms_fit2 <- tryCatch({
+    f1 <- quiet(metaSEM::tssem1(metaSEM::Becker92$data, metaSEM::Becker92$n, method = "FEM"))
+    A <- metaSEM::create.mxMatrix(c(0, "0.2*Spatial2Math", "0.2*Verbal2Math",
+                                    0, 0, 0,
+                                    0, 0, 0),
+                                  type = "Full", ncol = 3, nrow = 3, byrow = TRUE, name = "A")
+    S <- metaSEM::create.mxMatrix(c("0.2*ErrMath",
+                                    0, 1,
+                                    0, "0.2*SpatialVerbal", 1),
+                                  type = "Symm", byrow = TRUE, ncol = 3, nrow = 3, name = "S")
+    quiet(metaSEM::tssem2(f1, Amatrix = A, Smatrix = S, diag.constraints = FALSE))
+  }, error = function(e) NULL)
+
+  if (is.null(ms_fit2)) {
+    cat("SKIP item15d: could not fit the metaSEM example\n")
+  } else {
+    check("T15d1 metaSEM wls imports via meta2semPlot and renders", {
+      m <- quiet(semPlotModel(ms_fit2))
+      inherits(m, "semPlotModel") && nrow(m@Pars) >= 4 &&
+        inherits(quiet(semPaths(ms_fit2, DoNotPlot = TRUE)), "qgraph") })
+
+    check("T15d2 metaSEM stage-1 object errors informatively", {
+      f1 <- quiet(metaSEM::tssem1(metaSEM::Becker92$data, metaSEM::Becker92$n, method = "FEM"))
+      e <- tryCatch({ semPlotModel(f1); NULL }, error = function(e) conditionMessage(e))
+      !is.null(e) && grepl("stage-1", e) })
+  }
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))
