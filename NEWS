@@ -1,4 +1,6 @@
 Changes in Version 1.2
+  o Documented and regression-tested umx compatibility (umxRAM models are
+    MxRAMModels and import via the OpenMx importer) (#audit-15c)
   o NEW: lavaan.mi support -- pooled multiple-imputation fits display
     Rubin's-rules pooled estimates and pooled standardized solutions
     (#audit-13)

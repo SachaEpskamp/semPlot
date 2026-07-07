@@ -95,7 +95,7 @@ Rubin's-rules pooled estimates and pooled standardized solutions; observed and
 implied covariance matrices are not defined for pooled fits, so
 \code{\link{semCors}} is unavailable for them.
 
-psych's fa() and omega() outputs are supported (omega as a bifactor structure; pair it with semPaths(..., bifactor = 'g', layout = 'tree2')); principal() was already supported.
+umx models (umxRAM() returns an MxRAMModel) are supported via the OpenMx importer. psych's fa() and omega() outputs are supported (omega as a bifactor structure; pair it with semPaths(..., bifactor = 'g', layout = 'tree2')); principal() was already supported.
 
 piecewiseSEM's psem() models are supported: directed paths from the component models (with piecewiseSEM's standardized estimates in the std column) and correlated errors (\%~~\%) as bidirectional edges.
 }

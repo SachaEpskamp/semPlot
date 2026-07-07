@@ -618,5 +618,26 @@ if (!requireNamespace("lavaan.mi", quietly = TRUE)) {
     identical(table(mc@Pars$edge), table(mm@Pars$edge)) })
 }
 
+## ================= item15c =================
+# Item 15c: umx compatibility (umxRAM returns MxRAMModel; OpenMx importer handles it)
+not_cran0 <- function() !exists("not_cran") || isTRUE(not_cran)
+if (!(requireNamespace("umx", quietly = TRUE) && not_cran0())) {
+  cat("SKIP item15c: umx not installed or CRAN mode\n")
+} else {
+  # umx initializes its options in .onAttach, so attach it (as its users do):
+  suppressMessages(require(umx, quietly = TRUE))
+  check("T15c1 umxRAM model imports and renders via OpenMx importer", {
+    HSu <- HS[paste0("x",1:3)]
+    m1 <- quiet(umxRAM("m1", data = HSu,
+      umxPath(from = "vis", to = paste0("x",1:3)),
+      umxPath(var = paste0("x",1:3)),
+      umxPath(var = "vis", fixedAt = 1),
+      umxPath(means = paste0("x",1:3)),
+      autoRun = TRUE))
+    m <- quiet(semPlotModel(m1))
+    p <- quiet(semPaths(m1, DoNotPlot = TRUE))
+    inherits(m, "semPlotModel") && sum(m@Pars$edge == "->") == 3 && inherits(p, "qgraph") })
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))
