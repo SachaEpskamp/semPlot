@@ -31,11 +31,13 @@ semPlotModel.lm <- function(object, ...)
   # standardize() fails for non-gaussian GLMs (e.g. binomial) because
   # standardizing the response breaks the link function constraints.
   # Fall back to raw coefficients in that case.
+  std_ok <- TRUE
   stdCoef <- tryCatch(
     coef(standardize(object)),
     error = function(e) {
       warning("Could not compute standardized coefficients: ", e$message,
               ". Using raw coefficients instead.")
+      std_ok <<- FALSE
       coef(object)
     }
   )
@@ -44,14 +46,26 @@ semPlotModel.lm <- function(object, ...)
   NamesR <- rownames(coef)
   NamesC <- colnames(coef)
 
-  
+  # standardize() renames every variable with an "s" suffix (e.g. "x" -> "xs"),
+  # so on success we look up "<name>s"; in the raw-coefficient fallback the names
+  # are unchanged, so we look up "<name>" directly. rockchalk drops the intercept
+  # from the standardized fit (no "(Intercept)s"), yielding NA there, so we force
+  # the intercept to NA in the fallback too to stay consistent.
+  if (std_ok)
+  {
+    stdVals <- stdCoef[paste0(namesCoef,"s")]
+  } else {
+    stdVals <- stdCoef[namesCoef]
+    stdVals[grepl("intercept", namesCoef, ignore.case = TRUE)] <- NA
+  }
+
   Pars  <- data.frame(
-    label = "", 
+    label = "",
     lhs = rep(NamesR,times=Nc),
     edge = "->",
     rhs = rep(NamesC,each=Nr),
     est = c(coef),
-    std = unname(c(stdCoef[paste0(namesCoef,"s")])),
+    std = unname(c(stdVals)),
     group = "",
     fixed = FALSE,
     par = 1:(Nr*Nc),
