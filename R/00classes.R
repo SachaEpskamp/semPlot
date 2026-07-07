@@ -113,7 +113,7 @@ semPlotModel.default <- function(object,...)
     if (!file.exists(object))
     {
       mod <- try(semPlotModel_lavaanModel(object,...),silent=TRUE)
-      if (!"try-error"%in%class(mod)) return(mod) else stop("Input string neither an existing file or Lavaan model.")
+      if (!"try-error"%in%class(mod)) return(mod) else stop("Input string is neither an existing file nor a lavaan model. lavaan importer said:\n  ", attr(mod, "condition")$message, call. = FALSE)
     }
     # Find file:
     if (grepl("\\.xml",object,ignore.case=TRUE))
@@ -126,7 +126,7 @@ semPlotModel.default <- function(object,...)
     }
     
     # Read first 100 lines:
-    head <- readLines(object, 10)
+    head <- readLines(object, n = 100, warn = FALSE)
     if (any(grepl("mplus",head,ignore.case=TRUE)))
     {
       return(semPlotModel.mplus.model(object,...))
@@ -137,25 +137,26 @@ semPlotModel.default <- function(object,...)
       return(semPlotModel(readLisrel(object)))
     }
     
-    # If all else fais, just try everything and assume you get errors 
-    # if it is wrong:
-    mod <- try(semPlotModel_lavaanModel(object,...),silent=TRUE)
-    if (!"try-error"%in%class(mod)) return(mod)
-    
-    mod <- try(semPlotModel.mplus.model(object,...),silent=TRUE)
-    if (!"try-error"%in%class(mod)) return(mod)
-
-    mod <- try(semPlotModel(readLisrel(object)),silent=TRUE)
-    if (!"try-error"%in%class(mod)) return(mod)
-    
-    mod <- try(semPlotModel_Onyx(object),silent=TRUE)
-    if (!"try-error"%in%class(mod)) return(mod)
-    
-    mod <- try(semPlotModel_Amos(object),silent=TRUE)
-    if (!"try-error"%in%class(mod)) return(mod)
-    
-    # Well, we failed...
+    # If all else fais, just try everything and assume you get errors
+    # if it is wrong. Accumulate each importer's error message so a
+    # valid-but-failing input gets a useful diagnostic:
+    attempts <- list(
+      lavaan = function() semPlotModel_lavaanModel(object, ...),
+      Mplus  = function() semPlotModel.mplus.model(object, ...),
+      LISREL = function() semPlotModel(readLisrel(object)),
+      Onyx   = function() semPlotModel_Onyx(object),
+      Amos   = function() semPlotModel_Amos(object)
+    )
+    errs <- character(0)
+    for (nm in names(attempts))
+    {
+      mod <- try(attempts[[nm]](), silent = TRUE)
+      if (!"try-error" %in% class(mod)) return(mod)
+      errs[nm] <- attr(mod, "condition")$message
+    }
+    stop("Object not recognized as a SEM model. Importer attempts failed with:\n",
+         paste0("  - ", names(errs), ": ", errs, collapse = "\n"), call. = FALSE)
   }
-  
+
   stop("Object not recognized as SEM model")
 }
