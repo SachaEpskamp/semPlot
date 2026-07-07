@@ -37,16 +37,12 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
 #   c("exo cov","load dest","endo man cov")
 
 
-  # Check if input is combination of models:
-  call <- paste(deparse(substitute(object)), collapse = "")
-  if (grepl("\\+",call)) 
-  {
-    args <- unlist(strsplit(call,split="\\+"))
-    obs <- lapply(args,function(x)semPlotModel(eval(parse(text=x))))
-    object <- obs[[1]]
-    for (i in 2:length(obs)) object <- object + obs[[i]]
-  }
-  
+  # Check if the *unevaluated* input is a `a + b` combination of models
+  # (AST-based; the old deparse-and-split-on-"+" heuristic crashed on any
+  # inline call containing a `+`, such as semPaths(lm(y ~ x + z, data))):
+  combined <- .tryCombineModels(substitute(object), parent.frame())
+  if (!is.null(combined)) object <- combined
+
   if (!"semPlotModel"%in%class(object)) object <- do.call(semPlotModel,c(list(object),modelOpts))
   stopifnot("semPlotModel"%in%class(object))
   

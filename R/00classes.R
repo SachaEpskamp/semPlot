@@ -35,20 +35,49 @@ setGeneric("semPlotModel_S4", function(object,...) {
 #   }
 # }
 
-semPlotModel <- function (object, ...) {
-  # Check if call contains a + operator, if so combine models:
-  
-  call <- paste(deparse(substitute(object)), collapse = "")
-  if (grepl("\\+",call) & !grepl("\"",call) & !grepl("\'",call)) 
+# Collect the terms of a (possibly nested) `a + b (+ c ...)` call,
+# evaluated in 'env'. Only used for expressions whose top-level call is
+# the binary `+` operator.
+.collect_plus_terms <- function(expr, env)
+{
+  if (is.call(expr) && length(expr) == 3 && identical(expr[[1]], as.name("+")))
   {
-    args <- unlist(strsplit(call,split="\\+"))
-    obs <- lapply(args,function(x)semPlotModel(eval(parse(text=x))))
-    Res <- obs[[1]]
-    for (i in 2:length(obs)) Res <- Res + obs[[i]]
-    return(Res)
+    c(.collect_plus_terms(expr[[2]], env), .collect_plus_terms(expr[[3]], env))
+  } else {
+    list(eval(expr, env))
   }
-  
-  if ("MxRAMModel"%in%class(object)) return(semPlotModel_MxRAMModel(object)) 
+}
+
+# Interpret 'expr' (the substitute()d argument) as a combination of models
+# written as `a + b`, for model classes that do not define `+` themselves
+# (e.g. two lavaan fits). Returns a combined semPlotModel, or NULL when the
+# expression is not a `+` call, a term does not evaluate, or R can evaluate
+# the sum natively (in which case the caller proceeds normally). This
+# replaces an old deparse-and-split-on-"+" heuristic that crashed on any
+# inline call containing a `+`, such as semPaths(lm(y ~ x + z, data)).
+.tryCombineModels <- function(expr, env)
+{
+  if (!(is.call(expr) && length(expr) == 3 && identical(expr[[1]], as.name("+")))) return(NULL)
+  terms <- tryCatch(.collect_plus_terms(expr, env), error = function(e) NULL)
+  if (is.null(terms)) return(NULL)
+  # If R can evaluate the sum itself (semPlotModel objects, numerics, ...),
+  # let the normal path handle it:
+  canAdd <- tryCatch({ Reduce("+", terms); TRUE }, error = function(e) FALSE)
+  if (canAdd) return(NULL)
+  # Otherwise interpret `+` as model combination (errors propagate):
+  Reduce("+", lapply(terms, semPlotModel))
+}
+
+semPlotModel <- function (object, ...) {
+  # Check if the *unevaluated* argument is a `+` call, if so combine models:
+  combined <- .tryCombineModels(substitute(object), parent.frame())
+  if (!is.null(combined)) return(combined)
+
+  # semPlotModel objects pass through unchanged (checked before the generic
+  # S4 branch below, which would otherwise fail to dispatch on them):
+  if (is(object, "semPlotModel")) return(object)
+
+  if ("MxRAMModel"%in%class(object)) return(semPlotModel_MxRAMModel(object))
   if ("MxModel"%in%class(object)) return(semPlotModel_MxModel(object))
   if(isS4(object)) 
   {
