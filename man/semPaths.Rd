@@ -22,7 +22,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   springLevels = FALSE, nDigits = 2, exoVar, exoCov = TRUE, centerLevels = TRUE, 
   panelGroups = FALSE, layoutSplit = FALSE, measurementLayout = "tree", subScale, 
   subScale2, subRes = 4, subLinks, modelOpts = list(mplusStd = "std"), 
-  curveAdjacent = '<->', edge.label.cex = 0.6,  cardinal = "none", 
+  curveAdjacent = c('<->','--'), edge.label.cex = 0.6,  cardinal = "none", 
   equalizeManifests = FALSE, covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4), 
   ...)
 }
@@ -272,7 +272,7 @@ Vector of variables to link to. Currently not well supported so avoid using this
 A lists containing arguments sent to \code{\link{semPlotModel}} in case the input is not of class \code{semPlotModel}.
 }
 
-  \item{curveAdjacent}{What edges between adjacent horizontal nodes be curved? Can be \code{'<->'} or \code{'cov'} to indicate bidirectional covariances, \code{'->'} or \code{'reg'} for directed regressions or a vector containing both.}
+  \item{curveAdjacent}{What edges between adjacent horizontal nodes be curved? Can be \code{'<->'} or \code{'cov'} to indicate bidirectional covariances and undirected network edges (\code{'--'} is treated as \code{'cov'}), \code{'->'} or \code{'reg'} for directed regressions, or a vector containing both. Defaults to \code{c('<->','--')}.}
   
   \item{edge.label.cex}{Controls the font size of the edge labels. Same as in \code{\link[qgraph]{qgraph}} except that the default is now 0.8.}
 

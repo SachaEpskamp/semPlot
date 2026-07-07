@@ -27,7 +27,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      as.expression=character(0),optimizeLatRes=FALSE,inheritColor=TRUE,levels,nodeLabels,edgeLabels,
                      pastel=FALSE,rainbowStart=0,intAtSide,springLevels=FALSE,nDigits=2,exoVar,exoCov=TRUE,centerLevels=TRUE,
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
-                     subLinks, modelOpts = list(mplusStd="std"), curveAdjacent = "<->", edge.label.cex = 0.6, cardinal =  "none", 
+                     subLinks, modelOpts = list(mplusStd="std"), curveAdjacent = c("<->","--"), edge.label.cex = 0.6, cardinal =  "none",
                      equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4),
                      ...){
 
@@ -911,11 +911,12 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
           percurveAdjacent <- rep(FALSE,nrow(Edgelist))  
         
           curveAdjacent <- gsub("<->","cov",curveAdjacent)
+          curveAdjacent <- gsub("--","cov",curveAdjacent)
           curveAdjacent <- gsub("(->)|(~>)","reg",curveAdjacent)
-        
+
           if (is.character(curveAdjacent))
           {
-            percurveAdjacent[(any(grepl("reg",curveAdjacent,ignore.case=TRUE))&GroupPars$edge%in%c("->","~>",ignore.case=TRUE))|(any(grepl("cov",curveAdjacent))&GroupPars$edge%in%c("<->"))] <- TRUE
+            percurveAdjacent[(any(grepl("reg",curveAdjacent,ignore.case=TRUE))&GroupPars$edge%in%c("->","~>"))|(any(grepl("cov",curveAdjacent))&GroupPars$edge%in%c("<->","--"))] <- TRUE
           }
         }
 

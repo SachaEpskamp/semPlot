@@ -8,6 +8,14 @@ semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
   if (!syntax %in% c("lavaan","sem")) stop("Only 'lavaan' and 'sem' syntax is currently supported ")
  
   if (nrow(object@Thresholds) > 0) warning("Thresholds are not yet supported by semSyntax")
+
+  # Undirected network edges (e.g. GGM structures from psychonetrics) cannot
+  # be represented in lavaan/sem syntax:
+  if (any(object@Pars$edge == "--"))
+  {
+    warning("Undirected network edges (--) cannot be represented in lavaan/sem syntax and were skipped.")
+    object@Pars <- object@Pars[object@Pars$edge != "--", ]
+  }
   
   # If all fixed, simply set all fixed = TRUE:
   if (allFixed)

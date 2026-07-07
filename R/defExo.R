@@ -35,10 +35,12 @@ defExo <- function(object,layout="tree")
       object@Vars$exogenous <- FALSE
     }
     # If al endo, treat formative manifest as exo (MIMIC mode), unless all manifest are formative.
+    # Note: undirected ("--") edges are symmetric and must not influence
+    # exogeneity (which side of a "--" row a node is stored on is arbitrary):
     if (!any(object@Vars$exogenous))
     {
-      if (any(object@Vars$manifest & (object@Vars$name%in%object@Pars$rhs[object@Pars$edge %in% c("~>","--","->")])))
-        object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@Pars$rhs[object@Pars$edge %in% c("~>","--","->")])] <- TRUE
+      if (any(object@Vars$manifest & (object@Vars$name%in%object@Pars$rhs[object@Pars$edge %in% c("~>","->")])))
+        object@Vars$exogenous[object@Vars$manifest & !(object@Vars$name%in%object@Pars$rhs[object@Pars$edge %in% c("~>","->")])] <- TRUE
     }
     if (repExo)
     {
