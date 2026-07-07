@@ -15,6 +15,7 @@
 \alias{semPlotModel.msem}
 \alias{semPlotModel.msemObjectiveML}
 \alias{semPlotModel.efaList}
+\alias{semPlotModel.psem}
 \alias{semPlotModel_Amos}
 \alias{semPlotModel_Onyx}
 \alias{semPlotModel_lavaanModel}
@@ -41,6 +42,7 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 \method{semPlotModel}{msem}(object, \dots)
 \method{semPlotModel}{msemObjectiveML}(object, \dots)
 \method{semPlotModel}{efaList}(object, which, \dots)
+\method{semPlotModel}{psem}(object, \dots)
 semPlotModel_Amos(object)
 semPlotModel_Onyx(object)
 semPlotModel_lavaanModel(object, ...)
@@ -86,6 +88,8 @@ The development version of psychonetrics
 (\code{remotes::install_github("SachaEpskamp/psychonetrics")}) is recommended.
 
 psych's fa() and omega() outputs are supported (omega as a bifactor structure; pair it with semPaths(..., bifactor = 'g', layout = 'tree2')); principal() was already supported.
+
+piecewiseSEM's psem() models are supported: directed paths from the component models (with piecewiseSEM's standardized estimates in the std column) and correlated errors (\%~~\%) as bidirectional edges.
 }
 \value{
 A \code{"semPlotModel"} object. See \code{link{semPlotModel-class}}

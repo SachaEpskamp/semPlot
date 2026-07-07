@@ -40,6 +40,7 @@ export(semPlotModel_Amos)
 export(exo,"exo<-",endo,"endo<-",lat,"lat<-",man,"man<-")
 S3method(semPlotModel,regsem)
 S3method(semPlotModel,cvregsem)
+S3method(semPlotModel, psem)
 
 # importFrom(MplusAutomation,"readModels")
 importFrom(lavaan,"lavaan","cfa","standardizedSolution", "standardizedsolution", "parameterEstimates", "parameterestimates","inspect","lavaanNames","lavaanify","lavInspect","lavTech")

@@ -526,5 +526,54 @@ if (!requireNamespace("psych", quietly = TRUE)) {
     inherits(m, "semPlotModel") })
 }
 
+## ================= item15b =================
+# Item 15b: piecewiseSEM psem importer
+if (!requireNamespace("piecewiseSEM", quietly = TRUE)) {
+  cat("SKIP item15b: piecewiseSEM not installed\n")
+} else {
+  data(keeley, package = "piecewiseSEM")
+
+  check("T15b1 psem imports directed paths matching coefs()", {
+    mod <- quiet(piecewiseSEM::psem(
+      lm(rich ~ cover, data = keeley),
+      lm(cover ~ firesev, data = keeley),
+      lm(firesev ~ age, data = keeley),
+      data = keeley))
+    co <- quiet(piecewiseSEM::coefs(mod))
+    m <- quiet(semPlotModel(mod))
+    dir <- m@Pars[m@Pars$edge == "~>", ]
+    nrow(dir) == 3 &&
+      all(abs(sort(dir$est) - sort(as.numeric(co$Estimate))) < 1e-10) &&
+      all(!is.na(dir$std)) })
+
+  check("T15b2 psem renders", {
+    mod <- quiet(piecewiseSEM::psem(
+      lm(rich ~ cover, data = keeley),
+      lm(cover ~ firesev, data = keeley),
+      data = keeley))
+    inherits(quiet(semPaths(mod, DoNotPlot = TRUE)), "qgraph") })
+
+  check("T15b3 correlated errors become <-> edges", {
+    `%~~%` <- piecewiseSEM::`%~~%`
+    mod <- quiet(piecewiseSEM::psem(
+      lm(rich ~ firesev, data = keeley),
+      lm(cover ~ firesev, data = keeley),
+      rich %~~% cover,
+      data = keeley))
+    m <- quiet(semPlotModel(mod))
+    ce <- m@Pars[m@Pars$edge == "<->", ]
+    nrow(ce) == 1 && sort(c(ce$lhs, ce$rhs))[1] == "cover" &&
+      !grepl("~~", paste(ce$lhs, ce$rhs)) })
+
+  check("T15b4 glm component supported", {
+    k2 <- keeley; k2$rich01 <- as.numeric(k2$rich > stats::median(k2$rich))
+    mod <- quiet(piecewiseSEM::psem(
+      glm(rich01 ~ cover, family = binomial, data = k2),
+      lm(cover ~ firesev, data = k2),
+      data = k2))
+    m <- quiet(semPlotModel(mod))
+    sum(m@Pars$edge == "~>") == 2 })
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

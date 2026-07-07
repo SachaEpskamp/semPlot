@@ -1,4 +1,7 @@
 Changes in Version 1.2
+  o NEW: piecewiseSEM support -- psem() models import their directed paths
+    (with piecewiseSEM's standardized estimates) and correlated errors
+    (x %~~% y) as bidirectional edges (#audit-15b)
   o NEW: psych support -- fa() (directed loadings, factor correlations for
     oblique rotations, uniqueness self-loops) and omega() (bifactor /
     Schmid-Leiman structure; pair with semPaths(..., bifactor = 'g',
