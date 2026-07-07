@@ -441,5 +441,46 @@ check("T11e factanal loadings model unaffected by defExo change", {
     inherits(quiet(semPaths(m, what = "est", DoNotPlot = TRUE)), "qgraph") })
 
 
+## ================= item14 =================
+# Item 14: importer registration API + model validator
+check("T14a registered importer is dispatched by semPlotModel/semPaths", {
+  toy <- function(object, ...){
+    Pars <- data.frame(label = "", lhs = "A", edge = "~>", rhs = "B", est = 0.5,
+                       std = NA, group = "", fixed = FALSE, par = 1,
+                       stringsAsFactors = FALSE)
+    Vars <- data.frame(name = c("A","B"), manifest = TRUE, exogenous = NA,
+                       stringsAsFactors = FALSE)
+    m <- new("semPlotModel", Pars = Pars, Vars = Vars, Thresholds = data.frame(),
+             Computed = TRUE, ObsCovs = list(), ImpCovs = list(), Original = list())
+    m
+  }
+  registerSemPlotImporter("myToyModel", toy)
+  obj <- structure(list(), class = "myToyModel")
+  m <- semPlotModel(obj)
+  p <- quiet(semPaths(obj, DoNotPlot = TRUE))
+  inherits(m, "semPlotModel") && nrow(m@Pars) == 1 && inherits(p, "qgraph") })
+
+check("T14b validator catches unknown edge types", {
+  Pars <- data.frame(label = "", lhs = "A", edge = "=>", rhs = "B", est = 1,
+                     std = NA, group = "", fixed = FALSE, par = 1, stringsAsFactors = FALSE)
+  Vars <- data.frame(name = c("A","B"), manifest = TRUE, exogenous = NA, stringsAsFactors = FALSE)
+  bad <- new("semPlotModel", Pars = Pars, Vars = Vars, Thresholds = data.frame(),
+             Computed = TRUE, ObsCovs = list(), ImpCovs = list(), Original = list())
+  e <- tryCatch({ validateSemPlotModel(bad); NULL }, error = function(e) conditionMessage(e))
+  !is.null(e) && grepl("Unknown edge", e) })
+
+check("T14c validator catches Pars referring to unknown variables", {
+  Pars <- data.frame(label = "", lhs = "A", edge = "~>", rhs = "C", est = 1,
+                     std = NA, group = "", fixed = FALSE, par = 1, stringsAsFactors = FALSE)
+  Vars <- data.frame(name = c("A","B"), manifest = TRUE, exogenous = NA, stringsAsFactors = FALSE)
+  bad <- new("semPlotModel", Pars = Pars, Vars = Vars, Thresholds = data.frame(),
+             Computed = TRUE, ObsCovs = list(), ImpCovs = list(), Original = list())
+  e <- tryCatch({ validateSemPlotModel(bad); NULL }, error = function(e) conditionMessage(e))
+  !is.null(e) && grepl("not in Vars", e) })
+
+check("T14d validator passes a real imported model", {
+  m <- quiet(semPlotModel(fit_cfa))
+  identical(validateSemPlotModel(m), m) })
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

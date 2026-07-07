@@ -68,6 +68,63 @@ setGeneric("semPlotModel_S4", function(object,...) {
   Reduce("+", lapply(terms, semPlotModel))
 }
 
+# Registry for third-party importers: packages (or users) can register a
+# converter for their model class without modifying semPlot. See
+# ?registerSemPlotImporter.
+.importerRegistry <- new.env(parent = emptyenv())
+
+registerSemPlotImporter <- function(class, fun)
+{
+  stopifnot(is.character(class), length(class) == 1, nzchar(class), is.function(fun))
+  assign(class, fun, envir = .importerRegistry)
+  invisible(NULL)
+}
+
+# Validate the invariants semPaths() relies on. Returns the object
+# invisibly, or stops with a message listing all violations.
+validateSemPlotModel <- function(object)
+{
+  problems <- character(0)
+  if (!is(object, "semPlotModel"))
+  {
+    stop("Not a semPlotModel object.")
+  }
+  needed <- c("label","lhs","edge","rhs","est","std","group","fixed","par")
+  missingCols <- needed[!needed %in% names(object@Pars)]
+  if (length(missingCols) > 0)
+  {
+    problems <- c(problems, paste0("Pars is missing column(s): ", paste(missingCols, collapse = ", ")))
+  }
+  if ("edge" %in% names(object@Pars))
+  {
+    known <- c("->","~>","<->","--","int","|")
+    bad <- unique(object@Pars$edge[!object@Pars$edge %in% known])
+    if (length(bad) > 0)
+    {
+      problems <- c(problems, paste0("Unknown edge type(s): ", paste(bad, collapse = ", "),
+                                     " (known: ", paste(known, collapse = ", "), ")"))
+    }
+    if (any(is.na(object@Pars$edge)))
+    {
+      problems <- c(problems, "Pars$edge contains NA")
+    }
+  }
+  if (all(c("lhs","rhs","edge") %in% names(object@Pars)) && "name" %in% names(object@Vars))
+  {
+    nodes <- unique(c(object@Pars$lhs[object@Pars$edge != "int"], object@Pars$rhs))
+    unknown <- nodes[!nodes %in% c(object@Vars$name, "")]
+    if (length(unknown) > 0)
+    {
+      problems <- c(problems, paste0("Pars refer to variable(s) not in Vars: ", paste(unknown, collapse = ", ")))
+    }
+  }
+  if (length(problems) > 0)
+  {
+    stop("Invalid semPlotModel:\n", paste0("  - ", problems, collapse = "\n"))
+  }
+  invisible(object)
+}
+
 semPlotModel <- function (object, ...) {
   # Check if the *unevaluated* argument is a `+` call, if so combine models:
   combined <- .tryCombineModels(substitute(object), parent.frame())
@@ -76,6 +133,15 @@ semPlotModel <- function (object, ...) {
   # semPlotModel objects pass through unchanged (checked before the generic
   # S4 branch below, which would otherwise fail to dispatch on them):
   if (is(object, "semPlotModel")) return(object)
+
+  # Registered third-party importers take precedence over built-ins:
+  for (cl in class(object))
+  {
+    if (exists(cl, envir = .importerRegistry, inherits = FALSE))
+    {
+      return(get(cl, envir = .importerRegistry)(object, ...))
+    }
+  }
 
   if (is(object, "psychonetrics")) return(semPlotModel_psychonetrics(object, ...))
   if ("MxRAMModel"%in%class(object)) return(semPlotModel_MxRAMModel(object))

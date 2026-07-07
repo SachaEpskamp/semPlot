@@ -1,6 +1,8 @@
 
 # NEw export:
 export(semPlotModel)
+export(registerSemPlotImporter)
+export(validateSemPlotModel)
 S3method(semPlotModel, semspec)
 S3method(semPlotModel, regsemplot)
 S3method(semPlotModel, semPlotModel)

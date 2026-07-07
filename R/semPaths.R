@@ -45,6 +45,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
 
   if (!"semPlotModel"%in%class(object)) object <- do.call(semPlotModel,c(list(object),modelOpts))
   stopifnot("semPlotModel"%in%class(object))
+  validateSemPlotModel(object)
   
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
   

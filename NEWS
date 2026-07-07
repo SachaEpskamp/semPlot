@@ -1,4 +1,9 @@
 Changes in Version 1.2
+  o NEW: registerSemPlotImporter() lets other packages plug importers for
+    their model classes into semPlotModel()/semPaths(); the new
+    validateSemPlotModel() checks the semPlotModel contract and is run
+    automatically by semPaths() (#audit-14)
+  o Added a regression test suite (tests/regression-tests.R) (#audit-7)
   o sem, XML, lisrelToR, rockchalk and OpenMx are now optional (Suggests):
     each serves a single importer and is loaded on demand with an
     informative message when missing; installing semPlot is much lighter
