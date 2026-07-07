@@ -1,4 +1,8 @@
 Changes in Version 1.2
+  o NEW: PLS-SEM support -- seminr (estimate_pls) and cSEM (csem) models
+    import with reflective constructs as directed loadings and composite
+    (mode B / formative) constructs as weight arrows into the construct
+    (#audit-15e)
   o blavaan objects are imported natively (via lavaan-method inheritance)
     instead of overwriting their class; posterior means and standardized
     posterior solutions display as est/std (#audit-12)

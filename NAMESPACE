@@ -42,6 +42,8 @@ S3method(semPlotModel,regsem)
 S3method(semPlotModel,cvregsem)
 S3method(semPlotModel, psem)
 S3method(semPlotModel,wls)
+S3method(semPlotModel,seminr_model)
+S3method(semPlotModel,cSEMResults)
 S3method(semPlotModel,meta)
 S3method(semPlotModel,tssem1FEM)
 

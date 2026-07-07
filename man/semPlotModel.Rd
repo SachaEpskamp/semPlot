@@ -17,6 +17,8 @@
 \alias{semPlotModel.efaList}
 \alias{semPlotModel.psem}
 \alias{semPlotModel.wls}
+\alias{semPlotModel.seminr_model}
+\alias{semPlotModel.cSEMResults}
 \alias{semPlotModel.meta}
 \alias{semPlotModel.tssem1FEM}
 \alias{semPlotModel_Amos}
@@ -48,6 +50,8 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 \method{semPlotModel}{efaList}(object, which, \dots)
 \method{semPlotModel}{psem}(object, \dots)
 \method{semPlotModel}{wls}(object, \dots)
+\method{semPlotModel}{seminr_model}(object, \dots)
+\method{semPlotModel}{cSEMResults}(object, \dots)
 semPlotModel_Amos(object)
 semPlotModel_Onyx(object)
 semPlotModel_lavaanModel(object, ...)
@@ -99,7 +103,7 @@ Rubin's-rules pooled estimates and pooled standardized solutions; observed and
 implied covariance matrices are not defined for pooled fits, so
 \code{\link{semCors}} is unavailable for them.
 
-metaSEM stage-2 models (tssem2()/wls()) are supported through metaSEM's meta2semPlot(); stage-1 pooling objects give an informative error. umx models (umxRAM() returns an MxRAMModel) are supported via the OpenMx importer. psych's fa() and omega() outputs are supported (omega as a bifactor structure; pair it with semPaths(..., bifactor = 'g', layout = 'tree2')); principal() was already supported.
+PLS-SEM models from seminr (estimate_pls()) and cSEM (csem()) are supported: reflective constructs display directed loadings, composite (mode B / formative) constructs display weight arrows into the construct; PLS estimates are standardized. metaSEM stage-2 models (tssem2()/wls()) are supported through metaSEM's meta2semPlot(); stage-1 pooling objects give an informative error. umx models (umxRAM() returns an MxRAMModel) are supported via the OpenMx importer. psych's fa() and omega() outputs are supported (omega as a bifactor structure; pair it with semPaths(..., bifactor = 'g', layout = 'tree2')); principal() was already supported.
 
 piecewiseSEM's psem() models are supported: directed paths from the component models (with piecewiseSEM's standardized estimates in the std column) and correlated errors (\%~~\%) as bidirectional edges.
 }

@@ -704,5 +704,53 @@ if (!(requireNamespace("blavaan", quietly = TRUE) && not_cran3())) {
   }
 }
 
+## ================= item15e =================
+# Item 15e: PLS-SEM importers (seminr, cSEM)
+not_cran4 <- function() !exists("not_cran") || isTRUE(not_cran)
+if (!(requireNamespace("seminr", quietly = TRUE) && not_cran4())) {
+  cat("SKIP item15e (seminr): not installed or CRAN mode\n")
+} else {
+  sem_fit <- quiet({
+    mm <- seminr::constructs(
+      seminr::composite("Image", seminr::multi_items("IMAG", 1:5)),
+      seminr::composite("Satisfaction", seminr::multi_items("CUSA", 1:3), weights = seminr::mode_B),
+      seminr::reflective("Loyalty", seminr::multi_items("CUSL", 1:3)))
+    sm <- seminr::relationships(
+      seminr::paths(from = "Image", to = c("Satisfaction","Loyalty")),
+      seminr::paths(from = "Satisfaction", to = "Loyalty"))
+    seminr::estimate_pls(data = seminr::mobi, measurement_model = mm, structural_model = sm)
+  })
+  check("T15e1 seminr: modes map to loading vs weight arrows; renders", {
+    m <- quiet(semPlotModel(sem_fit))
+    modeB <- m@Pars[m@Pars$edge == "~>" & m@Pars$rhs == "Satisfaction" & m@Pars$lhs %in% paste0("CUSA",1:3), ]
+    refl <- m@Pars[m@Pars$edge == "->" & m@Pars$lhs %in% c("Image","Loyalty"), ]
+    struct <- m@Pars[m@Pars$edge == "~>" & m@Pars$lhs %in% c("Image","Satisfaction") & m@Pars$rhs %in% c("Satisfaction","Loyalty"), ]
+    nrow(modeB) == 3 && nrow(refl) == 8 && nrow(struct) == 3 &&
+      inherits(quiet(semPaths(sem_fit, DoNotPlot = TRUE)), "qgraph") })
+}
+if (!(requireNamespace("cSEM", quietly = TRUE) && not_cran4())) {
+  cat("SKIP item15e (cSEM): not installed or CRAN mode\n")
+} else {
+  csem_fit <- quiet({
+    model <- "
+      EXPE ~ IMAG
+      SAT ~ EXPE
+      IMAG =~ imag1 + imag2 + imag3
+      EXPE =~ expe1 + expe2 + expe3
+      SAT <~ sat1 + sat2 + sat3
+    "
+    cSEM::csem(.data = cSEM::satisfaction[, c(paste0("imag",1:3), paste0("expe",1:3), paste0("sat",1:3))],
+               .model = model)
+  })
+  check("T15e2 cSEM: composites get weights, common factors loadings; renders", {
+    m <- quiet(semPlotModel(csem_fit))
+    watSAT <- m@Pars[m@Pars$edge == "~>" & m@Pars$rhs == "SAT" & grepl("^sat", m@Pars$lhs), ]
+    loads <- m@Pars[m@Pars$edge == "->" & m@Pars$lhs %in% c("IMAG","EXPE"), ]
+    noSATload <- !any(m@Pars$edge == "->" & m@Pars$lhs == "SAT")
+    struct <- m@Pars[m@Pars$edge == "~>" & m@Pars$lhs %in% c("IMAG","EXPE") & m@Pars$rhs %in% c("EXPE","SAT"), ]
+    nrow(watSAT) == 3 && nrow(loads) == 6 && noSATload && nrow(struct) == 2 &&
+      inherits(quiet(semPaths(csem_fit, DoNotPlot = TRUE)), "qgraph") })
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))
