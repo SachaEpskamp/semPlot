@@ -89,8 +89,9 @@ semPlotModel.lm <- function(object, ...)
     }
   }
   
-  Pars$edge[grepl("intercept",Pars$lhs,ignore.case=TRUE)] <- "int"
-  Pars$lhs[grepl("intercept",Pars$lhs,ignore.case=TRUE)] <- ""
+  isInt <- Pars$lhs == "(Intercept)" | tolower(Pars$lhs) == "intercept"
+  Pars$edge[isInt] <- "int"
+  Pars$lhs[isInt] <- ""
   
   # Variable dataframe: 
   Vars <- data.frame(

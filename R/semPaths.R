@@ -134,7 +134,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     } else style <- "OpenMx"
   }
   if (grepl("ram",style,ignore.case=TRUE)) style <- "OpenMx"
-  if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only OpenMx (ram) or LISREL style is currently supported.")
+  if (!grepl("mx|lisrel",style,ignore.case=TRUE)) stop("Only style = 'OpenMx' (or 'ram'/'mx') and style = 'lisrel' are currently supported.")
   #   if (grepl("mx",style,ignore.case=TRUE) & !missing(residScale)) warning("'residScale' ingored in OpenMx style")
   if (missing(residScale)) residScale <- sizeMan
   

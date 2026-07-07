@@ -16,7 +16,15 @@ semSyntax <- function(object, syntax = "lavaan", allFixed = FALSE, file)
     warning("Undirected network edges (--) cannot be represented in lavaan/sem syntax and were skipped.")
     object@Pars <- object@Pars[object@Pars$edge != "--", ]
   }
-  
+
+  # Interaction terms (knotted edges from the lm/glm importer) cannot be
+  # represented in lavaan/sem syntax:
+  if (!is.null(object@Pars$knot) && any(object@Pars$knot > 0))
+  {
+    warning("Interaction terms are not representable in lavaan/sem syntax and were skipped.")
+    object@Pars <- object@Pars[object@Pars$knot == 0, ]
+  }
+
   # If all fixed, simply set all fixed = TRUE:
   if (allFixed)
   {

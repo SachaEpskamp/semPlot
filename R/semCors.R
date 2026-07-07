@@ -2,7 +2,11 @@ semCors <- function(object,include,vertical=TRUE,titles=FALSE,layout,maximum,...
   if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object) 
   
   if (!object@Computed) stop("SEM model has not been evaluated; there are no implied covariances")
-  
+  if (length(object@ObsCovs) == 0 && length(object@ImpCovs) == 0)
+  {
+    stop("This model contains no observed or implied covariance matrices; semCors is not available for this input type.")
+  }
+
   if (missing(layout)) layout <- NULL
   
   Ng <- max(sapply(list(object@ObsCovs,object@ImpCovs),length))
