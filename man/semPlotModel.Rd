@@ -16,6 +16,7 @@
 \alias{semPlotModel_Amos}
 \alias{semPlotModel_Onyx}
 \alias{semPlotModel_lavaanModel}
+\alias{semPlotModel_psychonetrics}
 \title{
 SEM model representation
 }
@@ -39,6 +40,7 @@ Methods to read a SEM object and return a \code{\link{semPlotModel-class}} objec
 semPlotModel_Amos(object)
 semPlotModel_Onyx(object)
 semPlotModel_lavaanModel(object, ...)
+semPlotModel_psychonetrics(object, delta = c("variance", "ignore", "show"), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -51,10 +53,25 @@ What standardization to use in Mplus models?
 \item{model}{
 The original sem model (used in cvregsem)
 }
+\item{delta}{
+How to display the Delta scaling parameters of GGM-parameterized blocks in
+psychonetrics models. \code{"variance"} (default) replaces them by the implied
+variances (the diagonal of \eqn{\Delta (I - \Omega)^{-1} \Delta}), which are
+directly interpretable; \code{"ignore"} omits them; \code{"show"} displays the
+raw scaling parameters as self-loops.
+}
 \item{\dots}{Arguments sent to 'lisrelModel', not used in other methods.}
 }
 \details{
 A detailed overview of which packages are supported and what is supported for each of them will soon be on my website.
+
+psychonetrics models (\code{semPlotModel_psychonetrics}, dispatched automatically
+by \code{semPlotModel}) are supported for the \code{lvm} and \code{varcov}
+frameworks, including all subtypes of their (co)variance structures:
+\code{"cov"}, \code{"ggm"} (displayed as undirected network edges),
+\code{"chol"} and \code{"prec"} (both displayed as implied covariances).
+The development version of psychonetrics
+(\code{remotes::install_github("SachaEpskamp/psychonetrics")}) is recommended.
 }
 \value{
 A \code{"semPlotModel"} object. See \code{link{semPlotModel-class}}

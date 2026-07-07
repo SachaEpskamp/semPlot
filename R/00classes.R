@@ -77,6 +77,7 @@ semPlotModel <- function (object, ...) {
   # S4 branch below, which would otherwise fail to dispatch on them):
   if (is(object, "semPlotModel")) return(object)
 
+  if (is(object, "psychonetrics")) return(semPlotModel_psychonetrics(object, ...))
   if ("MxRAMModel"%in%class(object)) return(semPlotModel_MxRAMModel(object))
   if ("MxModel"%in%class(object)) return(semPlotModel_MxModel(object))
   if(isS4(object)) 
