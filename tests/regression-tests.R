@@ -1,7 +1,7 @@
 # Regression tests for semPlot (plain stopifnot-style, no test framework).
-# Structure: baseline pipeline tests, then per-fix regression blocks matching
-# the audit items in fable_audit_semPlot.md. Long-running blocks (psychonetrics
-# model fitting) are skipped on CRAN (set NOT_CRAN=true to run them).
+# Structure: baseline pipeline tests, then per-fix regression blocks.
+# Long-running blocks (psychonetrics model fitting) are skipped on CRAN
+# (set NOT_CRAN=true to run them).
 library(semPlot)
 library(lavaan)
 options(warn = 1)
