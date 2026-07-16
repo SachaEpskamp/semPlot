@@ -65,7 +65,7 @@ semPlotModel.regsem <- semPlotModel.regsemplot <- function(object,...){
   semModel@Pars$edge[object1$op=="~1"] <- "int"
   semModel@Pars$edge[grepl("\\|",object1$op)] <- "|"
   
-  semModel@Pars <- semModel@Pars[!object$op%in%c(':=','<','>','==','|','<', '>'),]
+  semModel@Pars <- semModel@Pars[!object1$op%in%c(':=','<','>','==','|','<', '>'),]
   
   ## Create a vars data frame
   semModel@Vars <- data.frame(

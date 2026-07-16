@@ -558,12 +558,13 @@ source("http://openmx.ssri.psu.edu/docs/OpenMx/latest/_static/demo/TwoFactorMode
 semPaths(twoFactorFit, layout = "tree2")
 
 # Multi-group analysis -------------------------------------------
-## LISREL:
-# Download measurment invariance example:
-modFile <- tempfile(fileext=".OUT")
-download.file("http://sachaepskamp.com/files/mi1.OUT",modFile)
+## lavaan, measurement invariance:
+miMod <- ' visual  =~ x1 + x2 + x3
+           textual =~ x4 + x5 + x6 '
+miFit <- cfa(miMod, data = HolzingerSwineford1939, group = "school",
+             group.equal = "loadings")
 layout(t(1:2))
-semPaths(modFile,"eq",ask=FALSE, intAtSide = TRUE, mar = c(8, 1, 5, 1))
+semPaths(miFit,"eq",ask=FALSE, intAtSide = TRUE, mar = c(8, 1, 5, 1))
 # Color indicates equality constraints.
 }
 }

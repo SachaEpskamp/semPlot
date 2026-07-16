@@ -44,9 +44,14 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
   grpLabels <- unique(pars$group[order(pars$group_id)])
   singleGroup <- length(grpLabels) == 1
 
-  # Variable names (order matches psychonetrics' matrix rows):
+  # Variable names (order matches psychonetrics' matrix rows). Latent names are
+  # taken in 'lambda' column order, so that latNames[j] is the latent belonging
+  # to column j of lambda/beta and can be used to index the standardizing SDs
+  # below. This runs before the structural-zero rows are dropped, so every
+  # column is still represented.
   manNames <- object@sample@variables$label
-  latNames <- unique(pars$var2[pars$matrix == "lambda"])
+  lambdaRows <- pars$matrix == "lambda"
+  latNames <- unique(pars$var2[lambdaRows][order(pars$col[lambdaRows])])
   latNames <- latNames[!is.na(latNames)]
 
   # Thresholds not (yet) supported:
@@ -55,6 +60,13 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
     message("Thresholds ('tau') of psychonetrics models are not yet supported by semPlot and are not shown.")
     pars <- pars[pars$matrix != "tau", ]
   }
+
+  # How each block is parameterized is a property of the model, so it is read
+  # from the full parameter table, before the structural-zero drop below. An
+  # empty network (every omega fixed to zero, as for a default residual = "ggm")
+  # would otherwise disappear in that drop, leaving the block looking
+  # non-GGM and its delta rows unhandled.
+  allMatrices <- unique(pars$matrix)
 
   # Drop structurally-zero placeholder rows (e.g. excluded loadings):
   pars <- pars[!(pars$fixed & pars$par == 0 & pars$est == 0), ]
@@ -76,6 +88,108 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
     if (sfx == "_zeta") latNames else manNames
   }
 
+  # ---- Standardizing standard deviations --------------------------------
+  # psychonetrics leaves the 'std' column of @parameters empty for these
+  # models, so the standardized solution is computed here from the
+  # model-implied matrices:
+  #
+  #   lvm:    Var(eta) = (I - Beta)^-1 Sigma_zeta (I - Beta)^-T
+  #           Sigma    = Lambda Var(eta) Lambda' + Sigma_epsilon
+  #   varcov: Sigma is the implied covariance matrix itself.
+  #
+  # For a GGM-parameterized block psychonetrics forms
+  # Sigma_* = Delta (I - Omega)^-1 Delta, so 'sigma_*' already accounts for the
+  # network parameterization and needs no special-casing here.
+  impSigma <- getBlockMatrix("sigma")
+  impSigmaZeta <- if (framework == "lvm") getBlockMatrix("sigma_zeta") else NULL
+  impBeta <- if (framework == "lvm") getBlockMatrix("beta") else NULL
+
+  # A non-positive implied variance means the solution is improper (e.g. a
+  # Heywood case); standardizing against it is undefined, so those parameters
+  # keep std = NA and the affected variables are reported once below.
+  improper <- character(0)
+  sdFromVar <- function(v, nms, group)
+  {
+    bad <- !is.na(v) & v <= 0
+    if (any(bad))
+    {
+      improper <<- union(improper, if (singleGroup) nms[bad] else paste0(nms[bad], " (", group, ")"))
+    }
+    sd <- rep(NA_real_, length(v))
+    sd[!bad] <- sqrt(v[!bad])
+    sd
+  }
+
+  sdOf <- list()
+  for (g in grpLabels)
+  {
+    sdMan <- rep(NA_real_, length(manNames))
+    if (!is.null(impSigma) && !is.null(impSigma[[g]]))
+    {
+      sdMan <- sdFromVar(diag(as.matrix(impSigma[[g]])), manNames, g)
+    }
+    sdLat <- rep(NA_real_, length(latNames))
+    if (length(latNames) > 0 && !is.null(impSigmaZeta) && !is.null(impSigmaZeta[[g]]))
+    {
+      Sz <- as.matrix(impSigmaZeta[[g]])
+      B <- if (!is.null(impBeta) && !is.null(impBeta[[g]])) as.matrix(impBeta[[g]]) else matrix(0, nrow(Sz), ncol(Sz))
+      varEta <- tryCatch({
+        IB <- solve(diag(nrow(B)) - B)
+        IB %*% Sz %*% t(IB)
+      }, error = function(e) NULL)
+      if (!is.null(varEta)) sdLat <- sdFromVar(diag(varEta), latNames, g)
+    }
+    sdOf[[g]] <- list(man = sdMan, lat = sdLat)
+  }
+
+  if (length(improper) > 0)
+  {
+    warning("The model-implied variance is not positive for: ", paste(improper, collapse = ", "),
+            ". This indicates an improper solution; standardized parameters involving ",
+            "these variables are NA.")
+  }
+
+  # SDs belonging to a (co)variance block, for the derived rows added below:
+  blockSD <- function(sfx, g)
+  {
+    if (sfx == "_zeta") sdOf[[g]]$lat else sdOf[[g]]$man
+  }
+
+  # Standardize one parameter from its matrix and row/col indices.
+  stdValue <- function(mat, row, col, est, group)
+  {
+    sds <- sdOf[[group]]
+    if (is.null(sds)) return(NA_real_)
+    at <- function(x, i)
+    {
+      i <- suppressWarnings(as.integer(i))
+      if (!is.na(i) && i >= 1 && i <= length(x)) x[i] else NA_real_
+    }
+    lat <- sds$lat
+    man <- sds$man
+    switch(as.character(mat),
+      # Omega is by construction the partial correlation matrix and is thus
+      # already standardized: with Kappa = Delta^-1 (I - Omega) Delta^-1,
+      # -Kappa_ij / sqrt(Kappa_ii Kappa_jj) = Omega_ij for any Delta.
+      "omega_zeta"    = est,
+      "omega_epsilon" = est,
+      "omega"         = est,
+      "lambda"        = est * at(lat, col) / at(man, row),
+      "beta"          = est * at(lat, col) / at(lat, row),
+      "nu"            = est / at(man, row),
+      "mu"            = est / at(man, row),
+      "nu_eta"        = est / at(lat, row),
+      "sigma_zeta"    = est / (at(lat, row) * at(lat, col)),
+      "sigma_epsilon" = est / (at(man, row) * at(man, col)),
+      "sigma"         = est / (at(man, row) * at(man, col)),
+      # Delta is a scaling matrix; the corresponding scaling of the
+      # standardized (correlation) metric is Delta / sd.
+      "delta_zeta"    = est / at(lat, row),
+      "delta_epsilon" = est / at(man, row),
+      "delta"         = est / at(man, row),
+      NA_real_)
+  }
+
   # Rows that only encode a parameterization (not path-diagram parameters):
   parameterizationRows <- function(sfx)
   {
@@ -83,7 +197,7 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
   }
 
   derivedPars <- list()
-  addDerived <- function(nodes1, nodes2, ests, group)
+  addDerived <- function(nodes1, nodes2, ests, group, stds = NA_real_)
   {
     derivedPars[[length(derivedPars) + 1]] <<- data.frame(
       label = "",
@@ -91,7 +205,7 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
       edge = "<->",
       rhs = nodes2,
       est = ests,
-      std = NA,
+      std = stds,
       group = group,
       fixed = FALSE,
       par = 0,
@@ -100,10 +214,9 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
 
   for (sfx in blockSuffix)
   {
-    matNames <- unique(pars$matrix)
-    hasGGM <- paste0("omega", sfx) %in% matNames
-    hasChol <- paste0("lowertri", sfx) %in% matNames
-    hasPrec <- paste0("kappa", sfx) %in% matNames
+    hasGGM <- paste0("omega", sfx) %in% allMatrices
+    hasChol <- paste0("lowertri", sfx) %in% allMatrices
+    hasPrec <- paste0("kappa", sfx) %in% allMatrices
     nodes <- blockNodes(sfx)
 
     if (hasGGM)
@@ -129,7 +242,9 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
           {
             for (g in grpLabels)
             {
-              addDerived(nodes, nodes, diag(sig[[g]]), g)
+              vars <- diag(as.matrix(sig[[g]]))
+              sdv <- blockSD(sfx, g)
+              addDerived(nodes, nodes, vars, g, vars / (sdv * sdv))
             }
           }
         }
@@ -153,14 +268,27 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
                 "; displaying implied covariances.")
         for (g in grpLabels)
         {
-          S <- sig[[g]]
+          S <- as.matrix(sig[[g]])
           ind <- which(upper.tri(S, diag = TRUE), arr.ind = TRUE)
           ests <- S[ind]
           nonZero <- abs(ests) > sqrt(.Machine$double.eps)
-          addDerived(nodes[ind[nonZero, 1]], nodes[ind[nonZero, 2]], ests[nonZero], g)
+          sdv <- blockSD(sfx, g)
+          addDerived(nodes[ind[nonZero, 1]], nodes[ind[nonZero, 2]], ests[nonZero], g,
+                     ests[nonZero] / (sdv[ind[nonZero, 1]] * sdv[ind[nonZero, 2]]))
         }
       }
     }
+  }
+
+  # Fill in the standardized solution, keeping any value psychonetrics itself
+  # supplied:
+  if (nrow(pars) > 0)
+  {
+    computedStd <- mapply(stdValue, pars$matrix, pars$row, pars$col, pars$est, pars$group,
+                          SIMPLIFY = TRUE, USE.NAMES = FALSE)
+    computedStd <- as.numeric(computedStd)
+    computedStd[!is.finite(computedStd)] <- NA_real_
+    pars$std <- ifelse(is.na(pars$std), computedStd, pars$std)
   }
 
   # Map psychonetrics operators to semPlot edge types:

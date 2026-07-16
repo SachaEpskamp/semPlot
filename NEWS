@@ -1,4 +1,45 @@
 Changes in Version 1.2.0
+  o NEW: standardized parameters for psychonetrics models, so that
+    semPaths(mod, "std") now works. psychonetrics leaves the 'std' column of
+    its parameter table empty, so the standardized solution is computed from
+    the model-implied matrices:
+      Var(eta) = (I - Beta)^-1 Sigma_zeta (I - Beta)^-T
+      Sigma    = Lambda Var(eta) Lambda' + Sigma_epsilon
+    Loadings and regressions are rescaled by the ratio of the relevant
+    standard deviations, (co)variances are divided by them, and intercepts by
+    the variable's standard deviation (the lavaan std.all convention). This
+    covers the 'cov', 'ggm', 'chol' and 'prec' parameterizations of both the
+    lvm and varcov frameworks: for a GGM block psychonetrics forms
+    Sigma_* = Delta (I - Omega)^-1 Delta, so the same expressions apply. Omega
+    itself is by construction a matrix of partial correlations and is
+    therefore reported unchanged as its own standardized value.
+
+  o Fixed psychonetrics models with an empty GGM block (every omega fixed to
+    zero, as for a default residual = "ggm") dropping their delta parameters
+    with a "Dropped 10 parameter(s) with unsupported operator(s): ~/~"
+    warning, and showing no variances for that block. The block's
+    parameterization is now read from the full parameter table, before
+    structurally-zero rows are removed.
+
+  o Importing a psychonetrics model whose solution is improper (a
+    non-positive model-implied variance) now warns and names the offending
+    variables, instead of silently producing standardized values computed
+    against a variance clamped to zero.
+
+  o Fixed the regsem importer dropping no parameters for models using ':=',
+    '==', '<' or '>': the filter tested 'object$op', and since a regsem object
+    has no 'op' element R's partial matching silently resolved this to
+    'optim_fit', a number, making the whole test a constant. It now tests the
+    lavaan parameter table, as the surrounding lines already did. Models
+    without those operators are unaffected.
+
+  o Documentation examples fixed: ?regsemplot called semPlotModel.regsem()
+    directly, which is registered for S3 dispatch but never exported and so
+    could not be called by a user; it now goes through the semPlotModel()
+    generic. The multi-group example in ?semPaths downloaded a LISREL output
+    file from sachaepskamp.com that is no longer available, and now shows
+    equality constraints on a lavaan measurement-invariance model instead.
+
   o NEW: PLS-SEM support -- seminr (estimate_pls) and cSEM (csem) models
     import with reflective constructs as directed loadings and composite
     (mode B / formative) constructs as weight arrows into the construct

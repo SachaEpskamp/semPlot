@@ -58,6 +58,8 @@ fit <- cfa(mod, bfi2)
 out.reg <- regsem(fit, type="lasso", pars_pen=c(1:7))
 
 # plot the model
-semPaths(semPlotModel.regsem(object = out.reg))
+# semPlotModel.regsem is registered for S3 dispatch but not exported,
+# so it must be reached through the semPlotModel generic:
+semPaths(semPlotModel(out.reg))
 }
 }

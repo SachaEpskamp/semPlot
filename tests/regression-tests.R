@@ -373,6 +373,87 @@ if (!(requireNamespace("psychonetrics", quietly = TRUE) && not_cran)) {
     e <- tryCatch({ semPlotModel(v); NULL }, error = function(e) conditionMessage(e))
     !is.null(e) && grepl("var1", e) && grepl("supported", e) })
 
+  # --- standardized solution (psychonetrics leaves @parameters$std empty) ---
+
+  check("T10n lvm(latent=ggm): std is populated, not all NA", {
+    m <- quiet(semPlotModel(pn_lvm_ggm))
+    !all(is.na(m@Pars$std)) && !any(is.na(m@Pars$std)) })
+
+  check("T10o lvm(latent=ggm): std loadings equal lambda * sd_eta / sd_y", {
+    m <- quiet(semPlotModel(pn_lvm_ggm))
+    lam <- psychonetrics::getmatrix(pn_lvm_ggm, "lambda")
+    bet <- psychonetrics::getmatrix(pn_lvm_ggm, "beta")
+    sz <- psychonetrics::getmatrix(pn_lvm_ggm, "sigma_zeta")
+    sg <- psychonetrics::getmatrix(pn_lvm_ggm, "sigma")
+    IB <- solve(diag(nrow(bet)) - bet)
+    sdL <- sqrt(diag(IB %*% sz %*% t(IB))); sdY <- sqrt(diag(sg))
+    # NB: not named 'ok' -- check() evaluates this in the global frame, where
+    # 'ok' is the harness' own pass counter.
+    allMatch <- TRUE
+    for (i in 1:9) for (j in 1:3) {
+      if (lam[i,j] == 0) next
+      got <- m@Pars$std[m@Pars$edge == "->" & m@Pars$lhs == pn_lats[j] & m@Pars$rhs == paste0("x",i)]
+      allMatch <- allMatch && length(got) == 1 && abs(got - lam[i,j] * sdL[j] / sdY[i]) < 1e-8
+    }
+    allMatch })
+
+  check("T10p lvm(latent=ggm): omega is already standardized (std == est)", {
+    m <- quiet(semPlotModel(pn_lvm_ggm))
+    om <- m@Pars[m@Pars$edge == "--", ]
+    nrow(om) >= 1 && all(abs(om$std - om$est) < 1e-12) })
+
+  check("T10q lvm(latent=ggm): std residual variances are proportions in [0,1]", {
+    m <- quiet(semPlotModel(pn_lvm_ggm))
+    se <- psychonetrics::getmatrix(pn_lvm_ggm, "sigma_epsilon")
+    sg <- psychonetrics::getmatrix(pn_lvm_ggm, "sigma")
+    rv <- m@Pars[m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs & m@Pars$lhs %in% paste0("x",1:9), ]
+    all(rv$std >= 0 & rv$std <= 1) &&
+      all(abs(rv$std[match(paste0("x",1:9), rv$lhs)] - diag(se)/diag(sg)) < 1e-8) })
+
+  check("T10r lvm(latent=ggm): latent variances standardize to 1 (no latent regressions)", {
+    m <- quiet(semPlotModel(pn_lvm_ggm))
+    lv <- m@Pars[m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs & m@Pars$lhs %in% pn_lats, ]
+    nrow(lv) == 3 && all(abs(lv$std - 1) < 1e-8) })
+
+  check("T10s std intercepts follow the lavaan std.all convention (est / sd_y)", {
+    m <- quiet(semPlotModel(pn_lvm_ggm))
+    sg <- psychonetrics::getmatrix(pn_lvm_ggm, "sigma")
+    it <- m@Pars[m@Pars$edge == "int", ]
+    all(abs(it$std[match(paste0("x",1:9), it$rhs)] - it$est[match(paste0("x",1:9), it$rhs)]/sqrt(diag(sg))) < 1e-8) })
+
+  check("T10t semPaths(what='std') renders without non-finite weights", {
+    w <- NULL
+    p <- withCallingHandlers(quiet(semPaths(pn_lvm_ggm, "std", "est", DoNotPlot = TRUE)),
+                             warning = function(x) { w <<- conditionMessage(x); invokeRestart("muffleWarning") })
+    inherits(p, "qgraph") && is.null(w) })
+
+  check("T10u varcov(ggm): observed variances standardize to 1", {
+    m <- quiet(semPlotModel(pn_net))
+    sl <- m@Pars[m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs, ]
+    all(abs(sl$std - 1) < 1e-8) })
+
+  # An empty residual network leaves every omega_epsilon fixed at zero; the
+  # block must still be recognized as GGM so its delta rows are handled
+  # rather than leaking through as unsupported '~/~' parameters.
+  check("T10v residual='ggm' with an empty network drops no parameters", {
+    rg <- quiet(psychonetrics::runmodel(psychonetrics::lvm(
+      HS[paste0("x",1:9)], lambda = pn_L, latents = pn_lats, residual = "ggm")))
+    w <- NULL
+    m <- withCallingHandlers(semPlotModel(rg),
+                             warning = function(x) { w <<- conditionMessage(x); invokeRestart("muffleWarning") })
+    is.null(w) && !any(m@Pars$edge == "~/~") && !any(is.na(m@Pars$std)) })
+
+  check("T10w improper solution warns and yields NA std rather than wrong values", {
+    bad <- pn_lvm_ggm
+    # Force a negative model-implied variance for x1 (a Heywood-like case):
+    bad@modelmatrices[[1]]$sigma[1,1] <- -1
+    w <- NULL
+    m <- withCallingHandlers(semPlotModel(bad),
+                             warning = function(x) { w <<- conditionMessage(x); invokeRestart("muffleWarning") })
+    std_x1 <- m@Pars$std[m@Pars$edge == "->" & m@Pars$rhs == "x1"]
+    !is.null(w) && grepl("improper", w) && grepl("x1", w) &&
+      length(std_x1) >= 1 && all(is.na(std_x1)) })
+
   check("T10m ObsCovs/ImpCovs populated and symmetric", {
     m <- quiet(semPlotModel(pn_lvm_cov))
     length(m@ObsCovs) == 1 && length(m@ImpCovs) == 1 &&
