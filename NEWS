@@ -1,68 +1,68 @@
-Changes in Version 1.2
+Changes in Version 1.2.0
   o NEW: PLS-SEM support -- seminr (estimate_pls) and cSEM (csem) models
     import with reflective constructs as directed loadings and composite
     (mode B / formative) constructs as weight arrows into the construct
-    (#audit-15e)
+
   o blavaan objects are imported natively (via lavaan-method inheritance)
     instead of overwriting their class; posterior means and standardized
-    posterior solutions display as est/std (#audit-12)
+    posterior solutions display as est/std
   o NEW: metaSEM stage-2 models (tssem2()/wls()) plot via metaSEM's
     meta2semPlot() bridge; stage-1 pooling objects error informatively
-    (#audit-15d)
+
   o Documented and regression-tested umx compatibility (umxRAM models are
-    MxRAMModels and import via the OpenMx importer) (#audit-15c)
+    MxRAMModels and import via the OpenMx importer)
   o NEW: lavaan.mi support -- pooled multiple-imputation fits display
     Rubin's-rules pooled estimates and pooled standardized solutions
-    (#audit-13)
+
   o NEW: piecewiseSEM support -- psem() models import their directed paths
     (with piecewiseSEM's standardized estimates) and correlated errors
-    (x %~~% y) as bidirectional edges (#audit-15b)
+    (x %~~% y) as bidirectional edges
   o NEW: psych support -- fa() (directed loadings, factor correlations for
     oblique rotations, uniqueness self-loops) and omega() (bifactor /
     Schmid-Leiman structure; pair with semPaths(..., bifactor = 'g',
     layout = 'tree2')); new 'cut' argument to omit small loadings.
-    principal() was already supported (#audit-15a)
+    principal() was already supported
   o NEW: registerSemPlotImporter() lets other packages plug importers for
     their model classes into semPlotModel()/semPaths(); the new
     validateSemPlotModel() checks the semPlotModel contract and is run
-    automatically by semPaths() (#audit-14)
-  o Added a regression test suite (tests/regression-tests.R) (#audit-7)
+    automatically by semPaths()
+  o Added a regression test suite (tests/regression-tests.R)
   o sem, XML, lisrelToR, rockchalk and OpenMx are now optional (Suggests):
     each serves a single importer and is loaded on demand with an
     informative message when missing; installing semPlot is much lighter
-    (#audit-5)
+
   o semPaths() and semPlotModel() no longer crash on inline calls containing
     a '+' (e.g. semPaths(lm(y ~ x + z, data))); combining models with '+' now
-    uses AST inspection of the unevaluated argument (#audit-1)
+    uses AST inspection of the unevaluated argument
   o Fixed the all-NA 'std' column for non-gaussian GLMs (fallback of the 1.1.8
-    standardize() fix) (#audit-2)
+    standardize() fix)
   o semPaths(DoNotPlot=TRUE) no longer opens a graphics device; par(ask) and
-    panelGroups/semCors layout() are restored exception-safely (#audit-3)
+    panelGroups/semCors layout() are restored exception-safely
   o semPlotModel.default now reports every importer's failure message instead
-    of 'Object not recognized as SEM model' (#audit-4)
+    of 'Object not recognized as SEM model'
   o glm importer classifies intercepts by exact name; semCors errors
     informatively for models without covariance matrices; semSyntax skips
-    interaction terms with a warning (#audit-6)
+    interaction terms with a warning
   o NEW: psychonetrics support (lvm and varcov frameworks, all cov/ggm/chol/
     prec subtypes; multigroup). GGM blocks are displayed as undirected
     network edges, with delta scalings replaced by implied variances by
-    default (delta argument: 'variance', 'ignore', 'show') (#audit-10)
+    default (delta argument: 'variance', 'ignore', 'show')
   o Undirected ('--') edges are now first-class: symmetric layout roles
     (defExo), curveAdjacent support (new default c('<->','--')), and a
-    semSyntax guard (#audit-11)
+    semSyntax guard
   o NEW: lavaan efa() output (efaList) can be plotted; select solutions with
-    the 'which' argument (#audit-9)
+    the 'which' argument
   o lavaan composites ('<~') import as directed edges into the composite and
     re-emit as '<~' in semSyntax (previously drawn as undirected placeholder
-    edges) (#audit-8)
+    edges)
   o Multilevel lavaan models (cluster=) now map level 1/2 onto Within/Between
     panels instead of silently conflating both levels in one diagram
-    (#audit-8)
+
   o The lavaan importer aligns parameterEstimates() with parTable() by key
     matching (robust across lavaan versions) and uses the maintained
-    parTable()/lavNames() accessors (#audit-8)
+    parTable()/lavNames() accessors
   o Combining models with '+' uses column-union binding, so models from
-    different importers (e.g. lavaan + lm) can be combined (#audit-8)
+    different importers (e.g. lavaan + lm) can be combined
 
 Changes in Version 1.1.8
   o Fixed DoNotPlot = TRUE causing an error in multigroup models (#50)
