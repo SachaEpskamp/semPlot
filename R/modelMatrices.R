@@ -50,6 +50,14 @@ modelMatrices <- function(object,model="ram", endoOnly = FALSE)
   
   if (!"semPlotModel"%in%class(object)) object <- semPlotModel(object)
   stopifnot("semPlotModel"%in%class(object))
+
+  # Composites have no RAM or LISREL representation:
+  if (any(object@Pars$composite %in% TRUE) || any(object@Vars$composite %in% TRUE))
+  {
+    warning("The model contains composites, which cannot be represented in RAM or LISREL matrices: ",
+            "composite weights are included as directed effects of the indicators on the composite, ",
+            "so these matrices do not reproduce the composite model.")
+  }
   
   ### SETUP ###
   Model <- list()

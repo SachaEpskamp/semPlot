@@ -78,11 +78,13 @@ number of factors).
 The original sem model (used in cvregsem)
 }
 \item{delta}{
-How to display the Delta scaling parameters of GGM-parameterized blocks in
-psychonetrics models. \code{"variance"} (default) replaces them by the implied
-variances (the diagonal of \eqn{\Delta (I - \Omega)^{-1} \Delta}), which are
+How to display the scaling parameters of GGM-parameterized blocks (Delta) and
+correlation-parameterized blocks (the standard deviations SD) in psychonetrics
+models. \code{"variance"} (default) replaces them by the implied variances
+(e.g., the diagonal of \eqn{\Delta (I - \Omega)^{-1} \Delta}), which are
 directly interpretable; \code{"ignore"} omits them; \code{"show"} displays the
-raw scaling parameters as self-loops.
+raw scaling parameters as self-loops. Pass this argument to
+\code{\link{semPaths}} with \code{modelOpts = list(delta = "show")}.
 }
 \item{\dots}{Arguments sent to 'lisrelModel', not used in other methods.}
 }
@@ -90,10 +92,27 @@ raw scaling parameters as self-loops.
 A detailed overview of which packages are supported and what is supported for each of them will soon be on my website.
 
 psychonetrics models (\code{semPlotModel_psychonetrics}, dispatched automatically
-by \code{semPlotModel}) are supported for the \code{lvm} and \code{varcov}
-frameworks, including all subtypes of their (co)variance structures:
+by \code{semPlotModel}) are supported for the \code{lvm}, \code{varcov} and
+\code{cvm} frameworks, including all subtypes of their (co)variance structures:
 \code{"cov"}, \code{"ggm"} (displayed as undirected network edges),
-\code{"chol"} and \code{"prec"} (both displayed as implied covariances).
+\code{"cor"} (correlations, with the standard deviations treated as the
+scaling parameters, see \code{delta}), and \code{"chol"} and \code{"prec"}
+(both displayed as implied covariances). In the \code{cvm} framework
+(\code{cvm()} and \code{cnm()}, composite variable models) the composites are
+marked as such and drawn as hexagons by \code{\link{semPaths}}, the weights are
+directed edges from the indicators into the composites, and the (co)variances
+of the composite indicators (the \code{"_c"} matrices) are shown as (co)variance
+edges or, for \code{cnm()}, as a network. The (residual) variances and
+intercepts of composites are computed by psychonetrics and shown as fixed
+parameters.
+
+Composites defined with lavaan's \code{<~} operator (lavaan 0.7 or later) are
+marked as composites as well. In earlier versions of lavaan this operator
+defines a formatively measured latent variable whose disturbance variance is
+fixed to zero, which is also marked as a composite unless that variance is
+freely estimated. The constructs of PLS-SEM models from seminr (mode A and mode
+B) and cSEM (construct type \code{"Composite"}) that are composites are marked
+as such too.
 The development version of psychonetrics
 (\code{remotes::install_github("SachaEpskamp/psychonetrics")}) is recommended.
 

@@ -833,5 +833,165 @@ if (!(requireNamespace("cSEM", quietly = TRUE) && not_cran4())) {
       inherits(quiet(semPaths(csem_fit, DoNotPlot = TRUE)), "qgraph") })
 }
 
+## ================= item16 =================
+# Item 16: composites (Vars$composite / Pars$composite), drawn as hexagons
+comp_mod <- "
+  ind60 <~ x1 + x2 + x3
+  dem60 =~ y1 + y2 + y3 + y4
+  dem65 =~ y5 + y6 + y7 + y8
+  dem60 ~ ind60
+  dem65 ~ ind60 + dem60
+"
+fit_comp <- quiet(sem(comp_mod, data = PoliticalDemocracy))
+shapeOf <- function(q, node) q$graphAttributes$Nodes$shape[q$graphAttributes$Nodes$names == node]
+
+check("T16a lavaan: composite marked in Vars, weights in Pars", {
+  m <- quiet(semPlotModel(fit_comp))
+  identical(m@Vars$name[m@Vars$composite], "ind60") &&
+    sum(m@Pars$composite) == 3 && all(m@Pars$edge[m@Pars$composite] == "~>") &&
+    all(m@Pars$rhs[m@Pars$composite] == "ind60") })
+
+check("T16b semPaths draws composites as hexagons, other latents as circles", {
+  q <- quiet(semPaths(fit_comp, nCharNodes = 0, DoNotPlot = TRUE))
+  shapeOf(q, "ind60") == "hexagon" && shapeOf(q, "dem60") == "circle" && shapeOf(q, "x1") == "square" })
+
+check("T16c shapeComp, sizeComp and color = list(comp) are honored", {
+  q <- quiet(semPaths(fit_comp, nCharNodes = 0, shapeComp = "diamond", sizeComp = 12, sizeComp2 = 6,
+                      color = list(lat = "red", comp = "blue"), DoNotPlot = TRUE))
+  i <- which(q$graphAttributes$Nodes$names == "ind60")
+  j <- which(q$graphAttributes$Nodes$names == "dem60")
+  shapeOf(q, "ind60") == "diamond" && q$graphAttributes$Nodes$width[i] == 12 &&
+    q$graphAttributes$Nodes$height[i] == 6 && q$graphAttributes$Nodes$color[i] == "blue" &&
+    q$graphAttributes$Nodes$color[j] == "red" })
+
+check("T16d weights do not make a composite endogenous (exoVar = FALSE hides its variance)", {
+  q <- quiet(semPaths(fit_comp, exoVar = FALSE, nCharNodes = 0, DoNotPlot = TRUE))
+  E <- q$Edgelist; nm <- q$graphAttributes$Nodes$names
+  i <- which(nm == "ind60"); d <- which(nm == "dem60")
+  !any(E$from == i & E$to == i) && any(E$from == d & E$to == d) })
+
+check("T16e lavaan model string: <~ is a weight into the composite (not undirected)", {
+  m <- quiet(semPlotModel(" c1 <~ x1 + x2 + x3\n f =~ y1 + y2 + y3\n f ~ c1 "))
+  w <- m@Pars[m@Pars$lhs %in% c("x1","x2","x3") & m@Pars$rhs == "c1", ]
+  nrow(w) == 3 && all(w$edge == "~>") && all(w$composite) &&
+    identical(m@Vars$name[m@Vars$composite], "c1") })
+
+# lavaan >= 0.7 never frees the variance of a '<~' construct; in earlier
+# versions a free disturbance makes it a latent variable with causal indicators:
+check("T16f formative latent with a free disturbance is not a composite", {
+  lhs <- c("f","f","f","g","g","g"); op <- c("<~","<~","~~","<~","<~","~~")
+  rhs <- c("x1","x2","f","x3","x4","g"); free <- c(0, 1, 2, 0, 3, 0)
+  identical(semPlot:::.lavaanCompositeNames(lhs, op, rhs, free), "g") })
+
+check("T16g validateSemPlotModel rejects malformed composite information", {
+  m <- quiet(semPlotModel(fit_comp))
+  m1 <- m; m1@Pars$edge[m1@Pars$composite][1] <- "<->"
+  m2 <- m; m2@Vars$composite[m2@Vars$name == "x1"] <- TRUE
+  inherits(try(validateSemPlotModel(m1), silent = TRUE), "try-error") &&
+    inherits(try(validateSemPlotModel(m2), silent = TRUE), "try-error") })
+
+check("T16h models without composite columns still work and get FALSE defaults", {
+  m <- quiet(semPlotModel(fit_cfa))
+  m@Pars$composite <- NULL; m@Vars$composite <- NULL
+  n <- semPlot:::.normalizeComposites(m)
+  inherits(quiet(semPaths(m, DoNotPlot = TRUE)), "qgraph") &&
+    !any(n@Vars$composite) && !any(n@Pars$composite) })
+
+check("T16i '+' combines a model with and a model without composites", {
+  m1 <- quiet(semPlotModel(fit_comp))
+  m2 <- quiet(semPlotModel(fit_lm)); m2@Pars$composite <- NULL
+  m <- m1 + m2
+  identical(m@Vars$name[m@Vars$composite], "ind60") && !anyDuplicated(m@Vars$name) &&
+    inherits(quiet(semPaths(m, DoNotPlot = TRUE)), "qgraph") })
+
+check("T16j hexagon polygon fallback for qgraph versions without the shape", {
+  h <- semPlot:::.hexagonPolygon()
+  is.list(h) && length(h$x) == length(h$y) && length(h$x) > 100 &&
+    all(range(h$x) == c(-1, 1)) && all(range(h$y) == c(-1, 1)) })
+
+if (!(requireNamespace("psychonetrics", quietly = TRUE) && not_cran &&
+      exists("cvm", envir = asNamespace("psychonetrics")))) {
+  cat("SKIP item16 (psychonetrics cvm): psychonetrics >= 0.18 not installed or running on CRAN\n")
+} else {
+  pn_comp <- quiet(psychonetrics::runmodel(psychonetrics::fromlavaan(
+    sem(comp_mod, data = PoliticalDemocracy, composites.cov = "free"))))
+
+  check("T16k psychonetrics cvm: standardized solution matches lavaan std.all", {
+    fit_free <- quiet(sem(comp_mod, data = PoliticalDemocracy, composites.cov = "free"))
+    key <- function(m){
+      p <- m@Pars[m@Pars$edge != "int", ]
+      a <- ifelse(p$edge == "<->", pmin(p$lhs, p$rhs), p$lhs)
+      b <- ifelse(p$edge == "<->", pmax(p$lhs, p$rhs), p$rhs)
+      setNames(p$std, paste(a, p$edge, b)) }
+    kl <- key(quiet(semPlotModel(fit_free))); kp <- key(quiet(semPlotModel(pn_comp)))
+    setequal(names(kl), names(kp)) && max(abs(kl - kp[names(kl)])) < 1e-4 })
+
+  check("T16l psychonetrics cvm: composites, weights and computed variances", {
+    m <- quiet(semPlotModel(pn_comp))
+    v <- m@Pars[m@Pars$edge == "<->" & m@Pars$lhs == "ind60" & m@Pars$rhs == "ind60", ]
+    identical(m@Vars$name[m@Vars$composite], "ind60") && sum(m@Pars$composite) == 3 &&
+      nrow(v) == 1 && v$fixed &&
+      shapeOf(quiet(semPaths(pn_comp, nCharNodes = 0, DoNotPlot = TRUE)), "ind60") == "hexagon" })
+
+  sw_vars <- c("Q1", paste0("Q", 5:10))
+  sw_W <- matrix(0, 7, 3); sw_W[1, 1] <- 1; sw_W[2:4, 2] <- 1; sw_W[5:7, 3] <- 1
+  sw_B <- matrix(0, 3, 3); sw_B[1, 2:3] <- 1
+  sw_lat <- c("Fan", "Originals", "Sequels")
+  sw <- get(utils::data("StarWars", package = "psychonetrics", envir = environment()))
+
+  check("T16m psychonetrics cnm: indicator network as undirected edges within composites", {
+    mod <- quiet(psychonetrics::runmodel(psychonetrics::cnm(sw, weights = sw_W, beta = sw_B, vars = sw_vars,
+                                                            latents = sw_lat)))
+    m <- quiet(semPlotModel(mod))
+    und <- m@Pars[m@Pars$edge == "--", ]
+    om <- psychonetrics::getmatrix(mod, "omega_c")
+    blk <- c(0, 2, 2, 2, 3, 3, 3)
+    nrow(und) == 6 && all(blk[match(und$lhs, sw_vars)] == blk[match(und$rhs, sw_vars)]) &&
+      isTRUE(all.equal(sort(und$est), sort(om[lower.tri(om) & om != 0]))) &&
+      all(und$std == und$est) && !any(grepl("^delta", m@Pars$label)) &&
+      sum(m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs & m@Pars$lhs %in% sw_vars) == 7 })
+
+  check("T16n psychonetrics cvm latent = 'ggm': network between composites", {
+    mod <- quiet(psychonetrics::runmodel(psychonetrics::cvm(sw, weights = sw_W, vars = sw_vars, latent = "ggm",
+                                                            latents = sw_lat)))
+    m <- quiet(semPlotModel(mod))
+    und <- m@Pars[m@Pars$edge == "--", ]
+    cv <- m@Pars[m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs & m@Pars$lhs %in% sw_lat, ]
+    sz <- psychonetrics::getmatrix(mod, "sigma_zeta")
+    nrow(und) == 3 && all(c(und$lhs, und$rhs) %in% sw_lat) && nrow(cv) == 3 && all(cv$fixed) &&
+      isTRUE(all.equal(cv$est[match(sw_lat, cv$lhs)], diag(sz))) &&
+      inherits(quiet(semPaths(mod, DoNotPlot = TRUE)), "qgraph") })
+
+  check("T16o psychonetrics cvm composite = 'cor': SD rows become implied variances", {
+    mod <- quiet(psychonetrics::runmodel(psychonetrics::cvm(sw, weights = sw_W, beta = sw_B, vars = sw_vars,
+                                                            latents = sw_lat, composite = "cor")))
+    m <- quiet(semPlotModel(mod))
+    vv <- m@Pars[m@Pars$edge == "<->" & m@Pars$lhs == m@Pars$rhs & m@Pars$lhs %in% sw_vars, ]
+    sc <- psychonetrics::getmatrix(mod, "sigma_c")
+    nrow(vv) == 7 && isTRUE(all.equal(vv$est[match(sw_vars, vv$lhs)], diag(sc))) && all(abs(vv$std - 1) < 1e-8) })
+
+  check("T16p psychonetrics cvm multi-group renders per group", {
+    pd <- PoliticalDemocracy[c(paste0("x", 1:3), paste0("y", 1:4))]
+    pd$grp <- rep(c("a","b"), length.out = nrow(pd))
+    mod <- quiet(psychonetrics::runmodel(psychonetrics::cvm(pd,
+      lambda = cbind(0, c(0,0,0,1,1,1,1)), weights = cbind(c(1,1,1,0,0,0,0), 0),
+      beta = matrix(c(0,1,0,0), 2, 2), latents = c("ind60","dem60"),
+      vars = c(paste0("x", 1:3), paste0("y", 1:4)), groups = "grp")))
+    p <- quiet(semPaths(mod, DoNotPlot = TRUE, ask = FALSE))
+    is.list(p) && length(p) == 2 && all(sapply(p, inherits, "qgraph")) })
+}
+
+if (requireNamespace("seminr", quietly = TRUE) && not_cran4() && exists("sem_fit")) {
+  check("T16q seminr: mode A and mode B composites are composites, reflective constructs not", {
+    m <- quiet(semPlotModel(sem_fit))
+    setequal(m@Vars$name[m@Vars$composite], c("Image","Satisfaction")) &&
+      all(m@Pars$composite == (m@Pars$edge == "~>" & m@Pars$rhs == "Satisfaction" & m@Pars$lhs %in% paste0("CUSA", 1:3))) })
+}
+if (requireNamespace("cSEM", quietly = TRUE) && not_cran4() && exists("csem_fit")) {
+  check("T16r cSEM: composites marked, common factors not", {
+    m <- quiet(semPlotModel(csem_fit))
+    identical(m@Vars$name[m@Vars$composite], "SAT") && sum(m@Pars$composite) == 3 })
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

@@ -24,7 +24,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   subScale2, subRes = 4, subLinks, modelOpts = list(mplusStd = "std"), 
   curveAdjacent = c('<->','--'), edge.label.cex = 0.6,  cardinal = "none", 
   equalizeManifests = FALSE, covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4), 
-  ...)
+  shapeComp = "hexagon", sizeComp, sizeComp2, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -168,7 +168,8 @@ A character vector in which every element is the name of a latent variable in th
 Controls the color of nodes. Similar to 'color' in \code{\link[qgraph]{qgraph}}. A color vector indicating the color for each group, a single color character indicating the color for all nodes or a color vector indicating the color for each node separately. Can also be a list contaning one or more of the following elements (using fuzzy matching):
 \describe{
 \item{man}{The colors for manifest nodes}
-\item{lat}{The colors for latent nodes}
+\item{lat}{The colors for latent nodes (including composites, unless \code{comp} is given)}
+\item{comp}{The colors for composite nodes}
 \item{int}{The color for intercepts}
 }
 }
@@ -291,6 +292,18 @@ A string vector containing the name(s) of the general bifactor(s). This will aut
 A vector of radians residuals can optimize to if \code{optimizeLatRes = TRUE}
 }
 
+\item{shapeComp}{
+Shape of composite nodes, sent to the 'shape' argument in \code{\link[qgraph]{qgraph}}. Defaults to \code{"hexagon"}. See details.
+}
+
+\item{sizeComp}{
+Width of the composite nodes, sent to the 'vsize' argument in \code{\link[qgraph]{qgraph}}. Defaults to 1.1 times \code{sizeLat}.
+}
+
+\item{sizeComp2}{
+Height of the composite nodes, sent to the 'vsize2' argument in \code{\link[qgraph]{qgraph}}. Defaults to 0.9 times \code{sizeLat2}, which together with the default of \code{sizeComp} gives a regular hexagon of about the size of a latent variable.
+}
+
 
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function. These arguments can further control the output of the graph. Some usefull arguments in drawing path diagrams are:
@@ -388,6 +401,8 @@ The default \code{"tree"} layout under default rotation places the nodes in one 
 
 If not manually set (see \code{\link{semPlotModel-edit}}), \code{semPath} will automatically try to set the endogenous and exogenous variables, such that the resulting layout looks good. A latent variable is identified as \emph{exogenous} if it is not on the right hand side of a directed edge (\code{->} or \code{~>}) with another latent variable as node of origin. A manifest variable is set as \emph{exogenous} if it is only connected, in any way, to exogenous latent variables and if it is not the right hand side (dependent variable) of a regression edge (\code{~>}). If all variables are set to exogenous this way, they are all set to endogenous for consistency in the layouts. Afterwards, manifest variables only used in formative measurement models (only outgoing directed edges to latents) are set to exogenous again so that MIMIC models are displayed properly.
 
+\emph{Composites}---constructs that are exact weighted sums of their indicators, such as those defined with the \code{<~} operator in lavaan or with the \code{cvm()} and \code{cnm()} model families in psychonetrics---are drawn as hexagons (see \code{shapeComp}), following Grace and Bollen (2008) and Schamberger, Schuberth, Henseler and Rosseel (2025). The weights are drawn as directed edges from the indicators into the composite and the (co)variances of the indicators of a composite as (co)variance edges, or as undirected network edges when these are modeled as a network (\code{cnm()} in psychonetrics). The (residual) variance of a composite is not a free parameter but computed from the weights and the covariances of its indicators, and is therefore drawn as a fixed parameter (see \code{fixedStyle}). The weights of a composite do not make it endogenous: a composite that is not explained by other variables is treated as exogenous, so that, e.g., \code{exoVar = FALSE} (the default in the LISREL style) also hides its computed variance.
+
 Intercepts are placed on the same level as the variable, either on the left or right side of the node (pointing outward from the center). Residuals for manifest variables are placed at the top or bottom (for exogenous and endogenous manifests respectively). Residuals of latents are placed at the bottom or top respectively for exogenous and endogenous variables, but is switched if the latent is not connected to a manifest. Residuals for the leftmost and rightmost latent are placed at the left and right side respectively, or diagonal if the latent is connected to an intercept.
 
 The \code{"tree2"} and \code{"circle2"} layouts call the \code{layout.reingold.tilford} function from the \code{igraph} package. As roots are used the first available variables of the following list:
@@ -411,6 +426,10 @@ A \code{"qgraph"} object as returned by \code{\link[qgraph]{qgraph}}. This objec
 If there are multiple groups a list is returned with a "qgraph" object for each path diagram that has been produced.
 }
 \references{
+
+Grace, J. B., & Bollen, K. A. (2008). Representing general theoretical concepts in structural equation models: the role of composite variables. Environmental and Ecological Statistics, 15, 191-213.
+
+Schamberger, T., Schuberth, F., Henseler, J., & Rosseel, Y. (2025). Factor- and composite-based structural equation modeling: A new approach to incorporate composites in the traditional SEM framework. arXiv:2508.06112.
 
 Fruchterman, T. & Reingold, E. (1991). Graph drawing by force-directed placement. Software - Pract. Exp. 21, 1129-1164.
 
@@ -454,6 +473,41 @@ example(cfa)
 
 semPaths(fit, 'std', 'est', curveAdjacent = TRUE, style = "lisrel")
 
+# Composites -------------------------------------------
+# A composite (drawn as a hexagon) predicting two latent variables. In lavaan
+# (>= 0.7) the '<~' operator defines a composite:
+compMod <- '
+  ind60 <~ x1 + x2 + x3
+  dem60 =~ y1 + y2 + y3 + y4
+  dem65 =~ y5 + y6 + y7 + y8
+  dem60 ~ ind60
+  dem65 ~ ind60 + dem60
+'
+compFit <- sem(compMod, data = PoliticalDemocracy)
+semPaths(compFit, "std", style = "lisrel")
+
+\dontrun{
+# Composite models from psychonetrics, including a network of the indicators
+# within every composite (cnm) and a network between the constructs:
+library("psychonetrics")
+data(StarWars)
+vars <- c("Q1", paste0("Q", 5:10))
+weights <- matrix(0, 7, 3)
+weights[1, 1] <- 1
+weights[2:4, 2] <- 1
+weights[5:7, 3] <- 1
+beta <- matrix(0, 3, 3)
+beta[1, 2:3] <- 1
+latents <- c("Fan", "Originals", "Sequels")
+
+mod_cnm <- runmodel(cnm(StarWars, weights = weights, beta = beta, vars = vars,
+                        latents = latents))
+semPaths(prune(mod_cnm), "std", intercepts = FALSE)
+
+mod_net <- runmodel(cvm(StarWars, weights = weights, vars = vars,
+                        latent = "ggm", latents = latents))
+semPaths(mod_net, "std", intercepts = FALSE)
+}
 
 # MIMIC model ----------------------------------------------------
 ## Lavaan

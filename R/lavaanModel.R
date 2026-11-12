@@ -36,12 +36,13 @@ semPlotModel_lavaanModel <- function(object, ...)
   
   if (is.null(object$group)) object$group <- ""
   
-  # Create edges dataframe
+  # Create edges dataframe. Regressions ('~'), intercepts ('~1') and
+  # composite weights ('<~') store the arrow origin in rhs:
   semModel@Pars <- data.frame(
      label = object$label,
-    lhs = ifelse(object$op=="~"|object$op=="~1",object$rhs,object$lhs),
+    lhs = ifelse(object$op %in% c("~","~1","<~"),object$rhs,object$lhs),
     edge = "--",
-    rhs = ifelse(object$op=="~"|object$op=="~1",object$lhs,object$rhs),
+    rhs = ifelse(object$op %in% c("~","~1","<~"),object$lhs,object$rhs),
     est = object$est,
     std = NA,
     group = object$group,
@@ -52,9 +53,13 @@ semPlotModel_lavaanModel <- function(object, ...)
   semModel@Pars$edge[object$op=="~~"] <- "<->"  
   semModel@Pars$edge[object$op=="~*~"] <- "<->"  
   semModel@Pars$edge[object$op=="~"] <- "~>"
+  semModel@Pars$edge[object$op=="<~"] <- "~>"
   semModel@Pars$edge[object$op=="=~"] <- "->"
   semModel@Pars$edge[object$op=="~1"] <- "int"
   semModel@Pars$edge[grepl("\\|",object$op)] <- "|"
+
+  # Mark composite weights so semSyntax() can re-emit them as '<~':
+  semModel@Pars$composite <- object$op == "<~"
   
   # Move thresholds to Thresholds slot:
   semModel@Thresholds <- semModel@Pars[grepl("\\|",semModel@Pars$edge),-(3:4)]
@@ -70,6 +75,10 @@ semPlotModel_lavaanModel <- function(object, ...)
     manifest = c(varNames,factNames)%in%varNames,
     exogenous = NA,
     stringsAsFactors=FALSE)
+
+  # Composites (drawn as hexagons):
+  compNames <- .lavaanCompositeNames(object$lhs, object$op, object$rhs, object$free)
+  semModel@Vars$composite <- semModel@Vars$name %in% compNames & !semModel@Vars$manifest
   
   semModel@ObsCovs <- list()  
   semModel@ImpCovs <- list()

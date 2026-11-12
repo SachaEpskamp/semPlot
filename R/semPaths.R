@@ -29,6 +29,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
                      subLinks, modelOpts = list(mplusStd="std"), curveAdjacent = c("<->","--"), edge.label.cex = 0.6, cardinal =  "none",
                      equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4),
+                     shapeComp = "hexagon", sizeComp, sizeComp2,
                      ...){
 
   # Check if DoNotPlot is passed via ... (for qgraph):
@@ -46,6 +47,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   if (!"semPlotModel"%in%class(object)) object <- do.call(semPlotModel,c(list(object),modelOpts))
   stopifnot("semPlotModel"%in%class(object))
   validateSemPlotModel(object)
+
+  # Composite columns (Vars$composite, Pars$composite), FALSE where absent:
+  object <- .normalizeComposites(object)
   
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
   
@@ -66,6 +70,12 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   {
     if (sizeLat == sizeLat2) shapeLat <- "circle" else shapeLat <- "ellipse"
   }
+
+  # Composites: hexagons of about the size of a latent variable (a hexagon
+  # fills the box set by its width and height, so it is drawn a bit wider and
+  # lower to look regular):
+  if (missing(sizeComp)) sizeComp <- sizeLat * 1.1
+  if (missing(sizeComp2)) sizeComp2 <- sizeLat2 * 0.9
   
   # Check:
   if (missing(intAtSide)) intAtSide <- !residuals
@@ -148,8 +158,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   {
     object@Pars <- object@Pars[object@Pars$edge!="int",]
   }
-  # Set true exogenous:
-  object@Vars$trueExo <- !object@Vars$name %in% object@Pars$rhs[object@Pars$edge %in% c("->","~>")]
+  # Set true exogenous. The weights of a composite do not make it endogenous:
+  # a composite is exogenous if it is not explained by other variables:
+  object@Vars$trueExo <- !object@Vars$name %in% object@Pars$rhs[object@Pars$edge %in% c("->","~>") & !object@Pars$composite]
   # Remove true exo variances:
   if (!exoVar)
   {
@@ -245,6 +256,9 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   nL <- length(latNames)
   nN <- length(Labels)
   object@Vars <- object@Vars[match(Labels,object@Vars$name),]
+
+  # Composites:
+  compNames <- object@Vars$name[object@Vars$composite]
   
   # Define groups and colors setup:
   DefaultColor <- FALSE
@@ -546,6 +560,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       # Shape:
       Shape <- c(rep(shapeMan,nM),rep(shapeLat,nL))
       if (any(GroupPars$edge=="int")) Shape <- c(Shape,rep(shapeInt,Ni))
+      Shape[Labels %in% compNames] <- shapeComp
       
       Curve <- curve
       
@@ -1219,11 +1234,13 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
     vSize <- numeric(nN)
     vSize[Labels%in%manNames] <- sizeMan
     vSize[Labels%in%latNames] <- sizeLat
+    vSize[Labels%in%compNames] <- sizeComp
     vSize[Labels=="1"] <- sizeInt
     
     vSize2 <- numeric(nN)
     vSize2[Labels%in%manNames] <- sizeMan2
     vSize2[Labels%in%latNames] <- sizeLat2
+    vSize2[Labels%in%compNames] <- sizeComp2
     vSize2[Labels=="1"] <- sizeInt2
     
     eColor <- rep(NA,nrow(Edgelist))
@@ -1287,6 +1304,10 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
       if (!is.null(colList$lat))
       {
         color[Labels%in%latNames] <- colList$lat
+      }
+      if (!is.null(colList$comp))
+      {
+        color[Labels%in%compNames] <- colList$comp
       }
       if (!is.null(colList$int))
       {
@@ -1636,8 +1657,18 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
 #     curveScale <- TRUE
     
     ### RUN QGRAPH ###
-    
-    qgraphRes[[which(Groups==gr)]] <- qgraph::qgraph(Edgelist,
+
+    # qgraph versions without the built-in hexagon shape (used for composites)
+    # get the polygon passed explicitly:
+    hexFallback <- any(Shape == "hexagon") && !.qgraphHasHexagon() && !"polygonList" %in% names(list(...))
+    if (any(Shape == "hexagon") && !.qgraphHasHexagon() && "polygonList" %in% names(list(...)) &&
+        !"hexagon" %in% names(list(...)$polygonList))
+    {
+      stop("The installed version of qgraph has no 'hexagon' shape (used to draw composites). Update qgraph, ",
+           "add a 'hexagon' element to 'polygonList', or choose another shape with 'shapeComp'.")
+    }
+
+    runQgraph <- function(...) qgraph::qgraph(Edgelist,
                                              labels=nLab,
                                              bidirectional=Bidir,
                                              directed=Directed,
@@ -1671,6 +1702,12 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              edge.label.cex = edge.label.cex,
                                              edgeConnectPoints = ECP,
                                              ...)
+    qgraphRes[[which(Groups==gr)]] <- if (hexFallback)
+    {
+      runQgraph(..., polygonList = list(hexagon = .hexagonPolygon()))
+    } else {
+      runQgraph(...)
+    }
 
 #     if (thresholds)
 #     {

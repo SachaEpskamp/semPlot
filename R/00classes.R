@@ -3,7 +3,17 @@
 # '->' is factor loading
 # '~>' is regression
 # '<->' is (co)variance
+# '--' is an undirected (network) edge
 # 'int' is an intercept
+#
+# Composites (constructs that are weighted sums of their indicators, such as
+# those defined with lavaan's '<~' operator or psychonetrics' cvm() family) are
+# represented with two optional logical columns:
+#   Vars$composite: the node is a composite (drawn as a hexagon by semPaths);
+#   Pars$composite: the edge is a composite weight. Weights are directed '~>'
+#                   edges from the indicator (lhs) into the composite (rhs).
+# Both columns default to FALSE when absent (see .normalizeComposites), so
+# importers that do not know about composites need not set them.
 
 setClass( "semPlotModel", representation(
   Pars = "data.frame",
@@ -109,6 +119,29 @@ validateSemPlotModel <- function(object)
       problems <- c(problems, "Pars$edge contains NA")
     }
   }
+  if (!is.null(object@Pars$composite))
+  {
+    if (!is.logical(object@Pars$composite))
+    {
+      problems <- c(problems, "Pars$composite must be logical")
+    } else if ("edge" %in% names(object@Pars) &&
+               any(object@Pars$composite %in% TRUE & object@Pars$edge != "~>"))
+    {
+      problems <- c(problems, "composite weights (Pars$composite) must be directed '~>' edges from the indicator into the composite")
+    }
+  }
+  if (!is.null(object@Vars$composite))
+  {
+    if (!is.logical(object@Vars$composite))
+    {
+      problems <- c(problems, "Vars$composite must be logical")
+    } else if ("manifest" %in% names(object@Vars) &&
+               any(object@Vars$composite %in% TRUE & object@Vars$manifest %in% TRUE))
+    {
+      problems <- c(problems, paste0("composite variable(s) cannot be manifest: ",
+                                     paste(object@Vars$name[object@Vars$composite %in% TRUE & object@Vars$manifest %in% TRUE], collapse = ", ")))
+    }
+  }
   if (all(c("lhs","rhs","edge") %in% names(object@Pars)) && "name" %in% names(object@Vars))
   {
     nodes <- unique(c(object@Pars$lhs[object@Pars$edge != "int"], object@Pars$rhs))
@@ -123,6 +156,28 @@ validateSemPlotModel <- function(object)
     stop("Invalid semPlotModel:\n", paste0("  - ", problems, collapse = "\n"))
   }
   invisible(object)
+}
+
+# Make sure the composite columns (see the note at the top of this file) are
+# present and logical. Vars$composite defaults to the nodes that receive
+# composite weights, where an importer did not set it.
+.normalizeComposites <- function(object)
+{
+  if (is.null(object@Pars$composite))
+  {
+    object@Pars$composite <- rep(FALSE, nrow(object@Pars))
+  } else {
+    object@Pars$composite <- object@Pars$composite %in% TRUE
+  }
+  weighted <- object@Vars$name %in% object@Pars$rhs[object@Pars$composite]
+  if (is.null(object@Vars$composite))
+  {
+    object@Vars$composite <- weighted & !object@Vars$manifest
+  } else {
+    object@Vars$composite <- ifelse(is.na(object@Vars$composite), weighted & !object@Vars$manifest,
+                                    object@Vars$composite %in% TRUE)
+  }
+  object
 }
 
 semPlotModel <- function (object, ...) {

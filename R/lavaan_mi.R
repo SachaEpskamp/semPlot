@@ -77,6 +77,10 @@ semPlotModel_lavaan_mi <- function(object, ...)
     exogenous = NA,
     stringsAsFactors = FALSE)
 
+  # Composites (drawn as hexagons):
+  compNames <- .lavaanCompositeNames(pars$lhs, pars$op, pars$rhs, pt$free[ptIdx])
+  semModel@Vars$composite <- semModel@Vars$name %in% compNames & !semModel@Vars$manifest
+
   # Pooled sample statistics are not uniquely defined across imputations:
   semModel@ObsCovs <- list()
   semModel@ImpCovs <- list()

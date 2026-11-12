@@ -1,12 +1,22 @@
 # Importer for psychonetrics models (github.com/SachaEpskamp/psychonetrics).
 #
-# Supports the 'lvm' and 'varcov' frameworks, including every subtype of
-# their (co)variance structures: "cov" (covariances), "ggm" (undirected
-# network Omega + scaling Delta), "chol" (Cholesky) and "prec" (precision).
-# GGM blocks are displayed as undirected ("--") edges; the Delta scaling
-# parameters are, by default, replaced by the implied variances
-# (diag of Sigma = Delta (I - Omega)^-1 Delta), which are directly
-# interpretable. "chol"/"prec" blocks are displayed as implied covariances.
+# Supports the 'lvm', 'varcov' and 'cvm' frameworks, including every subtype
+# of their (co)variance structures: "cov" (covariances), "ggm" (undirected
+# network Omega + scaling Delta), "cor" (correlations Rho + standard
+# deviations SD), "chol" (Cholesky) and "prec" (precision).
+# GGM blocks are displayed as undirected ("--") edges and correlation blocks
+# as (co)variance edges holding the correlations; the scaling parameters
+# (Delta or SD) are, by default, replaced by the implied variances (e.g., diag
+# of Sigma = Delta (I - Omega)^-1 Delta), which are directly interpretable.
+# "chol"/"prec" blocks are displayed as implied covariances.
+#
+# The 'cvm' framework (cvm() and cnm()) contains composites next to latent
+# variables. Composites are marked in Vars$composite (drawn as hexagons) and
+# their weights are '~>' edges from the indicator into the composite, marked
+# in Pars$composite. The '_c' block holds the (co)variances of the composite
+# indicators, which is a network of these indicators for cnm(). The (residual)
+# variances and intercepts of composites are computed by psychonetrics and are
+# shown as fixed parameters.
 #
 # psychonetrics is a Suggests dependency; this function is called from
 # semPlotModel() via class dispatch and must swallow unused arguments
@@ -21,10 +31,11 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
   delta <- match.arg(delta)
 
   framework <- object@model
-  if (!framework %in% c("lvm","varcov"))
+  if (!framework %in% c("lvm","varcov","cvm"))
   {
     stop("psychonetrics framework '", framework, "' is not (yet) supported by semPlot. ",
-         "Currently supported: 'lvm' and 'varcov' (including the ggm/precision wrappers). ",
+         "Currently supported: 'lvm', 'varcov' (including the ggm/precision wrappers) and ",
+         "'cvm' (composite models from cvm() and cnm()). ",
          "For temporal / multi-level frameworks, consider plotting the relevant matrix directly, ",
          "e.g. qgraph::qgraph(psychonetrics::getmatrix(object, \"omega_zeta_within\")).")
   }
@@ -38,7 +49,13 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
     stop("Unexpected psychonetrics parameter table: missing column(s) ", paste(missingCols, collapse = ", "),
          ". Please report this together with your psychonetrics version.")
   }
-  pars <- pars[needed]
+  # Variable indices: 'row' and 'col' index the matrix of a parameter, which in
+  # the cvm framework covers only part of the variables for the '_epsilon' and
+  # '_c' blocks. 'var1_id' and 'var2_id' always index all variables (or all
+  # latent variables):
+  if (is.null(pars$var1_id)) pars$var1_id <- pars$row
+  if (is.null(pars$var2_id)) pars$var2_id <- pars$col
+  pars <- pars[c(needed, "var1_id", "var2_id")]
 
   # Group labels in group_id order ('fullsample' for single-group models):
   grpLabels <- unique(pars$group[order(pars$group_id)])
@@ -48,11 +65,28 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
   # taken in 'lambda' column order, so that latNames[j] is the latent belonging
   # to column j of lambda/beta and can be used to index the standardizing SDs
   # below. This runs before the structural-zero rows are dropped, so every
-  # column is still represented.
+  # column is still represented. In the cvm framework lambda has a column for
+  # every construct, composites included.
   manNames <- object@sample@variables$label
   lambdaRows <- pars$matrix == "lambda"
   latNames <- unique(pars$var2[lambdaRows][order(pars$col[lambdaRows])])
   latNames <- latNames[!is.na(latNames)]
+
+  # Composites (cvm framework):
+  compNames <- character(0)
+  if (framework == "cvm")
+  {
+    compvec <- object@extramatrices$compvec
+    if (!is.null(compvec) && length(compvec) == length(latNames))
+    {
+      compNames <- latNames[as.vector(as.matrix(compvec)) == 1]
+    } else
+    {
+      # Constructs with at least one weight that is not a structural zero:
+      wRows <- pars$matrix == "weights" & !(pars$fixed & pars$est == 0)
+      compNames <- unique(pars$var2[wRows])
+    }
+  }
 
   # Thresholds not (yet) supported:
   if (any(pars$matrix == "tau"))
@@ -68,6 +102,33 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
   # non-GGM and its delta rows unhandled.
   allMatrices <- unique(pars$matrix)
 
+  # (Co)variance blocks and the node names their matrices refer to:
+  blockSuffix <- switch(framework,
+                        "lvm" = c("_zeta","_epsilon"),
+                        "cvm" = c("_zeta","_epsilon","_c"),
+                        "")
+  blockMatrices <- function(sfx)
+  {
+    paste0(c("sigma","kappa","lowertri","omega","delta","rho","SD"), sfx)
+  }
+  # The node of every row/column of a block, read from the full parameter
+  # table of the first group (every parameterization has a matrix with the
+  # diagonal in the table, so every node is covered):
+  blockNodeList <- list()
+  for (sfx in blockSuffix)
+  {
+    r <- pars[pars$matrix %in% blockMatrices(sfx) & pars$group_id == min(pars$group_id), , drop = FALSE]
+    nodes <- character(0)
+    if (nrow(r) > 0)
+    {
+      nodes <- rep(NA_character_, max(c(r$row, r$col)))
+      nodes[r$row] <- r$var1
+      nodes[r$col] <- ifelse(is.na(r$var2), r$var1, r$var2)
+    }
+    blockNodeList[[paste0("block", sfx)]] <- nodes
+  }
+  blockNodes <- function(sfx) blockNodeList[[paste0("block", sfx)]]
+
   # Drop structurally-zero placeholder rows (e.g. excluded loadings):
   pars <- pars[!(pars$fixed & pars$par == 0 & pars$est == 0), ]
 
@@ -81,28 +142,23 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
     m
   }
 
-  # (Co)variance blocks and the node names their matrices refer to:
-  blockSuffix <- if (framework == "lvm") c("_zeta","_epsilon") else ""
-  blockNodes <- function(sfx)
-  {
-    if (sfx == "_zeta") latNames else manNames
-  }
-
   # ---- Standardizing standard deviations --------------------------------
   # psychonetrics leaves the 'std' column of @parameters empty for these
   # models, so the standardized solution is computed here from the
   # model-implied matrices:
   #
-  #   lvm:    Var(eta) = (I - Beta)^-1 Sigma_zeta (I - Beta)^-T
-  #           Sigma    = Lambda Var(eta) Lambda' + Sigma_epsilon
-  #   varcov: Sigma is the implied covariance matrix itself.
+  #   lvm/cvm: Var(eta) = (I - Beta)^-1 Sigma_zeta (I - Beta)^-T
+  #            Sigma    = model-implied covariance matrix of the variables
+  #   varcov:  Sigma is the implied covariance matrix itself.
   #
   # For a GGM-parameterized block psychonetrics forms
   # Sigma_* = Delta (I - Omega)^-1 Delta, so 'sigma_*' already accounts for the
-  # network parameterization and needs no special-casing here.
+  # network parameterization and needs no special-casing here. In the cvm
+  # framework Sigma_zeta contains the computed (residual) variances of the
+  # composites, so that Var(eta) contains the variances of the composites.
   impSigma <- getBlockMatrix("sigma")
-  impSigmaZeta <- if (framework == "lvm") getBlockMatrix("sigma_zeta") else NULL
-  impBeta <- if (framework == "lvm") getBlockMatrix("beta") else NULL
+  impSigmaZeta <- if (framework %in% c("lvm","cvm")) getBlockMatrix("sigma_zeta") else NULL
+  impBeta <- if (framework %in% c("lvm","cvm")) getBlockMatrix("beta") else NULL
 
   # A non-positive implied variance means the solution is improper (e.g. a
   # Heywood case); standardizing against it is undefined, so those parameters
@@ -149,14 +205,17 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
             "these variables are NA.")
   }
 
-  # SDs belonging to a (co)variance block, for the derived rows added below:
+  # SDs belonging to the nodes of a (co)variance block, for the derived rows
+  # added below:
   blockSD <- function(sfx, g)
   {
-    if (sfx == "_zeta") sdOf[[g]]$lat else sdOf[[g]]$man
+    nodes <- blockNodes(sfx)
+    if (sfx == "_zeta") sdOf[[g]]$lat[match(nodes, latNames)] else sdOf[[g]]$man[match(nodes, manNames)]
   }
 
-  # Standardize one parameter from its matrix and row/col indices.
-  stdValue <- function(mat, row, col, est, group)
+  # Standardize one parameter from its matrix and the (global) indices of its
+  # variables.
+  stdValue <- function(mat, v1, v2, est, group)
   {
     sds <- sdOf[[group]]
     if (is.null(sds)) return(NA_real_)
@@ -167,38 +226,40 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
     }
     lat <- sds$lat
     man <- sds$man
-    switch(as.character(mat),
-      # Omega is by construction the partial correlation matrix and is thus
-      # already standardized: with Kappa = Delta^-1 (I - Omega) Delta^-1,
-      # -Kappa_ij / sqrt(Kappa_ii Kappa_jj) = Omega_ij for any Delta.
-      "omega_zeta"    = est,
-      "omega_epsilon" = est,
-      "omega"         = est,
-      "lambda"        = est * at(lat, col) / at(man, row),
-      "beta"          = est * at(lat, col) / at(lat, row),
-      "nu"            = est / at(man, row),
-      "mu"            = est / at(man, row),
-      "nu_eta"        = est / at(lat, row),
-      "sigma_zeta"    = est / (at(lat, row) * at(lat, col)),
-      "sigma_epsilon" = est / (at(man, row) * at(man, col)),
-      "sigma"         = est / (at(man, row) * at(man, col)),
-      # Delta is a scaling matrix; the corresponding scaling of the
-      # standardized (correlation) metric is Delta / sd.
-      "delta_zeta"    = est / at(lat, row),
-      "delta_epsilon" = est / at(man, row),
-      "delta"         = est / at(man, row),
-      NA_real_)
-  }
-
-  # Rows that only encode a parameterization (not path-diagram parameters):
-  parameterizationRows <- function(sfx)
-  {
-    pars$matrix %in% paste0(c("delta","lowertri","kappa"), sfx)
+    mat <- as.character(mat)
+    switch(mat,
+      "lambda"  = est * at(lat, v2) / at(man, v1),
+      "beta"    = est * at(lat, v2) / at(lat, v1),
+      # Composite weights: from the indicator (var1) into the composite (var2):
+      "weights" = est * at(man, v1) / at(lat, v2),
+      "nu"      = est / at(man, v1),
+      "mu"      = est / at(man, v1),
+      "nu_eta"  = est / at(lat, v1),
+      {
+        # (Co)variance blocks: 'sigma_zeta', 'omega_epsilon', 'delta_c', ...
+        type <- sub("_.*$", "", mat)
+        sd <- if (grepl("_zeta$", mat)) lat else man
+        switch(type,
+          # Omega is by construction the partial correlation matrix and is thus
+          # already standardized: with Kappa = Delta^-1 (I - Omega) Delta^-1,
+          # -Kappa_ij / sqrt(Kappa_ii Kappa_jj) = Omega_ij for any Delta. The
+          # same holds for the correlations in Rho.
+          "omega" = est,
+          "rho"   = est,
+          "sigma" = est / (at(sd, v1) * at(sd, v2)),
+          # Delta and SD are scaling matrices; the corresponding scaling of the
+          # standardized (correlation) metric is Delta / sd.
+          "delta" = est / at(sd, v1),
+          "SD"    = est / at(sd, v1),
+          NA_real_)
+      })
   }
 
   derivedPars <- list()
   addDerived <- function(nodes1, nodes2, ests, group, stds = NA_real_)
   {
+    # The (residual) variances of composites are computed, not estimated:
+    computed <- nodes1 == nodes2 & nodes1 %in% compNames
     derivedPars[[length(derivedPars) + 1]] <<- data.frame(
       label = "",
       lhs = nodes1,
@@ -207,7 +268,7 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
       est = ests,
       std = stds,
       group = group,
-      fixed = FALSE,
+      fixed = computed,
       par = 0,
       stringsAsFactors = FALSE)
   }
@@ -215,22 +276,25 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
   for (sfx in blockSuffix)
   {
     hasGGM <- paste0("omega", sfx) %in% allMatrices
+    hasCor <- paste0("rho", sfx) %in% allMatrices
     hasChol <- paste0("lowertri", sfx) %in% allMatrices
     hasPrec <- paste0("kappa", sfx) %in% allMatrices
     nodes <- blockNodes(sfx)
 
-    if (hasGGM)
+    if (hasGGM || hasCor)
     {
-      # Omega rows (op '--') stay as undirected edges. Delta rows:
-      deltaRows <- pars$matrix == paste0("delta", sfx)
+      # Omega rows (op '--') stay as undirected edges and Rho rows (op '~~') as
+      # (co)variance edges holding the correlations. The scaling rows (Delta or
+      # SD):
+      scaleRows <- pars$matrix == paste0(ifelse(hasGGM, "delta", "SD"), sfx)
       if (delta == "show")
       {
         # Show raw scaling parameters as self-loops:
-        pars$op[deltaRows] <- "~~"
-        pars$var2[deltaRows] <- pars$var1[deltaRows]
+        pars$op[scaleRows] <- "~~"
+        pars$var2[scaleRows] <- pars$var1[scaleRows]
       } else
       {
-        pars <- pars[!deltaRows, ]
+        pars <- pars[!scaleRows, ]
         if (delta == "variance")
         {
           sig <- getBlockMatrix(paste0("sigma", sfx))
@@ -262,7 +326,8 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
                 "'; this block is not shown.")
       } else
       {
-        blockName <- switch(sfx, "_zeta" = "latent", "_epsilon" = "residual", "observed")
+        blockName <- switch(sfx, "_zeta" = "latent", "_epsilon" = "residual",
+                            "_c" = "composite indicator", "observed")
         message("The ", blockName, " block is parameterized as ",
                 ifelse(hasChol, "'chol'", "'prec'"),
                 "; displaying implied covariances.")
@@ -284,15 +349,18 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
   # supplied:
   if (nrow(pars) > 0)
   {
-    computedStd <- mapply(stdValue, pars$matrix, pars$row, pars$col, pars$est, pars$group,
+    computedStd <- mapply(stdValue, pars$matrix, pars$var1_id, pars$var2_id, pars$est, pars$group,
                           SIMPLIFY = TRUE, USE.NAMES = FALSE)
     computedStd <- as.numeric(computedStd)
     computedStd[!is.finite(computedStd)] <- NA_real_
     pars$std <- ifelse(is.na(pars$std), computedStd, pars$std)
   }
 
-  # Map psychonetrics operators to semPlot edge types:
-  known <- pars$op %in% c("~1","~=","<-","~~","--")
+  # Map psychonetrics operators to semPlot edge types. Factor loadings
+  # (var2 =~ var1) and regressions (var1 <- var2) point from var2 to var1;
+  # composite weights (var1 ~> var2) point from the indicator var1 into the
+  # composite var2:
+  known <- pars$op %in% c("~1","~=","<-","~>","~~","--")
   if (any(!known))
   {
     warning("Dropped ", sum(!known), " parameter(s) with unsupported operator(s): ",
@@ -306,7 +374,7 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
           ifelse(pars$op %in% c("~=","<-"), pars$var2, pars$var1)),
     edge = ifelse(pars$op == "~1", "int",
            ifelse(pars$op == "~=", "->",
-           ifelse(pars$op == "<-", "~>",
+           ifelse(pars$op %in% c("<-","~>"), "~>",
            ifelse(pars$op == "~~", "<->", "--")))),
     rhs = ifelse(pars$op %in% c("~1","~=","<-"), pars$var1, pars$var2),
     est = pars$est,
@@ -321,6 +389,9 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
     Pars <- rbind(Pars, do.call(rbind, derivedPars))
   }
 
+  # Composite weights:
+  Pars$composite <- c(pars$op == "~>", rep(FALSE, nrow(Pars) - nrow(pars)))
+
   # Single-group models get an empty group label (no per-group titles):
   if (singleGroup)
   {
@@ -333,6 +404,7 @@ semPlotModel_psychonetrics <- function(object, delta = c("variance","ignore","sh
     name = c(manNames, latNames),
     manifest = c(rep(TRUE, length(manNames)), rep(FALSE, length(latNames))),
     exogenous = NA,
+    composite = c(rep(FALSE, length(manNames)), latNames %in% compNames),
     stringsAsFactors = FALSE)
   semModel@Thresholds <- data.frame()
   semModel@Computed <- isTRUE(object@computed)

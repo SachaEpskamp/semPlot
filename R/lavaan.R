@@ -6,6 +6,20 @@
 # 
 
 
+# Names of the composites in a lavaan parameter table: the constructs defined
+# with the '<~' operator. In lavaan >= 0.7 these are composites (exact weighted
+# sums of their indicators, with a computed variance); in earlier versions '<~'
+# defines a formatively measured latent variable whose disturbance variance is
+# fixed to zero, which is a composite as well. Only when that (residual)
+# variance is freely estimated is the construct a latent variable with causal
+# indicators, which is then not treated as a composite.
+.lavaanCompositeNames <- function(lhs, op, rhs, free)
+{
+  cand <- unique(lhs[op == "<~"])
+  freeVar <- unique(lhs[op == "~~" & lhs == rhs & !is.na(free) & free > 0])
+  setdiff(cand, freeVar)
+}
+
 ## EXTRACT MODEL ###
 setMethod("semPlotModel_S4",signature("lavaan"),function(object){
 
@@ -107,6 +121,10 @@ setMethod("semPlotModel_S4",signature("lavaan"),function(object){
     manifest = c(varNames,factNames)%in%varNames,
     exogenous = NA,
     stringsAsFactors=FALSE)
+
+  # Composites (drawn as hexagons):
+  compNames <- .lavaanCompositeNames(pars$lhs, pars$op, pars$rhs, pt$free[ptIdx])
+  semModel@Vars$composite <- semModel@Vars$name %in% compNames & !semModel@Vars$manifest
     
   # res.cov <- lavTech(object, "sampstat")$res.cov
   # lavTech(object, "sampstat")$cov

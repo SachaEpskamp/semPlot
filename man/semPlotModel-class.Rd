@@ -36,6 +36,7 @@ Objects can be created by calls of the form \code{new("semPlotModel", ...)}.
     \item{\code{fixed}}{Logical indicating if the parameter is fixed.}
     \item{\code{par}}{Parameter number. 0 indicates the parameter is fixed and parameters with the same parameter number are constrained to be equal.}
     \item{\code{knot}}{Knot number. 0 indicates the edge is not knotted and edges with the same knot number are knotted together. Only used to indicate interactions in 'lm' models and can be omitted.}
+    \item{\code{composite}}{Logical indicating if the edge is a composite weight, which must then be a directed \code{'~>'} edge from the indicator (left hand side) into the composite (right hand side). Can be omitted, in which case no edge is a composite weight.}
     
     }
     }
@@ -44,6 +45,7 @@ Objects can be created by calls of the form \code{new("semPlotModel", ...)}.
       \item{name}{Name of the variable}
       \item{manifest}{Logical indicating if the variable is manifest}
       \item{exogenous}{Logical indicating if the variable is exogenous. If \code{NA}} (the default) \code{\link{semPaths}} will attempt to detect which variables are exogenous.
+      \item{composite}{Logical indicating if the variable is a composite: a weighted sum of its indicators, drawn as a hexagon by \code{\link{semPaths}}. Composites cannot be manifest. Can be omitted, in which case the variables that receive composite weights (see \code{Pars}) are composites.}
     
     }}
     \item{\code{Thresholds}:}{Object of class \code{"data.frame"} indicating the thresholds in the SEM model. It is the same as \code{Pars} except it does not have the elements \code{'edge'} and \code{'rhs'}.}

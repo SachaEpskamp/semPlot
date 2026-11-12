@@ -1,3 +1,49 @@
+Changes in Version 1.3.0
+  o NEW: composites. Constructs that are exact weighted sums of their
+    indicators are drawn as hexagons (following Grace & Bollen, 2008, and
+    Schamberger, Schuberth, Henseler & Rosseel, 2025), with their weights as
+    directed edges from the indicators into the composite:
+      - lavaan: constructs defined with '<~' (composites in lavaan >= 0.7;
+        in earlier versions formative latent variables with a zero
+        disturbance variance, which are composites as well unless that
+        variance is freely estimated).
+      - psychonetrics: the composite variable model family, cvm() and cnm()
+        (psychonetrics >= 0.18). The weights, the (co)variances of the
+        composite indicators (the '_c' matrices) and the computed (residual)
+        variances and intercepts of composites (shown as fixed parameters)
+        are imported, and so are networks: the network of the indicators
+        within every composite (cnm(), composite = "ggm"), between the
+        constructs (latent = "ggm") and of the residuals (residual = "ggm")
+        are drawn as undirected edges. The standardized solution covers all
+        of these and equals lavaan's std.all for models both can estimate.
+      - seminr (mode A and mode B composites) and cSEM (constructs of type
+        "Composite").
+  o The semPlotModel class represents composites with two optional logical
+    columns: Vars$composite marks composite variables and Pars$composite
+    marks composite weights, which are '~>' edges from the indicator into the
+    composite. Both default to FALSE, so existing importers and hand-made
+    models are unaffected. validateSemPlotModel() checks them, and the '+'
+    operator now also combines models whose Vars have different columns.
+  o New semPaths() arguments 'shapeComp' (default "hexagon"), 'sizeComp' and
+    'sizeComp2', and an element 'comp' in a list given to 'color'. The weights
+    of a composite no longer make it endogenous: a composite that is not
+    explained by other variables is treated as exogenous, so that, for
+    example, exoVar = FALSE (the default in the LISREL style) also hides its
+    computed variance. The hexagon is a built-in shape as of qgraph 1.10.2;
+    with older qgraph versions semPaths() supplies the polygon itself.
+  o Fixed lavaan model syntax given directly to semPlotModel()/semPaths()
+    drawing composite weights ('<~') as undirected edges.
+  o Fixed the psychonetrics importer for the correlation parameterization
+    ("cor"; Rho and SD matrices): the standard deviations were shown as if
+    they were variances. They are now treated as scaling parameters, as Delta
+    for GGM blocks ('delta' argument: replaced by the implied variances by
+    default). Standardized parameters are now computed from the variable
+    indices of each parameter rather than its matrix row and column, which
+    differ for the blocks of the cvm framework (results for the lvm and
+    varcov frameworks are unchanged).
+  o modelMatrices() warns that composites cannot be represented in RAM or
+    LISREL matrices.
+
 Changes in Version 1.2.0
   o NEW: standardized parameters for psychonetrics models, so that
     semPaths(mod, "std") now works. psychonetrics leaves the 'std' column of

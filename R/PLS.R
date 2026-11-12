@@ -2,7 +2,8 @@
 # PLS estimates are standardized; est and std carry the same values.
 # Display conventions: reflective(-ly displayed) constructs get directed
 # loadings construct -> item; composite (mode B / formative) constructs get
-# weight arrows item -> construct.
+# weight arrows item -> construct. Composites (mode A and mode B in seminr,
+# construct type "Composite" in cSEM) are drawn as hexagons.
 
 semPlotModel.seminr_model <- function(object, ...)
 {
@@ -19,11 +20,12 @@ semPlotModel.seminr_model <- function(object, ...)
   items <- unique(mm[, "measurement"])
 
   Pars <- list()
-  addPar <- function(lhs, edge, rhs, est)
+  addPar <- function(lhs, edge, rhs, est, composite = FALSE)
   {
     Pars[[length(Pars) + 1]] <<- data.frame(
       label = "", lhs = lhs, edge = edge, rhs = rhs,
       est = est, std = est, group = "", fixed = FALSE, par = 0,
+      composite = composite,
       stringsAsFactors = FALSE)
   }
 
@@ -35,7 +37,7 @@ semPlotModel.seminr_model <- function(object, ...)
     item <- mm[i, "measurement"]
     if (unname(mm[i, "type"]) == "B")
     {
-      addPar(item, "~>", cons, object$outer_weights[item, cons])
+      addPar(item, "~>", cons, object$outer_weights[item, cons], composite = TRUE)
     } else
     {
       addPar(cons, "->", item, object$outer_loadings[item, cons])
@@ -53,12 +55,16 @@ semPlotModel.seminr_model <- function(object, ...)
   Pars <- do.call(rbind, Pars)
   Pars$par <- seq_len(nrow(Pars))
 
+  # Composites: constructs of type "A" (mode A) or "B" (mode B):
+  compNames <- unique(mm[mm[, "type"] %in% c("A","B"), "construct"])
+
   semModel <- new("semPlotModel")
   semModel@Pars <- Pars
   semModel@Vars <- data.frame(
     name = c(items, constructs),
     manifest = c(rep(TRUE, length(items)), rep(FALSE, length(constructs))),
     exogenous = NA,
+    composite = c(rep(FALSE, length(items)), constructs %in% compNames),
     stringsAsFactors = FALSE)
   semModel@Thresholds <- data.frame()
   semModel@Computed <- TRUE
@@ -92,11 +98,12 @@ semPlotModel.cSEMResults <- function(object, ...)
   }
 
   Pars <- list()
-  addPars <- function(lhs, edge, rhs, ests)
+  addPars <- function(lhs, edge, rhs, ests, composite = FALSE)
   {
     Pars[[length(Pars) + 1]] <<- data.frame(
       label = "", lhs = lhs, edge = edge, rhs = rhs,
       est = ests, std = ests, group = "", fixed = FALSE, par = 0,
+      composite = composite,
       stringsAsFactors = FALSE)
   }
 
@@ -121,7 +128,7 @@ semPlotModel.cSEMResults <- function(object, ...)
   {
     nm <- parseName(we$Name, "<~")
     keep <- cType[nm$lhs] == "Composite"
-    if (any(keep)) addPars(nm$rhs[keep], "~>", nm$lhs[keep], we$Estimate[keep])
+    if (any(keep)) addPars(nm$rhs[keep], "~>", nm$lhs[keep], we$Estimate[keep], composite = TRUE)
   }
 
   Pars <- do.call(rbind, Pars)
@@ -137,6 +144,7 @@ semPlotModel.cSEMResults <- function(object, ...)
     name = c(items, constructs),
     manifest = c(rep(TRUE, length(items)), rep(FALSE, length(constructs))),
     exogenous = NA,
+    composite = c(rep(FALSE, length(items)), constructs %in% names(cType)[cType == "Composite"]),
     stringsAsFactors = FALSE)
   semModel@Thresholds <- data.frame()
   semModel@Computed <- TRUE

@@ -155,3 +155,22 @@ mixInts <- function(vars,intMap,Layout,trim=FALSE,intAtSide=TRUE)
   }
   return(Layout)
 }
+
+# Does the installed qgraph provide the "hexagon" node shape (qgraph > 1.10.1)?
+.qgraphHasHexagon <- function()
+{
+  exists("HEXAGONPOLY", envir = asNamespace("qgraph"), inherits = FALSE)
+}
+
+# Hexagon outline (flat top and bottom) in the format of qgraph's
+# 'polygonList', for qgraph versions without the built-in hexagon shape. The
+# outline is sampled densely, as qgraph attaches edges to the outline point at
+# the closest angle.
+.hexagonPolygon <- function(n = 30)
+{
+  vx <- c(0, 0.5, 1, 0.5, -0.5, -1, -0.5, 0)
+  vy <- c(1, 1, 0, -1, -1, 0, 1, 1)
+  x <- unlist(lapply(seq_len(length(vx) - 1), function(i) seq(vx[i], vx[i+1], length.out = n + 1)[-(n + 1)]))
+  y <- unlist(lapply(seq_len(length(vy) - 1), function(i) seq(vy[i], vy[i+1], length.out = n + 1)[-(n + 1)]))
+  list(x = c(x, x[1]), y = c(y, y[1]))
+}
