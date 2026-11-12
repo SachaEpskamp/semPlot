@@ -1059,5 +1059,23 @@ if (requireNamespace("psychonetrics", quietly = TRUE) && not_cran4() &&
       sum(toQ1) == 3 && isTRUE(all.equal(sort(unname(q$Edgelist$weight[toQ1])), sort(reg$std))) })
 }
 
+# Item 18: undirected (network) edges are cut at the node borders like
+# directed edges, so curved network edges are drawn like covariances
+check("T18a undirected edges are cut at node borders (parallelEdge, angle 0)", {
+  m <- quiet(semPlotModel(fit_cfa))
+  i <- which(m@Pars$edge == "<->" & m@Pars$lhs != m@Pars$rhs)[1]
+  m@Pars$edge[i] <- "--"
+  q <- quiet(semPaths(m, DoNotPlot = TRUE))
+  E <- q$graphAttributes$Edges
+  any(!q$Edgelist$directed) && identical(E$parallelEdge, !q$Edgelist$directed) && all(E$parallelAngle == 0) })
+
+check("T18b user-supplied parallelEdge is honored; no change without undirected edges", {
+  m <- quiet(semPlotModel(fit_cfa))
+  i <- which(m@Pars$edge == "<->" & m@Pars$lhs != m@Pars$rhs)[1]
+  m@Pars$edge[i] <- "--"
+  q1 <- quiet(semPaths(m, parallelEdge = FALSE, DoNotPlot = TRUE))
+  q2 <- quiet(semPaths(fit_cfa, DoNotPlot = TRUE))
+  !any(q1$graphAttributes$Edges$parallelEdge) && !any(q2$graphAttributes$Edges$parallelEdge) })
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

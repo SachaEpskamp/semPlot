@@ -53,6 +53,12 @@ Changes in Version 1.3.0
     models) are affected, and not structural = TRUE plots; hidden dummies may
     still be named in 'latents' and full-length 'nodeLabels'. Set
     hideDummies = FALSE to draw dummy latent variables as before.
+  o Undirected (network) edges are now cut at the node borders, like directed
+    edges, so that curved network edges (e.g., between composite indicators
+    or composites modeled as a GGM) are drawn exactly like covariances at the
+    same place, only without arrowheads. Previously they were drawn from node
+    center to node center, so that curves ran behind large nodes. The labels
+    of straight network edges are now centered between the node borders.
 
 Changes in Version 1.2.0
   o NEW: standardized parameters for psychonetrics models, so that

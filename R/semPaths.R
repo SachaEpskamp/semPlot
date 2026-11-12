@@ -1690,7 +1690,17 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
            "add a 'hexagon' element to 'polygonList', or choose another shape with 'shapeComp'.")
     }
 
-    runQgraph <- function(...) qgraph::qgraph(Edgelist,
+    # qgraph draws undirected edges from node center to node center (hidden
+    # behind the nodes), whereas directed edges are cut at the node borders
+    # and curved between these border points. Curved network edges ('--')
+    # would then run along (behind) large nodes instead of being drawn like
+    # the covariances ('<->') at the same place. Cutting them at the borders
+    # too (parallelEdge with an angle of zero) draws them identically, but
+    # without arrowheads. A user-supplied 'parallelEdge' takes precedence:
+    runQgraph <- function(...,
+                          parallelEdge = if (any(!Directed)) !Directed else NULL,
+                          parallelAngle = if (missing(parallelEdge) && any(!Directed)) 0 else NULL)
+      qgraph::qgraph(Edgelist,
                                              labels=nLab,
                                              bidirectional=Bidir,
                                              directed=Directed,
@@ -1723,6 +1733,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                                              barsAtSide = ThreshAtSide,
                                              edge.label.cex = edge.label.cex,
                                              edgeConnectPoints = ECP,
+                                             parallelEdge = parallelEdge,
+                                             parallelAngle = parallelAngle,
                                              ...)
     qgraphRes[[which(Groups==gr)]] <- if (hexFallback)
     {
