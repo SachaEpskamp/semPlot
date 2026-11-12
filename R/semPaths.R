@@ -29,7 +29,7 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
                      panelGroups=FALSE,layoutSplit = FALSE, measurementLayout = "tree", subScale, subScale2, subRes = 4, 
                      subLinks, modelOpts = list(mplusStd="std"), curveAdjacent = c("<->","--"), edge.label.cex = 0.6, cardinal =  "none",
                      equalizeManifests = FALSE,  covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4),
-                     shapeComp = "hexagon", sizeComp, sizeComp2,
+                     shapeComp = "hexagon", sizeComp, sizeComp2, hideDummies = TRUE,
                      ...){
 
   # Check if DoNotPlot is passed via ... (for qgraph):
@@ -50,6 +50,18 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
 
   # Composite columns (Vars$composite, Pars$composite), FALSE where absent:
   object <- .normalizeComposites(object)
+
+  # Dummy latents (a single indicator with loading 1 and zero residual
+  # variance, as needed in LISREL-style models to use an observed variable in
+  # the structural model) are drawn as their indicator. Not in a structural
+  # plot, which only shows latent variables:
+  latFull <- if (!missing(latents)) latents else object@Vars$name[!object@Vars$manifest]
+  dummies <- character(0)
+  if (isTRUE(hideDummies) && !structural)
+  {
+    dummies <- .dummyLatents(object)
+    object <- .collapseDummyLatents(object, dummies)
+  }
   
   # if (gui) return(do.call(semPathsGUI,as.list(match.call())[-1]))
   
@@ -245,6 +257,8 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   latNames <- object@Vars$name[!object@Vars$manifest]
   if (!missing(latents))
   {
+    # Hidden dummy latents may be listed; they are drawn as their indicator:
+    latents <- latents[!latents %in% dummies]
     if (!(all(latNames%in%latents) & length(latents) == length(latNames)))
     {
       stop(paste("Argument 'latents' should be a vector containing reordered elements of the vector",dput(latNames)))
@@ -255,6 +269,14 @@ semPaths <- function(object,what="paths",whatLabels,style,layout="tree",intercep
   nM <- length(manNames)
   nL <- length(latNames)
   nN <- length(Labels)
+
+  # Node labels given for all nodes including hidden dummy latents:
+  if (length(dummies) > 0 && !missing(nodeLabels) &&
+      length(nodeLabels) == length(c(manNames, latFull)) &&
+      length(nodeLabels) == nN + length(dummies))
+  {
+    nodeLabels <- nodeLabels[!c(manNames, latFull) %in% dummies]
+  }
   object@Vars <- object@Vars[match(Labels,object@Vars$name),]
 
   # Composites:

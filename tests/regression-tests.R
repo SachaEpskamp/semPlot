@@ -993,5 +993,71 @@ if (requireNamespace("cSEM", quietly = TRUE) && not_cran4() && exists("csem_fit"
     identical(m@Vars$name[m@Vars$composite], "SAT") && sum(m@Pars$composite) == 3 })
 }
 
+# Item 17: dummy latents (eta =~ 1*y with zero residual variance of y) are
+# drawn as their indicator (hideDummies = TRUE)
+dummy_obs <- "ind60 =~ x1 + x2 + x3\n dem60 =~ y1 + y2 + y3 + y4\n y5 ~ ind60 + dem60"
+dummy_lat <- "ind60 =~ x1 + x2 + x3\n dem60 =~ y1 + y2 + y3 + y4\n D =~ 1*y5\n y5 ~~ 0*y5\n D ~ ind60 + dem60"
+fit_dobs <- quiet(sem(dummy_obs, data = PoliticalDemocracy))
+fit_dlat <- quiet(sem(dummy_lat, data = PoliticalDemocracy))
+edgesOf <- function(q) {
+  l <- q$graphAttributes$Nodes$names; E <- q$Edgelist
+  d <- data.frame(from = l[E$from], to = l[E$to], w = round(E$weight, 6), stringsAsFactors = FALSE)
+  d <- d[order(d$from, d$to, d$w), ]; rownames(d) <- NULL; d }
+
+check("T17a dummy latent detected; plot equals the model with the observed variable", {
+  q1 <- quiet(semPaths(fit_dobs, what = "std", nCharNodes = 0, DoNotPlot = TRUE))
+  q2 <- quiet(semPaths(fit_dlat, what = "std", nCharNodes = 0, DoNotPlot = TRUE))
+  identical(semPlot:::.dummyLatents(quiet(semPlotModel(fit_dlat))), c(y5 = "D")) &&
+    !"D" %in% q2$graphAttributes$Nodes$names && isTRUE(all.equal(edgesOf(q1), edgesOf(q2), tolerance = 1e-4)) })
+
+check("T17b hideDummies = FALSE and structural = TRUE keep the dummy latent", {
+  q1 <- quiet(semPaths(fit_dlat, hideDummies = FALSE, nCharNodes = 0, DoNotPlot = TRUE))
+  q2 <- quiet(semPaths(fit_dlat, structural = TRUE, nCharNodes = 0, DoNotPlot = TRUE))
+  l1 <- q1$graphAttributes$Nodes$names
+  "D" %in% l1 && any(l1[q1$Edgelist$from] == "D" & l1[q1$Edgelist$to] == "y5") &&
+    "D" %in% q2$graphAttributes$Nodes$names })
+
+check("T17c single-indicator latents that are not dummies are kept", {
+  m <- quiet(semPlotModel(fit_dlat))
+  m2 <- m; m2@Pars$est[m2@Pars$lhs == "D" & m2@Pars$edge == "->"] <- 2
+  m3 <- m; m3@Pars$est[m3@Pars$lhs == "y5" & m3@Pars$rhs == "y5"] <- 0.5
+  m4 <- m; m4@Pars$fixed[m4@Pars$lhs == "D" & m4@Pars$edge == "->"] <- FALSE
+  m5 <- m; m5@Pars <- rbind(m5@Pars, transform(m5@Pars[m5@Pars$lhs == "ind60" & m5@Pars$rhs == "x1", ],
+                                               rhs = "y5", fixed = FALSE, par = 99))
+  # A model given only as syntax: the latent drawn by the user stays
+  m6 <- quiet(semPlotModel(" D =~ 1*y5\n y5 ~~ 0*y5\n D ~ x1 "))
+  all(vapply(list(m2, m3, m4, m5, m6), function(x) length(semPlot:::.dummyLatents(x)) == 0, logical(1))) &&
+    length(semPlot:::.dummyLatents(quiet(semPlotModel(fit_cfa)))) == 0 &&
+    length(semPlot:::.dummyLatents(quiet(semPlotModel(fit_comp)))) == 0 })
+
+check("T17d 'latents' and full-length 'nodeLabels' may still name the dummy latent", {
+  m <- quiet(semPlotModel(fit_dlat))
+  full <- c(m@Vars$name[m@Vars$manifest], "D", "dem60", "ind60")
+  q <- quiet(semPaths(fit_dlat, latents = c("D", "dem60", "ind60"), nodeLabels = paste0("L", full),
+                      DoNotPlot = TRUE))
+  identical(q$graphAttributes$Nodes$labels, paste0("L", setdiff(full, "D"))) })
+
+check("T17e multi-group: dummy latent collapsed in every group", {
+  pd <- PoliticalDemocracy; pd$grp <- rep(c("a", "b"), length.out = nrow(pd))
+  fit <- quiet(sem(dummy_lat, data = pd, group = "grp"))
+  p <- quiet(semPaths(fit, nCharNodes = 0, DoNotPlot = TRUE, ask = FALSE))
+  is.list(p) && length(p) == 2 && all(sapply(p, function(q) !"D" %in% q$graphAttributes$Nodes$names &&
+    sum(q$graphAttributes$Nodes$names[q$Edgelist$to] == "y5" & q$Edgelist$directed) >= 2)) })
+
+if (requireNamespace("psychonetrics", quietly = TRUE) && not_cran4() &&
+    exists("cvm", envir = asNamespace("psychonetrics")) && exists("sw")) {
+  check("T17f psychonetrics cvm: dummy latent for an observed outcome drawn as the observed variable", {
+    W <- L <- matrix(0, 10, 4); W[2:4, 1] <- 1; W[5:7, 2] <- 1; W[8:10, 3] <- 1; L[1, 4] <- 1
+    B <- matrix(0, 4, 4); B[4, 1:3] <- 1
+    mod <- quiet(psychonetrics::runmodel(psychonetrics::cvm(sw[, 1:10], weights = W, lambda = L, beta = B)))
+    m <- quiet(semPlotModel(mod))
+    q <- quiet(semPaths(mod, what = "std", nCharNodes = 0, DoNotPlot = TRUE))
+    nm <- q$graphAttributes$Nodes$names
+    reg <- m@Pars[m@Pars$edge == "~>" & m@Pars$rhs == "Eta_4", ]
+    toQ1 <- q$Edgelist$to == which(nm == "Q1") & nm[q$Edgelist$from] %in% reg$lhs
+    identical(semPlot:::.dummyLatents(m), c(Q1 = "Eta_4")) && !"Eta_4" %in% nm &&
+      sum(toQ1) == 3 && isTRUE(all.equal(sort(unname(q$Edgelist$weight[toQ1])), sort(reg$std))) })
+}
+
 cat("\n==== RESULT:", ok, "passed,", fail, "failed ====\n")
 if (fail > 0) stop("semPlot regression tests failed: ", paste(fails, collapse = "; "))

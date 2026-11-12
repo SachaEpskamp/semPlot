@@ -24,7 +24,7 @@ semPaths(object, what = "paths", whatLabels, style, layout = "tree",
   subScale2, subRes = 4, subLinks, modelOpts = list(mplusStd = "std"), 
   curveAdjacent = c('<->','--'), edge.label.cex = 0.6,  cardinal = "none", 
   equalizeManifests = FALSE, covAtResiduals = TRUE, bifactor, optimPoints = 1:8 * (pi/4), 
-  shapeComp = "hexagon", sizeComp, sizeComp2, ...)
+  shapeComp = "hexagon", sizeComp, sizeComp2, hideDummies = TRUE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -304,6 +304,10 @@ Width of the composite nodes, sent to the 'vsize' argument in \code{\link[qgraph
 Height of the composite nodes, sent to the 'vsize2' argument in \code{\link[qgraph]{qgraph}}. Defaults to 0.9 times \code{sizeLat2}, which together with the default of \code{sizeComp} gives a regular hexagon of about the size of a latent variable.
 }
 
+\item{hideDummies}{
+Logical. Should dummy latent variables be hidden? A dummy latent variable has a single indicator, with its factor loading fixed to 1 and the residual variance of the indicator fixed to zero, so that the latent variable equals its indicator. Such variables are needed to use an observed variable in the structural model in LISREL-style frameworks such as psychonetrics. If \code{TRUE} (default), the dummy latent variable is replaced by its indicator, so that structural effects go directly to and from the observed variable. Only applies to estimated models (and psychonetrics models), and not when \code{structural = TRUE}. See details.
+}
+
 
   \item{\dots}{
   Arguments sent to the \code{\link[qgraph]{qgraph}} function. These arguments can further control the output of the graph. Some usefull arguments in drawing path diagrams are:
@@ -402,6 +406,8 @@ The default \code{"tree"} layout under default rotation places the nodes in one 
 If not manually set (see \code{\link{semPlotModel-edit}}), \code{semPath} will automatically try to set the endogenous and exogenous variables, such that the resulting layout looks good. A latent variable is identified as \emph{exogenous} if it is not on the right hand side of a directed edge (\code{->} or \code{~>}) with another latent variable as node of origin. A manifest variable is set as \emph{exogenous} if it is only connected, in any way, to exogenous latent variables and if it is not the right hand side (dependent variable) of a regression edge (\code{~>}). If all variables are set to exogenous this way, they are all set to endogenous for consistency in the layouts. Afterwards, manifest variables only used in formative measurement models (only outgoing directed edges to latents) are set to exogenous again so that MIMIC models are displayed properly.
 
 \emph{Composites}---constructs that are exact weighted sums of their indicators, such as those defined with the \code{<~} operator in lavaan or with the \code{cvm()} and \code{cnm()} model families in psychonetrics---are drawn as hexagons (see \code{shapeComp}), following Grace and Bollen (2008) and Schamberger, Schuberth, Henseler and Rosseel (2025). The weights are drawn as directed edges from the indicators into the composite and the (co)variances of the indicators of a composite as (co)variance edges, or as undirected network edges when these are modeled as a network (\code{cnm()} in psychonetrics). The (residual) variance of a composite is not a free parameter but computed from the weights and the covariances of its indicators, and is therefore drawn as a fixed parameter (see \code{fixedStyle}). The weights of a composite do not make it endogenous: a composite that is not explained by other variables is treated as exogenous, so that, e.g., \code{exoVar = FALSE} (the default in the LISREL style) also hides its computed variance.
+
+\emph{Dummy latent variables} (see \code{hideDummies}) are detected as latent variables (not composites) with a single factor loading, fixed to 1 in every group, on an observed variable whose residual variance is fixed to zero (or not part of the model) and that has no other incoming directed edges and no (co)variances with other variables. With \code{hideDummies = TRUE} the loading and the zero residual variance are removed and every other edge of the dummy latent variable, including its (residual) variance, is drawn at the observed variable instead. Because the observed variable equals the dummy latent variable, the parameter estimates (unstandardized and standardized) are unchanged. Hidden dummy latent variables may still be named in \code{latents}, and \code{nodeLabels} may also be given for all nodes including the dummy latent variables. Other arguments given per node or per edge should match the graph without dummy latent variables, or set \code{hideDummies = FALSE}.
 
 Intercepts are placed on the same level as the variable, either on the left or right side of the node (pointing outward from the center). Residuals for manifest variables are placed at the top or bottom (for exogenous and endogenous manifests respectively). Residuals of latents are placed at the bottom or top respectively for exogenous and endogenous variables, but is switched if the latent is not connected to a manifest. Residuals for the leftmost and rightmost latent are placed at the left and right side respectively, or diagonal if the latent is connected to an intercept.
 
@@ -507,6 +513,21 @@ semPaths(prune(mod_cnm), "std", intercepts = FALSE)
 mod_net <- runmodel(cvm(StarWars, weights = weights, vars = vars,
                         latent = "ggm", latents = latents))
 semPaths(mod_net, "std", intercepts = FALSE)
+
+# An observed outcome (Q1) predicted by three composites. In psychonetrics,
+# the observed variable enters the structural model through a dummy latent
+# variable (loading 1, zero residual variance), which semPaths() hides:
+weights <- lambda <- matrix(0, 10, 4)
+weights[2:4, 1] <- 1
+weights[5:7, 2] <- 1
+weights[8:10, 3] <- 1
+lambda[1, 4] <- 1
+beta <- matrix(0, 4, 4)
+beta[4, 1:3] <- 1
+mod_obs <- runmodel(cvm(StarWars[, 1:10], weights = weights, lambda = lambda,
+                        beta = beta))
+semPaths(mod_obs, "std")
+semPaths(mod_obs, "std", hideDummies = FALSE)
 }
 
 # MIMIC model ----------------------------------------------------
